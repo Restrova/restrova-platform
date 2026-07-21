@@ -9,7 +9,7 @@ import { z } from "zod";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { db } from "./db.js";
-import { getAssistantReply } from "./ai.js";
+import { getAiRuntimeStatus, getAssistantReply } from "./ai.js";
 import { executeTool } from "./tools.js";
 import { dataConnectionStatus, importRestaurantData, previewRestaurantData } from "./dataImport.js";
 import { importKnowledgeDocument, knowledgeStatus, searchKnowledgeBase } from "./knowledge.js";
@@ -111,7 +111,10 @@ function serializeMe(user) {
     branches
   };
 }
-app.get("/api/health", (_, res) => res.json({ status: "ok", ai: "built-in", version: "prefinal" }));
+app.get("/api/health", (_, res) => {
+  const ai = getAiRuntimeStatus();
+  res.json({ status: "ok", ai: ai.mode, version: "prefinal", ...ai });
+});
 app.post("/api/auth/register", (req, res, next) => {
   try {
     const parsed = z.object({
@@ -315,7 +318,7 @@ app.post("/api/chat", auth, async (req, res, next) => {
     const history = db.prepare("SELECT role,content FROM chat_messages WHERE session_id=? ORDER BY id DESC LIMIT 20").all(sessionId).reverse();
     const result = await getAssistantReply(history, toolScope(req));
     const messageId = Number(db.prepare("INSERT INTO chat_messages(session_id,role,content) VALUES (?,'assistant',?)").run(sessionId, result.content).lastInsertRowid);
-    res.json({ sessionId, message: { id: messageId, role: "assistant", content: result.content, toolsUsed: result.toolsUsed } });
+    res.json({ sessionId, message: { id: messageId, role: "assistant", content: result.content, toolsUsed: result.toolsUsed, aiMode: result.aiMode, model: result.model } });
   } catch (error) { next(error); }
 });
 app.post("/api/actions/:hash/confirm", auth, requireOwner, (req, res, next) => {
@@ -375,7 +378,11 @@ app.use((error, _req, res, _next) => {
 });
 
 if (process.env.NODE_ENV !== "test") {
-  app.listen(process.env.PORT || 4000, () => console.log(`API listening on http://localhost:${process.env.PORT || 4000}`));
+  app.listen(process.env.PORT || 4000, () => {
+    const ai = getAiRuntimeStatus();
+    console.log(`API listening on http://localhost:${process.env.PORT || 4000}`);
+    console.info(JSON.stringify({ source: "restaurant-ai", event: "ai_mode_active", mode: ai.mode, model: ai.model }));
+  });
 }
 
 export { app, getAuthContext, serializeMe };

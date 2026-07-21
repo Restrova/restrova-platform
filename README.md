@@ -12,9 +12,9 @@ npm run dev
 
 Open `http://localhost:5173`, choose **Create restaurant**, and create your own owner account, organization, restaurant, and first branch.
 
-The app uses its built-in prefinal restaurant assistant mode. It answers supported restaurant operations questions with deterministic business logic, restaurant-scoped tools, and data-readiness checks. No OpenAI API key or external model is required.
+The app uses its built-in prefinal restaurant assistant mode by default. It answers supported restaurant operations questions with deterministic business logic, restaurant-scoped tools, and data-readiness checks. No OpenAI API key or external model is required.
 
-Important: the built-in assistant is rules-based. It can analyze connected restaurant data for supported questions, explain missing data, and avoid fake “healthy” conclusions, but it is not an open-ended language model.
+Important: the built-in assistant is rules-based. It can analyze connected restaurant data for supported questions, explain missing data, and avoid fake “healthy” conclusions, but it is not an open-ended language model. To enable real OpenAI model responses, set `OPENAI_API_KEY` on the backend service only.
 
 ## Architecture
 
@@ -123,7 +123,28 @@ The repository includes a Render Blueprint that builds the React frontend, serve
 
 [Deploy to Render](https://render.com/deploy?repo=https://github.com/sami124-coder/AI-restaurant-)
 
-During setup, no AI provider key is needed. `/api/health` reports `ai: "built-in"` and `version: "prefinal"`.
+During setup, no AI provider key is needed. `/api/health` reports the non-secret AI status, including `aiConfigured`, `mode`, `model`, and `version: "prefinal"`.
+
+### Optional OpenAI model mode
+
+OpenAI calls are made only from `server/src/ai.js`. Never put an OpenAI key in frontend JavaScript, `VITE_*` variables, GitHub, screenshots, logs, or API responses.
+
+Supported backend environment variables:
+
+| Variable | Purpose |
+| --- | --- |
+| `OPENAI_API_KEY` | Enables OpenAI mode when present. Leave empty for deterministic demo mode. |
+| `OPENAI_MODEL` | Model name used by the Responses API. Defaults to `gpt-5.6`. |
+| `OPENAI_REASONING_EFFORT` | Optional Responses API reasoning effort. |
+| `OPENAI_TEXT_VERBOSITY` | Optional Responses API text verbosity. |
+| `OPENAI_MAX_OUTPUT_TOKENS` | Optional response length cap. |
+
+Runtime behavior:
+
+- If `OPENAI_API_KEY` is missing, the app uses deterministic built-in responses.
+- If `OPENAI_API_KEY` is present, the backend sends the owner question and tool-backed draft to the OpenAI Responses API.
+- If the OpenAI request fails, the server logs a sanitized failure and returns an explicit built-in fallback answer instead of pretending the model succeeded.
+- Logs include only mode, selected model, success/failure, HTTP status, and sanitized error type.
 
 ### Railway alternative
 

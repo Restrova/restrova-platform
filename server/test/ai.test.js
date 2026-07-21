@@ -1,9 +1,49 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { demoReply, inferTools, SYSTEM_PROMPT } from "../src/ai.js";
+import { demoReply, getAiRuntimeStatus, getAssistantReply, inferTools, SYSTEM_PROMPT } from "../src/ai.js";
 import { db } from "../src/db.js";
 
 const restaurantId = db.prepare("SELECT id FROM restaurants ORDER BY id LIMIT 1").get().id;
+
+test("AI runtime status never exposes secrets", () => {
+  const originalKey = process.env.OPENAI_API_KEY;
+  const originalModel = process.env.OPENAI_MODEL;
+  delete process.env.OPENAI_API_KEY;
+  delete process.env.OPENAI_MODEL;
+  assert.deepEqual(getAiRuntimeStatus(), { aiConfigured: false, mode: "demo", model: "built-in" });
+  process.env.OPENAI_API_KEY = "test-secret-value";
+  process.env.OPENAI_MODEL = "configured-test-model";
+  const status = getAiRuntimeStatus();
+  assert.deepEqual(status, { aiConfigured: true, mode: "openai", model: "configured-test-model" });
+  assert.doesNotMatch(JSON.stringify(status), /test-secret-value/);
+  if (originalKey === undefined) delete process.env.OPENAI_API_KEY; else process.env.OPENAI_API_KEY = originalKey;
+  if (originalModel === undefined) delete process.env.OPENAI_MODEL; else process.env.OPENAI_MODEL = originalModel;
+});
+
+test("assistant uses explicit fallback when OpenAI request fails", async () => {
+  const originalKey = process.env.OPENAI_API_KEY;
+  const originalModel = process.env.OPENAI_MODEL;
+  const originalFetch = globalThis.fetch;
+  process.env.OPENAI_API_KEY = "test-secret-value";
+  process.env.OPENAI_MODEL = "configured-test-model";
+  globalThis.fetch = async (_url, options) => {
+    assert.doesNotMatch(options.body, /test-secret-value/);
+    return {
+      ok: false,
+      status: 404,
+      async json() {
+        return { error: { type: "model_not_found" } };
+      }
+    };
+  };
+  const result = await getAssistantReply([{ role: "user", content: "hello" }], restaurantId);
+  assert.equal(result.aiMode, "fallback");
+  assert.equal(result.model, "configured-test-model");
+  assert.match(result.content, /configured OpenAI request/i);
+  if (originalKey === undefined) delete process.env.OPENAI_API_KEY; else process.env.OPENAI_API_KEY = originalKey;
+  if (originalModel === undefined) delete process.env.OPENAI_MODEL; else process.env.OPENAI_MODEL = originalModel;
+  globalThis.fetch = originalFetch;
+});
 
 test("greeting receives a conversational response without fabricated figures", () => {
   const reply = demoReply("hello", restaurantId);
