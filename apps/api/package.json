@@ -21,12 +21,15 @@
     "pino": "^9.7.0",
     "argon2": "^0.41.1",
     "express-rate-limit": "^7.5.0"
-    ,"zod": "^4.1.5"
+    ,"zod": "^4.1.5",
+    "multer": "^2.2.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
     "@types/node": "^24.1.0",
+    "@types/multer": "^2.0.0",
     "@types/supertest": "^6.0.3",
     "supertest": "^7.1.4",
     "tsx": "^4.20.3",
