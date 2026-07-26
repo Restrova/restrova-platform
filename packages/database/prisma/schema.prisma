@@ -112,6 +112,13 @@ model Restaurant {
   legalName      String?
   currency       String   @db.Char(3)
   timezone       String
+  country        String?
+  city           String?
+  defaultLanguage String @default("en")
+  businessType   String?
+  branchCount    Int @default(1)
+  fiscalWeekStart Int @default(1)
+  taxHandling    String @default("exclusive")
   createdAt      DateTime @default(now()) @db.Timestamptz(3)
   updatedAt      DateTime @updatedAt @db.Timestamptz(3)
 
@@ -129,6 +136,7 @@ model Branch {
   address        String?
   timezone       String
   isActive       Boolean  @default(true)
+  openingDate    DateTime? @db.Date
   createdAt      DateTime @default(now()) @db.Timestamptz(3)
   updatedAt      DateTime @updatedAt @db.Timestamptz(3)
 
