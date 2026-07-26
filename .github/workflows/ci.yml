@@ -39,7 +39,7 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-      - run: for attempt in 1 2 3; do pnpm install --frozen-lockfile --ignore-scripts --no-optional && break; test "$attempt" = 3 && exit 1; sleep 5; done
+      - run: for attempt in 1 2 3; do pnpm install --frozen-lockfile --ignore-scripts && break; test "$attempt" = 3 && exit 1; sleep 5; done
       - run: pnpm db:generate
       - run: pnpm db:migrate
       - run: pnpm lint
@@ -59,6 +59,6 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-      - run: for attempt in 1 2 3; do pnpm install --frozen-lockfile --ignore-scripts --no-optional && break; test "$attempt" = 3 && exit 1; sleep 5; done
+      - run: for attempt in 1 2 3; do pnpm install --frozen-lockfile --ignore-scripts && break; test "$attempt" = 3 && exit 1; sleep 5; done
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:e2e

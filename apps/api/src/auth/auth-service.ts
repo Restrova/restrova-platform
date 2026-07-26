@@ -1,15 +1,16 @@
-import argon2 from 'argon2';
 import { randomBytes, randomUUID, createHash } from 'node:crypto';
 import type { PrismaClient, MembershipRole } from '@rda/database';
 
 export interface TenantContext { userId: string; organizationId: string; restaurantId: string; permittedBranchIds: string[]; role: MembershipRole; sessionId: string }
 const hashToken = (token: string) => createHash('sha256').update(token).digest('hex');
 const expiry = () => new Date(Date.now() + 1000 * 60 * 60 * 24 * 30);
+const argon2 = async () => (await import('argon2')).default;
 
 export class AuthService {
   public constructor(private readonly db: PrismaClient) {}
   public async register(input: { email: string; password: string; displayName: string; organizationName: string; restaurantName: string }) {
-    const passwordHash = await argon2.hash(input.password, { type: argon2.argon2id });
+    const crypto = await argon2();
+    const passwordHash = await crypto.hash(input.password, { type: crypto.argon2id });
     const organizationId = randomUUID(); const restaurantId = randomUUID(); const userId = randomUUID();
     return this.db.$transaction(async (tx) => {
       await tx.user.create({ data: { id: userId, email: input.email.toLowerCase(), passwordHash, displayName: input.displayName } });
@@ -22,7 +23,8 @@ export class AuthService {
   public async authenticate(email: string, password: string) {
     const user = await this.db.user.findUnique({ where: { email: email.toLowerCase() } });
     if (!user || !user.isActive || (user.lockedUntil && user.lockedUntil > new Date())) throw new Error('INVALID_CREDENTIALS');
-    const valid = await argon2.verify(user.passwordHash, password).catch(() => false);
+    const crypto = await argon2();
+    const valid = await crypto.verify(user.passwordHash, password).catch(() => false);
     if (!valid) { const attempts = user.failedLoginAttempts + 1; await this.db.user.update({ where: { id: user.id }, data: { failedLoginAttempts: attempts, lockedUntil: attempts >= 5 ? new Date(Date.now() + 15 * 60_000) : null } }); throw new Error('INVALID_CREDENTIALS'); }
     await this.db.user.update({ where: { id: user.id }, data: { failedLoginAttempts: 0, lockedUntil: null, lastLoginAt: new Date() } }); return user;
   }
