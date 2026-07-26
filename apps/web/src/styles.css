@@ -20,6 +20,19 @@ button { border: 0; border-radius: .5rem; background: #a94f2b; color: white; pad
 button:disabled { opacity: .6; cursor: wait; }
 .link-button { background: transparent; color: #a94f2b; padding-left: 0; }
 [role='alert'] { color: #a12d2d; }
+.dashboard { max-width: 980px; }
+.dashboard header { display: flex; justify-content: space-between; gap: 2rem; align-items: flex-start; }
+.import-card, .decision-card, .metrics article { background: #fffaf4; border: 1px solid #e6d9ca; border-radius: .75rem; padding: 1.25rem; }
+.import-card { margin: 2rem 0 1rem; }
+.upload { display: inline-grid; gap: .5rem; margin-top: 1rem; color: #a94f2b; font-weight: 700; }
+.metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1rem; }
+.metrics article { display: grid; gap: .45rem; }
+.metrics strong { font-size: 2rem; }
+.metrics small { color: #74685d; }
+.reviews { display: flex; gap: 1rem; margin-top: 1.5rem; flex-wrap: wrap; }
+.reviews span { border-top: 1px solid #e6d9ca; padding-top: .7rem; flex: 1; }
+.reviews b { display: block; margin-top: .25rem; }
+@media (max-width: 700px) { .dashboard header, .metrics { grid-template-columns: 1fr; display: grid; } }
 h1 {
   font-size: clamp(2.5rem, 7vw, 5rem);
   line-height: 0.95;

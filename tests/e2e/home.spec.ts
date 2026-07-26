@@ -16,4 +16,6 @@ test('supports registration and authenticated session state', async ({ page }) =
   await page.getByLabel('Restaurant').fill('Test Restaurant');
   await page.getByRole('button', { name: 'Register' }).click();
   await expect(page.getByText('Your tenant workspace is ready.')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Decision workspace' })).toBeVisible();
+  await expect(page.getByText('Choose sales export')).toBeVisible();
 });
