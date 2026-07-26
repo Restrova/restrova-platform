@@ -42,4 +42,23 @@ export class AuthService {
   }
   public revokeSession(sessionId: string) { return this.db.session.update({ where: { id: sessionId }, data: { revokedAt: new Date() } }); }
   public revokeAllSessions(userId: string) { return this.db.session.updateMany({ where: { userId, revokedAt: null }, data: { revokedAt: new Date() } }); }
+  public async requestPasswordReset(email: string) {
+    const user = await this.db.user.findUnique({ where: { email: email.toLowerCase() } });
+    if (!user) return null;
+    const token = randomBytes(32).toString('base64url');
+    await this.db.passwordResetToken.deleteMany({ where: { userId: user.id, usedAt: null } });
+    await this.db.passwordResetToken.create({ data: { id: randomUUID(), userId: user.id, tokenHash: hashToken(token), expiresAt: new Date(Date.now() + 30 * 60_000) } });
+    return token;
+  }
+  public async resetPassword(token: string, password: string) {
+    const record = await this.db.passwordResetToken.findUnique({ where: { tokenHash: hashToken(token) } });
+    if (!record || record.usedAt || record.expiresAt <= new Date()) throw new Error('INVALID_RESET_TOKEN');
+    const crypto = await argon2();
+    const passwordHash = await crypto.hash(password, { type: crypto.argon2id });
+    await this.db.$transaction([
+      this.db.user.update({ where: { id: record.userId }, data: { passwordHash, failedLoginAttempts: 0, lockedUntil: null } }),
+      this.db.passwordResetToken.update({ where: { id: record.id }, data: { usedAt: new Date() } }),
+      this.db.session.updateMany({ where: { userId: record.userId, revokedAt: null }, data: { revokedAt: new Date() } }),
+    ]);
+  }
 }
