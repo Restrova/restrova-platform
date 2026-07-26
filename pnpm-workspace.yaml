@@ -1,16 +1,10 @@
 packages:
   - apps/*
   - packages/*
-onlyBuiltDependencies:
-  - argon2
-  - '@prisma/client'
-  - '@prisma/engines'
-  - esbuild
-  - prisma
-confirmModulesPurge: false
 allowBuilds:
   argon2: true
   '@prisma/client': true
   '@prisma/engines': true
   esbuild: true
   prisma: true
+confirmModulesPurge: false
