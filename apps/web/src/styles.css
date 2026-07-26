@@ -12,6 +12,14 @@ main {
   padding: 3rem;
   border-inline-start: 6px solid #bf5b36;
 }
+.auth-shell { max-width: 560px; }
+form { display: grid; gap: 1rem; margin-top: 2rem; }
+label { display: grid; gap: .4rem; font-weight: 600; }
+input { border: 1px solid #d7cbbf; border-radius: .5rem; padding: .8rem; font: inherit; }
+button { border: 0; border-radius: .5rem; background: #a94f2b; color: white; padding: .8rem 1rem; font: inherit; cursor: pointer; }
+button:disabled { opacity: .6; cursor: wait; }
+.link-button { background: transparent; color: #a94f2b; padding-left: 0; }
+[role='alert'] { color: #a12d2d; }
 h1 {
   font-size: clamp(2.5rem, 7vw, 5rem);
   line-height: 0.95;

@@ -6,6 +6,6 @@ import { App } from './App';
 describe('App', () => {
   it('renders the product name', () => {
     render(<App />);
-    expect(screen.getByRole('heading', { name: 'Restaurant Decision AI' })).toBeVisible();
+    expect(screen.getByRole('heading', { name: 'Welcome back' })).toBeVisible();
   });
 });
