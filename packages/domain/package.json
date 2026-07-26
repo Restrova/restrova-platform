@@ -12,7 +12,7 @@
     "test": "pnpm test:unit",
     "test:unit": "vitest run"
   },
-  "dependencies": {},
+  "dependencies": { "decimal.js": "^10.6.0" },
   "devDependencies": {
     "vitest": "^3.2.4"
   }

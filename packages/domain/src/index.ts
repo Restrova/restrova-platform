@@ -1,26 +1,37 @@
+import Decimal from 'decimal.js';
+
+export type DataQuality = 'COMPLETE' | 'PARTIAL' | 'INSUFFICIENT' | 'INVALID';
+export type Scope = { currency?: string; from?: string; to?: string; branchIds?: string[] };
+export type FinancialResult = { metricName: string; value: string | null; unit: string; currency?: string; dateRange?: { from?: string; to?: string }; branchScope?: string[]; comparisonBaseline?: string | null; formulaVersion: string; sourceRecordCount: number; dataQualityStatus: DataQuality; missingFields: string[]; warnings: string[] };
+export type SaleItem = { id?: string; orderId?: string; date?: string; branchId?: string; category?: string; channel?: string; itemCode?: string; quantity: string; grossAmount: string; foodCost?: string | null; packagingCost?: string | null; currency: string };
+export type FinancialInput = { items: SaleItem[]; discounts?: string[]; refunds?: string[]; deliveryCommissions?: string[]; laborCosts?: string[]; operatingCosts?: string[]; scope?: Scope };
+const VERSION = '2026-07-26.1';
+const D = (v: string | number | Decimal.Value | null | undefined) => { try { return new Decimal(v ?? 0); } catch { throw new Error('INVALID_DECIMAL'); } };
+const fmt = (v: Decimal) => v.toDecimalPlaces(2, Decimal.ROUND_HALF_UP).toFixed(2);
+const result = (name: string, value: Decimal | null, input: FinancialInput, missing: string[] = [], warnings: string[] = [], count = input.items.length): FinancialResult => ({ metricName: name, value: value === null ? null : fmt(value), unit: 'CURRENCY', currency: input.scope?.currency, dateRange: { from: input.scope?.from, to: input.scope?.to }, branchScope: input.scope?.branchIds, comparisonBaseline: null, formulaVersion: VERSION, sourceRecordCount: count, dataQualityStatus: missing.length ? (missing.length >= count ? 'INSUFFICIENT' : 'PARTIAL') : 'COMPLETE', missingFields: missing, warnings });
+const sum = (values: string[] | undefined) => (values ?? []).reduce((a, v) => a.plus(D(v)), D(0));
+export function grossSales(input: FinancialInput) { return result('Gross sales', input.items.reduce((a, i) => a.plus(D(i.grossAmount)), D(0)), input); }
+export function netSales(input: FinancialInput) { return result('Net sales', grossSales(input).value ? D(grossSales(input).value).minus(sum(input.discounts)).minus(sum(input.refunds)) : D(0), input); }
+export function discountRate(input: FinancialInput) { const gross = D(grossSales(input).value); return result('Discount rate', gross.isZero() ? D(0) : sum(input.discounts).div(gross).mul(100), input, [], [], input.items.length); }
+export function refundRate(input: FinancialInput) { const gross = D(grossSales(input).value); return result('Refund rate', gross.isZero() ? D(0) : sum(input.refunds).div(gross).mul(100), input); }
+function itemCost(input: FinancialInput, field: 'foodCost' | 'packagingCost', name: string) { const missing: string[] = []; let total = D(0); for (const item of input.items) { if (item[field] == null) missing.push(item.itemCode ?? item.id ?? 'unknown'); else total = total.plus(D(item[field]).mul(D(item.quantity))); } return result(name, missing.length ? total : total, input, missing, missing.length ? ['Cost is missing; zero was not assumed.'] : []); }
+export function foodCost(input: FinancialInput) { return itemCost(input, 'foodCost', 'Food cost'); }
+export function packagingCost(input: FinancialInput) { return itemCost(input, 'packagingCost', 'Packaging cost'); }
+export function deliveryCommission(input: FinancialInput) { return result('Delivery commission', sum(input.deliveryCommissions), input); }
+export function contributionMargin(input: FinancialInput) { const net = D(netSales(input).value); const costs = D(foodCost(input).value).plus(D(packagingCost(input).value)).plus(D(deliveryCommission(input).value)); return result('Contribution margin', net.minus(costs), input, [...foodCost(input).missingFields, ...packagingCost(input).missingFields]); }
+export function contributionMarginPercentage(input: FinancialInput) { const net = D(netSales(input).value); const margin = contributionMargin(input); return { ...margin, metricName: 'Contribution margin percentage', value: net.isZero() ? '0.00' : fmt(D(margin.value).div(net).mul(100),), unit: 'PERCENT' }; }
+export function estimatedOperatingProfit(input: FinancialInput) { const missing = [...foodCost(input).missingFields]; if (!input.laborCosts?.length) missing.push('laborCosts'); if (!input.operatingCosts?.length) missing.push('operatingCosts'); if (missing.length) return result('Estimated operating profit', null, input, missing, ['Required labor and operating costs are missing.']); return result('Estimated operating profit', D(contributionMargin(input).value).minus(sum(input.laborCosts)).minus(sum(input.operatingCosts)), input); }
+export function averageOrderValue(input: FinancialInput) { const ids = new Set(input.items.map((i) => i.orderId).filter(Boolean)); const count = ids.size || input.items.length; return result('Average order value', count ? D(netSales(input).value).div(count) : D(0), input); }
+export function percentageChange(current: string, baseline: string) { const b = D(baseline); return b.isZero() ? null : fmt(D(current).minus(b).div(b).mul(100)); }
+export function currencyRound(value: string, decimals = 2) { return D(value).toDecimalPlaces(decimals, Decimal.ROUND_HALF_UP).toFixed(decimals); }
+export function dataCompleteness(input: FinancialInput) { const total = input.items.length; const covered = input.items.filter((i) => i.foodCost != null && i.packagingCost != null).length; return { metricName: 'Cost coverage', value: total ? `${fmt(D(covered).div(total).mul(100))}%` : '0.00%', coveredRecords: covered, totalRecords: total, status: total === 0 ? 'INSUFFICIENT' as const : covered === total ? 'COMPLETE' as const : 'PARTIAL' as const }; }
+export function comparePeriods(current: FinancialInput, baseline: FinancialInput) { return { current: netSales(current), baseline: netSales(baseline), percentageChange: percentageChange(netSales(current).value ?? '0', netSales(baseline).value ?? '0') }; }
+export function itemProfitability(input: FinancialInput) { return groupProfitability(input, (i) => i.itemCode ?? 'unknown'); }
+export function categoryProfitability(input: FinancialInput) { return groupProfitability(input, (i) => i.category ?? 'unknown'); }
+export function channelProfitability(input: FinancialInput) { return groupProfitability(input, (i) => i.channel ?? 'unknown'); }
+export function branchProfitability(input: FinancialInput) { return groupProfitability(input, (i) => i.branchId ?? 'unknown'); }
+function groupProfitability(input: FinancialInput, key: (item: SaleItem) => string) { const groups = new Map<string, SaleItem[]>(); for (const item of input.items) groups.set(key(item), [...(groups.get(key(item)) ?? []), item]); return [...groups].map(([name, items]) => ({ name, result: contributionMargin({ ...input, items }) })); }
+export function historicalBaseline(periods: FinancialInput[]) { if (!periods.length) return null; const values = periods.map((p) => D(netSales(p).value)); return fmt(values.reduce((a, v) => a.plus(v), D(0)).div(values.length)); }
 export type OrderInput = { netAmount: string; discountAmount?: string; refundAmount?: string; deliveryCommission?: string };
-export type DecisionMetrics = { grossSales: string; discounts: string; refunds: string; deliveryCommissions: string; netSales: string; leakage: string; leakageRate: string; priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'; issue: string | null; recommendation: string | null; evidence: string[] };
-
-const cents = (value: string | undefined): bigint => {
-  const normalized = value ?? '0';
-  const [whole, fraction = ''] = normalized.trim().split('.');
-  const sign = whole.startsWith('-') ? -1n : 1n;
-  const absoluteWhole = whole.replace('-', '') || '0';
-  return sign * (BigInt(absoluteWhole) * 100n + BigInt((fraction + '00').slice(0, 2)));
-};
-const money = (value: bigint) => `${value < 0n ? '-' : ''}${(value < 0n ? -value : value) / 100n}.${((value < 0n ? -value : value) % 100n).toString().padStart(2, '0')}`;
-
-/** Deterministic, dependency-free financial decision engine. It never calls an AI provider. */
-export function calculateDecision(orders: OrderInput[]): DecisionMetrics {
-  const gross = orders.reduce((sum, order) => sum + cents(order.netAmount), 0n);
-  const discounts = orders.reduce((sum, order) => sum + cents(order.discountAmount), 0n);
-  const refunds = orders.reduce((sum, order) => sum + cents(order.refundAmount), 0n);
-  const commissions = orders.reduce((sum, order) => sum + cents(order.deliveryCommission), 0n);
-  const leakage = discounts + refunds + commissions;
-  const net = gross - leakage;
-  const leakageRate = gross === 0n ? 0 : Number((leakage * 10000n) / gross) / 100;
-  const priority = leakageRate >= 15 ? 'CRITICAL' : leakageRate >= 8 ? 'HIGH' : leakageRate >= 3 ? 'MEDIUM' : 'LOW';
-  const issue = leakageRate >= 3 ? 'Revenue leakage detected' : null;
-  const recommendation = leakageRate >= 3 ? 'Review discounts, refunds, and delivery commission rules this week.' : null;
-  return { grossSales: money(gross), discounts: money(discounts), refunds: money(refunds), deliveryCommissions: money(commissions), netSales: money(net), leakage: money(leakage), leakageRate: `${leakageRate.toFixed(2)}%`, priority, issue, recommendation, evidence: [`${orders.length} orders evaluated`, `Leakage total: ${money(leakage)}`, `Leakage rate: ${leakageRate.toFixed(2)}%`] };
+export function calculateDecision(orders: OrderInput[]) { const input: FinancialInput = { items: orders.map((o) => ({ quantity: '1', grossAmount: o.netAmount, foodCost: '0', packagingCost: '0', currency: 'CNY' })), discounts: orders.map((o) => o.discountAmount ?? '0'), refunds: orders.map((o) => o.refundAmount ?? '0'), deliveryCommissions: orders.map((o) => o.deliveryCommission ?? '0'), scope: { currency: 'CNY' } }; const leakage = sum(input.discounts).plus(sum(input.refunds)).plus(sum(input.deliveryCommissions)); const gross = D(grossSales(input).value); const rate = gross.isZero() ? D(0) : leakage.div(gross).mul(100); return { grossSales: fmt(gross), discounts: fmt(sum(input.discounts)), refunds: fmt(sum(input.refunds)), deliveryCommissions: fmt(sum(input.deliveryCommissions)), netSales: fmt(D(netSales(input).value)), leakage: fmt(leakage), leakageRate: `${fmt(rate)}%`, priority: rate.gte(15) ? 'CRITICAL' : rate.gte(8) ? 'HIGH' : rate.gte(3) ? 'MEDIUM' : 'LOW', issue: rate.gte(3) ? 'Revenue leakage detected' : null, recommendation: rate.gte(3) ? 'Review discounts, refunds, and delivery commission rules this week.' : null, evidence: [`${orders.length} orders evaluated`] };
 }
