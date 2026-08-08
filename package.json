@@ -2,7 +2,7 @@
   "name": "ai-restaurant-manager",
   "private": true,
   "version": "1.0.0",
-  "workspaces": ["server", "web"],
+  "workspaces": ["02-backend/server", "03-frontend/web"],
   "scripts": {
     "dev": "concurrently -n api,web -c cyan,magenta \"npm run dev -w server\" \"npm run dev -w web\"",
     "build": "npm run build -w web",

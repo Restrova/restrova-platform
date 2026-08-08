@@ -18,31 +18,33 @@ Important: the built-in assistant is rules-based. It can analyze connected resta
 
 ## Architecture
 
-- `web/`: React + Vite chat workspace and live operations sidebar
-- `server/`: Express REST API, JWT authentication, SQLite persistence, built-in assistant logic
-- Tool implementations are pure restaurant-scoped functions in `server/src/tools.js`
+- `02-backend/server/`: Express REST API, JWT authentication, SQLite persistence, built-in assistant logic
+- `03-frontend/web/`: React + Vite chat workspace, routes, shell, localization, and UI
+- `04-data-ai/evals/`: assistant behavior evaluation dataset and runner
+- `05-devops-qa/`: Dockerfile, docs, GitHub templates, and QA/deployment ownership notes
+- Tool implementations are pure restaurant-scoped functions in `02-backend/server/src/tools.js`
 - Every operational query is constrained by the authenticated organization, restaurant, role, and branch scope.
 
 ## Team sections
 
-The repository is organized for a multi-person team without moving production source paths:
+The repository is physically organized for a multi-person team:
 
 | Section | Owner role | Start here |
 | --- | --- | --- |
-| Backend | مطور Backend | [`team/backend/README.md`](team/backend/README.md) |
-| Frontend | مطور Frontend | [`team/frontend/README.md`](team/frontend/README.md) |
-| Data and AI | مهندس AI وData | [`team/data-ai/README.md`](team/data-ai/README.md) |
-| DevOps and QA | مهندس QA وDevOps | [`team/devops-qa/README.md`](team/devops-qa/README.md) |
+| Backend | مطور Backend | [`02-backend/README.md`](02-backend/README.md) |
+| Frontend | مطور Frontend | [`03-frontend/README.md`](03-frontend/README.md) |
+| Data and AI | مهندس AI وData | [`04-data-ai/README.md`](04-data-ai/README.md) |
+| DevOps and QA | مهندس QA وDevOps | [`05-devops-qa/README.md`](05-devops-qa/README.md) |
 
-See [`docs/team-ownership.md`](docs/team-ownership.md) for the full ownership map and handoff checklist.
+See [`05-devops-qa/docs/team-ownership.md`](05-devops-qa/docs/team-ownership.md) for the full ownership map and handoff checklist.
 
 ## MVP planning docs
 
 Before adding the next database or UI feature, start with these docs:
 
-- [`docs/repository-audit.md`](docs/repository-audit.md): current implementation audit and gaps.
-- [`docs/mvp-scope.md`](docs/mvp-scope.md): frozen MVP scope for a Yemeni restaurant in China.
-- [`docs/acceptance-tests.md`](docs/acceptance-tests.md): task-by-task acceptance tests and readiness format.
+- [`05-devops-qa/docs/repository-audit.md`](05-devops-qa/docs/repository-audit.md): current implementation audit and gaps.
+- [`05-devops-qa/docs/mvp-scope.md`](05-devops-qa/docs/mvp-scope.md): frozen MVP scope for a Yemeni restaurant in China.
+- [`05-devops-qa/docs/acceptance-tests.md`](05-devops-qa/docs/acceptance-tests.md): task-by-task acceptance tests and readiness format.
 
 The next implementation task is Task 1 only: account registration, organization, restaurant, branches, roles, and user management.
 
@@ -90,7 +92,7 @@ After each assistant response, the owner can approve it or provide a corrected m
 
 ## Evaluation dataset
 
-`server/evals/dataset.js` contains 88 reviewed Arabic and English scenarios covering busy/quiet days, menu profitability, low inventory, missing data, refund anomalies, staffing decisions, broad manager questions, real-data setup questions, general manager advice, knowledge-grounded answers, language capability questions, and actions requiring confirmation.
+`04-data-ai/evals/dataset.js` contains reviewed Arabic and English scenarios covering busy/quiet days, menu profitability, low inventory, missing data, refund anomalies, staffing decisions, broad manager questions, real-data setup questions, general manager advice, knowledge-grounded answers, language capability questions, and actions requiring confirmation.
 
 Run it after every prompt, model, or tool change:
 
@@ -121,7 +123,7 @@ The recommended production workflow is:
 1. Import private restaurant books, SOPs, recipes, and training manuals into the knowledge base.
 2. Import permitted open-source guidance, such as MIT-licensed conversational AI examples, as separate knowledge documents.
 3. Ask the owner/manager to approve or correct real assistant answers in the feedback panel.
-4. Add the best corrected situations to `server/evals/dataset.js`.
+4. Add the best corrected situations to `04-data-ai/evals/dataset.js`.
 5. Run `npm run eval -w server` after every prompt, tool, or model change.
 
 This trains behavior safely through retrieval, expert feedback, and regression tests. Do not commit copyrighted book text to GitHub; keep extracted files private and import them only into the deployed database you control.
@@ -140,7 +142,7 @@ During setup, no AI provider key is needed. `/api/health` reports the non-secret
 
 ### Optional OpenAI model mode
 
-OpenAI calls are made only from `server/src/ai.js`. Never put an OpenAI key in frontend JavaScript, `VITE_*` variables, GitHub, screenshots, logs, or API responses.
+OpenAI calls are made only from `02-backend/server/src/ai.js`. Never put an OpenAI key in frontend JavaScript, `VITE_*` variables, GitHub, screenshots, logs, or API responses.
 
 Supported backend environment variables:
 
@@ -161,7 +163,7 @@ Runtime behavior:
 
 ### Railway alternative
 
-The included `Dockerfile` and `railway.json` also support deployment on Railway:
+The included `05-devops-qa/Dockerfile` and root `railway.json` also support deployment on Railway:
 
 1. Create a Railway project and choose **Deploy from GitHub repo**.
 2. Select `sami124-coder/AI-restaurant-`.

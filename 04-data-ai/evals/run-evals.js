@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
-import { db } from "../src/db.js";
-import { demoReply, inferTools, SYSTEM_PROMPT } from "../src/ai.js";
+import { db } from "../../02-backend/server/src/db.js";
+import { demoReply, inferTools, SYSTEM_PROMPT } from "../../02-backend/server/src/ai.js";
 import { evaluationDataset } from "./dataset.js";
 
 const restaurantId = db.prepare("SELECT id FROM restaurants ORDER BY id LIMIT 1").get().id;

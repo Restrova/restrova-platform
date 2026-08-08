@@ -364,7 +364,7 @@ app.get("/api/training/export", auth, (req, res) => {
 });
 if (process.env.NODE_ENV === "production") {
   const currentDir = path.dirname(fileURLToPath(import.meta.url));
-  const webDist = path.resolve(currentDir, "../../web/dist");
+  const webDist = path.resolve(currentDir, "../../../03-frontend/web/dist");
   app.use(express.static(webDist));
   app.get("/{*path}", (req, res, next) => {
     if (req.path.startsWith("/api/")) return next();

@@ -2,20 +2,20 @@
 # Do not enable this file until every placeholder is replaced.
 
 # Backend developer — مطور Backend
-/server/ @your-backend-owner
+/02-backend/server/ @your-backend-owner
 
 # Frontend developer — مطور Frontend
-/web/ @your-frontend-owner
+/03-frontend/web/ @your-frontend-owner
 
 # Data/AI engineer — مهندس AI وData
-/server/src/ai.js @your-ai-data-owner
-/server/src/tools.js @your-ai-data-owner
-/server/evals/ @your-ai-data-owner
+/02-backend/server/src/ai.js @your-ai-data-owner
+/02-backend/server/src/tools.js @your-ai-data-owner
+/04-data-ai/evals/ @your-ai-data-owner
 /data/ @your-ai-data-owner
 /.tmp-knowledge/ @your-ai-data-owner
 
 # DevOps and QA engineer — مهندس QA وDevOps
-/Dockerfile @your-devops-qa-owner
+/05-devops-qa/Dockerfile @your-devops-qa-owner
 /railway.json @your-devops-qa-owner
 /render.yaml @your-devops-qa-owner
 /package.json @your-devops-qa-owner
@@ -23,5 +23,4 @@
 /.env.example @your-devops-qa-owner
 
 # Documentation is shared unless your team wants stricter ownership.
-/docs/ @your-devops-qa-owner
-/team/ @your-devops-qa-owner
+/05-devops-qa/docs/ @your-devops-qa-owner

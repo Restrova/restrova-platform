@@ -3,8 +3,8 @@ FROM node:22-bookworm-slim
 WORKDIR /app
 
 COPY package.json ./
-COPY server/package.json ./server/package.json
-COPY web/package.json ./web/package.json
+COPY 02-backend/server/package.json ./02-backend/server/package.json
+COPY 03-frontend/web/package.json ./03-frontend/web/package.json
 RUN npm install
 
 COPY . .
@@ -18,4 +18,3 @@ RUN mkdir -p /data
 
 EXPOSE 3000
 CMD ["npm", "start"]
-

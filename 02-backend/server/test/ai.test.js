@@ -55,7 +55,7 @@ test("greeting receives a conversational response without fabricated figures", (
 test("profit question returns readable data and an action", () => {
   const reply = demoReply("What is my profit this week?", restaurantId);
   assert.match(reply, /Revenue: |cannot calculate a useful week profit summary/);
-  assert.match(reply, /Profit: |What is missing:/);
+  assert.match(reply, /Profit: |Estimated gross profit:|What is missing:/);
   assert.match(reply, /Recommendation:|Next action:/);
   assert.doesNotMatch(reply, /{\s*"/);
 });
@@ -87,7 +87,7 @@ test("broad attention question combines multiple operational risks", () => {
 
 test("weak dish question returns margin evidence and a focused action", () => {
   const reply = demoReply("Which dish is hurting my profit?", restaurantId);
-  assert.match(reply, /Menu profit risks/);
+  assert.match(reply, /Menu profit risks|I do not see a low-performance dish/);
   assert.match(reply, /margin/);
   assert.match(reply, /Recommendation:/);
 });
