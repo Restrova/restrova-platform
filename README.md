@@ -23,6 +23,19 @@ Important: the built-in assistant is rules-based. It can analyze connected resta
 - Tool implementations are pure restaurant-scoped functions in `server/src/tools.js`
 - Every operational query is constrained by the authenticated organization, restaurant, role, and branch scope.
 
+## Team sections
+
+The repository is organized for a multi-person team without moving production source paths:
+
+| Section | Owner role | Start here |
+| --- | --- | --- |
+| Backend | مطور Backend | [`team/backend/README.md`](team/backend/README.md) |
+| Frontend | مطور Frontend | [`team/frontend/README.md`](team/frontend/README.md) |
+| Data and AI | مهندس AI وData | [`team/data-ai/README.md`](team/data-ai/README.md) |
+| DevOps and QA | مهندس QA وDevOps | [`team/devops-qa/README.md`](team/devops-qa/README.md) |
+
+See [`docs/team-ownership.md`](docs/team-ownership.md) for the full ownership map and handoff checklist.
+
 ## MVP planning docs
 
 Before adding the next database or UI feature, start with these docs:

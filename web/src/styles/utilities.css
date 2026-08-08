@@ -1,0 +1,96 @@
+.sr-only {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: fixed;
+  inset-block-start: var(--space-3);
+  inset-inline-start: var(--space-3);
+  z-index: var(--z-toast);
+  transform: translateY(-150%);
+  border-radius: var(--radius-md);
+  background: var(--color-primary);
+  color: var(--color-text-inverse);
+  padding: var(--space-2) var(--space-4);
+  text-decoration: none;
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+.route-state {
+  max-inline-size: 48rem;
+  margin-inline: auto;
+  padding: var(--space-12) var(--space-6);
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  border: 1px solid var(--color-info-border);
+  border-radius: var(--radius-full);
+  background: var(--color-info-soft);
+  color: var(--color-info);
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}
+
+.status-pill.danger {
+  border-color: var(--color-danger-border);
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+}
+
+.text-page-title {
+  font-size: clamp(var(--font-size-3xl), 5vw, var(--font-size-4xl));
+  line-height: var(--line-height-heading);
+  font-weight: var(--font-weight-bold);
+}
+
+.text-section-title {
+  font-size: var(--font-size-2xl);
+  line-height: var(--line-height-heading);
+  font-weight: var(--font-weight-bold);
+}
+
+.text-card-title {
+  font-size: var(--font-size-lg);
+  line-height: var(--line-height-heading);
+  font-weight: var(--font-weight-semibold);
+}
+
+.text-body {
+  font-size: var(--font-size-md);
+  line-height: var(--line-height-body);
+}
+
+.text-supporting {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.text-label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}
+
+.text-caption {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+}
+
+.text-numeric {
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--font-weight-bold);
+}
