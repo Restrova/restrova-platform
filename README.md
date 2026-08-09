@@ -6,8 +6,9 @@ The AI decision layer for restaurant owners. Ask for a daily summary, find menu 
 
 ```bash
 cp .env.example .env
-npm install
-npm run dev
+corepack enable
+pnpm install
+pnpm dev
 ```
 
 Open `http://localhost:5173`, choose **Create restaurant**, and create your own owner account, organization, restaurant, and first branch.
@@ -29,11 +30,11 @@ Important: the built-in assistant is rules-based. It can analyze connected resta
 
 The repository is physically organized for a multi-person team:
 
-| Section | Owner role | Start here |
-| --- | --- | --- |
-| Backend | مطور Backend | [`02-backend/README.md`](02-backend/README.md) |
-| Frontend | مطور Frontend | [`03-frontend/README.md`](03-frontend/README.md) |
-| Data and AI | مهندس AI وData | [`04-data-ai/README.md`](04-data-ai/README.md) |
+| Section       | Owner role       | Start here                                         |
+| ------------- | ---------------- | -------------------------------------------------- |
+| Backend       | مطور Backend     | [`02-backend/README.md`](02-backend/README.md)     |
+| Frontend      | مطور Frontend    | [`03-frontend/README.md`](03-frontend/README.md)   |
+| Data and AI   | مهندس AI وData   | [`04-data-ai/README.md`](04-data-ai/README.md)     |
 | DevOps and QA | مهندس QA وDevOps | [`05-devops-qa/README.md`](05-devops-qa/README.md) |
 
 See [`05-devops-qa/docs/team-ownership.md`](05-devops-qa/docs/team-ownership.md) for the full ownership map and handoff checklist.
@@ -65,13 +66,13 @@ The next implementation task is Task 1 only: account registration, organization,
 
 Use **Connect real data** inside the app to upload CSV exports. Column names:
 
-| Data type | Required columns | Optional columns |
-| --- | --- | --- |
-| Orders | `created_at,total_price,cost` | `items` (JSON), or `item_name,quantity`, `discount`, `commission`, `other_cost`, `source_key` |
-| Refunds | `amount,created_at` | `order_id,reason,source_key` |
-| Menu | `name,price,cost` | `active` |
-| Inventory | `item_name,quantity,threshold` | — |
-| Staff shifts | `employee_name,role,start_at,end_at,hourly_rate` | — |
+| Data type    | Required columns                                 | Optional columns                                                                              |
+| ------------ | ------------------------------------------------ | --------------------------------------------------------------------------------------------- |
+| Orders       | `created_at,total_price,cost`                    | `items` (JSON), or `item_name,quantity`, `discount`, `commission`, `other_cost`, `source_key` |
+| Refunds      | `amount,created_at`                              | `order_id,reason,source_key`                                                                  |
+| Menu         | `name,price,cost`                                | `active`                                                                                      |
+| Inventory    | `item_name,quantity,threshold`                   | —                                                                                             |
+| Staff shifts | `employee_name,role,start_at,end_at,hourly_rate` | —                                                                                             |
 
 Dates should be ISO-compatible, for example `2026-07-04T19:00:00Z`. Imports must be previewed before confirmation. Orders and refunds skip duplicates by `source_key` or row fingerprint. Inventory is branch-scoped. Orders with `quantity > 1` store item unit price/cost correctly so dish revenue is not doubled.
 
@@ -97,7 +98,7 @@ After each assistant response, the owner can approve it or provide a corrected m
 Run it after every prompt, model, or tool change:
 
 ```bash
-npm run eval -w server
+pnpm --filter server eval
 ```
 
 The normal server test command also runs the evaluation suite.
@@ -124,7 +125,7 @@ The recommended production workflow is:
 2. Import permitted open-source guidance, such as MIT-licensed conversational AI examples, as separate knowledge documents.
 3. Ask the owner/manager to approve or correct real assistant answers in the feedback panel.
 4. Add the best corrected situations to `04-data-ai/evals/dataset.js`.
-5. Run `npm run eval -w server` after every prompt, tool, or model change.
+5. Run `pnpm --filter server eval` after every prompt, tool, or model change.
 
 This trains behavior safely through retrieval, expert feedback, and regression tests. Do not commit copyrighted book text to GitHub; keep extracted files private and import them only into the deployed database you control.
 
@@ -146,13 +147,13 @@ OpenAI calls are made only from `02-backend/server/src/ai.js`. Never put an Open
 
 Supported backend environment variables:
 
-| Variable | Purpose |
-| --- | --- |
-| `OPENAI_API_KEY` | Enables OpenAI mode when present. Leave empty for deterministic demo mode. |
-| `OPENAI_MODEL` | Model name used by the Responses API. Defaults to `gpt-5.6`. |
-| `OPENAI_REASONING_EFFORT` | Optional Responses API reasoning effort. |
-| `OPENAI_TEXT_VERBOSITY` | Optional Responses API text verbosity. |
-| `OPENAI_MAX_OUTPUT_TOKENS` | Optional response length cap. |
+| Variable                   | Purpose                                                                    |
+| -------------------------- | -------------------------------------------------------------------------- |
+| `OPENAI_API_KEY`           | Enables OpenAI mode when present. Leave empty for deterministic demo mode. |
+| `OPENAI_MODEL`             | Model name used by the Responses API. Defaults to `gpt-5.6`.               |
+| `OPENAI_REASONING_EFFORT`  | Optional Responses API reasoning effort.                                   |
+| `OPENAI_TEXT_VERBOSITY`    | Optional Responses API text verbosity.                                     |
+| `OPENAI_MAX_OUTPUT_TOKENS` | Optional response length cap.                                              |
 
 Runtime behavior:
 

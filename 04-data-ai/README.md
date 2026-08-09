@@ -22,6 +22,6 @@ This section is owned by the Data/AI engineer.
 From the repository root:
 
 ```bash
-npm run eval -w server
-npm run test -w server
+pnpm --filter server eval
+pnpm --filter server test
 ```

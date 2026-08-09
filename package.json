@@ -2,15 +2,30 @@
   "name": "ai-restaurant-manager",
   "private": true,
   "version": "1.0.0",
-  "workspaces": ["02-backend/server", "03-frontend/web"],
+  "packageManager": "pnpm@11.17.0",
+  "engines": {
+    "node": ">=22",
+    "pnpm": ">=11"
+  },
+  "workspaces": [
+    "02-backend/server",
+    "03-frontend/web"
+  ],
   "scripts": {
-    "dev": "concurrently -n api,web -c cyan,magenta \"npm run dev -w server\" \"npm run dev -w web\"",
-    "build": "npm run build -w web",
-    "start": "npm run start -w server",
-    "test": "npm run test -w server",
-    "lint": "pnpm --filter web lint"
+    "dev": "concurrently -n api,web -c cyan,magenta \"pnpm --filter server dev\" \"pnpm --filter web dev\"",
+    "start": "pnpm --filter server start",
+    "lint": "pnpm --filter web lint",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "test": "pnpm test:unit && pnpm test:integration",
+    "test:unit": "pnpm --filter web test",
+    "test:integration": "pnpm --filter server test",
+    "build": "pnpm --filter web build",
+    "validate": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm test && pnpm build"
   },
   "devDependencies": {
-    "concurrently": "^9.2.1"
+    "concurrently": "^9.2.1",
+    "prettier": "^3.9.6"
   }
 }

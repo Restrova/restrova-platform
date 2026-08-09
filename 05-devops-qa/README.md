@@ -24,6 +24,9 @@ From the repository root:
 
 ```bash
 pnpm lint
+pnpm format:check
+pnpm typecheck
 pnpm test
 pnpm build
+pnpm validate
 ```

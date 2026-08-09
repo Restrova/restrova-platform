@@ -6,7 +6,7 @@ This audit records the current state before expanding the MVP. It follows the re
 
 ## Current architecture
 
-- Monorepo with npm workspaces:
+- Monorepo with pnpm workspaces:
   - `02-backend/server`: Express API, SQLite via `better-sqlite3`, JWT auth, OpenAI Responses API integration.
   - `03-frontend/web`: React + Vite single-page app.
 - Production serving:
@@ -210,13 +210,13 @@ Existing tests cover:
 Current test command:
 
 ```bash
-npm run test -w server
+pnpm --filter server test
 ```
 
 Existing frontend build command:
 
 ```bash
-npm run build -w web
+pnpm --filter web build
 ```
 
 ## Recommended next implementation task

@@ -20,6 +20,6 @@ This section is owned by the backend developer.
 From the repository root:
 
 ```bash
-npm run test -w server
-npm run eval -w server
+pnpm --filter server test
+pnpm --filter server eval
 ```
