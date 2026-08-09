@@ -1,0 +1,61 @@
+version: 2
+
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: Asia/Shanghai
+    target-branch: main
+    open-pull-requests-limit: 5
+    versioning-strategy: increase-if-necessary
+    labels:
+      - dependencies
+      - pnpm
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      frontend:
+        patterns:
+          - react
+          - react-dom
+          - react-router-dom
+          - "@tanstack/*"
+          - "@vitejs/*"
+          - vite
+          - vitest
+      backend:
+        patterns:
+          - express
+          - helmet
+          - cors
+          - jsonwebtoken
+          - zod
+          - better-sqlite3
+          - bcryptjs
+      tooling:
+        patterns:
+          - eslint
+          - prettier
+          - concurrently
+          - "@eslint/*"
+          - eslint-plugin-*
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:30"
+      timezone: Asia/Shanghai
+    target-branch: main
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - github-actions
+    commit-message:
+      prefix: chore
+      include: scope
