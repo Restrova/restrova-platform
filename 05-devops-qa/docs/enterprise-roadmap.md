@@ -1,111 +1,97 @@
 # Enterprise readiness roadmap
 
 Date: 2026-08-09  
-Basis: `05-devops-qa/docs/enterprise-readiness-audit.md` at current HEAD.
+Basis: refreshed `05-devops-qa/docs/enterprise-readiness-audit.md` at commit `fb1ed18`.
 
-This roadmap preserves the team-section structure:
+This roadmap contains only unresolved or partially resolved findings after the repository foundation work. It intentionally does not include resolved foundation items ER-019, ER-020, ER-031, and ER-035.
 
-- Backend developer: `02-backend/`
-- Frontend developer: `03-frontend/`
-- Data/AI engineer: `04-data-ai/` plus AI/tool modules in backend
-- DevOps/QA engineer: `05-devops-qa/` and root deployment/tooling files
+Do not reorganize the repository and do not introduce microservices. Keep the current monorepo.
 
-## Phase 0: stop data-loss and unsafe-production risks
+## Phase 1: P0 data-loss/security blockers
 
-Goal: make it safe to test with real pilot data without silent data loss.
+Goal: make it safe to store real pilot restaurant data.
 
-| Workstream | Owner | Deliverables | Exit criteria |
+| Finding | Owner | Deliverables | Exit criteria |
 | --- | --- | --- | --- |
-| Durable database | Backend + DevOps/QA | Decide PostgreSQL vs durable SQLite volume; document supported production mode; enforce startup durability checks. | A fresh deployment cannot start in unsafe production storage mode. |
-| Backups and restore | DevOps/QA | Backup schedule, retention policy, restore runbook, restore drill script. | A backup can be restored into a staging environment and verified. |
-| Migration system | Backend | Versioned migration framework replacing ad-hoc `ensureColumn()` changes. | Schema changes are reviewed, repeatable, and tracked by migration version. |
-| Secret exposure response | DevOps/QA | Rotate any key that was ever pasted into screenshots or chat; document secret rotation steps. | No exposed key remains active. |
+| ER-001 | Backend + DevOps/QA | Supported production storage mode; durable SQLite volume enforcement or PostgreSQL plan; production startup/deployment safety check. | Production cannot run with an unsafe ephemeral database path. |
+| ER-002 | DevOps/QA | Backup script/process, restore script/process, retention policy, RPO/RTO, restore verification command. | A backup can be restored into a clean environment and verified. |
 
-Recommended order:
+Recommended next commit: P0 database durability plus backup/recovery only.
 
-1. Rotate any exposed OpenAI/API credentials.
-2. Define production database target.
-3. Add backup/restore process.
-4. Add formal migrations before the next schema change.
+## Phase 2: P1 tenant/auth/database correctness
 
-## Phase 1: real-customer access control
+Goal: stop incorrect tenant/branch/user context and high-risk auth/data correctness gaps.
 
-Goal: make organization, restaurant, branch and role boundaries reliable.
-
-| Workstream | Owner | Deliverables | Exit criteria |
+| Finding | Owner | Deliverables | Exit criteria |
 | --- | --- | --- | --- |
-| Explicit tenant selection | Backend + Frontend | Login returns available memberships when multiple exist; user selects organization/restaurant explicitly. | A multi-organization user cannot be silently placed in the wrong restaurant. |
-| Branch-scoped API contract | Backend + Frontend | Every branch-aware endpoint accepts and validates selected `branchId`; frontend query keys include org/restaurant/branch. | Switching branch in UI changes the data scope everywhere. |
-| Role hardening | Backend | Owner-only training export; knowledge permissions; branch-manager scoped reads/writes. | Viewers cannot export training data or read restricted knowledge. |
-| Session hardening | Backend + Frontend | Server-side sessions or refresh-token rotation, logout revocation, auth rate limits. | Logout invalidates server-side access and brute-force attempts are throttled. |
-| Invite flow | Backend + Frontend | One-time invite token with expiry and first-login password setup. | Temporary plaintext passwords are no longer returned by API. |
+| ER-003 | Backend | Formal database migration framework and migration version table. | Schema changes no longer run as unversioned boot-time mutations. |
+| ER-004 | Backend + Frontend | Explicit organization/restaurant selection for multi-membership users. | Login cannot silently select the wrong restaurant. |
+| ER-005 | Backend + Frontend | Branch-aware request contract and shared server-side scope resolver. | Selected frontend branch matches backend tool/dashboard/chat scope. |
+| ER-006 | Backend | Correct restaurant-scoped vs branch-scoped data-status counting. | `/api/data/status` cannot query nonexistent `menu_items.branch_id`. |
+| ER-007 | Backend | Owner-only or AI-admin-only training export. | Viewers/branch managers cannot export training feedback. |
+| ER-008 | Backend + Data/AI | Persist validated `correctTools` and server-side tool trace metadata. | Feedback exports include accurate reviewed tool labels. |
+| ER-009 | Backend + Data/AI | Knowledge document visibility, role/branch scope, deletion and audit. | Restricted knowledge is not exposed to unauthorized users. |
+| ER-010 | Backend + Frontend | One-time invitation tokens and first-login password setup. | Invite API no longer returns plaintext temporary passwords. |
+| ER-011 | Backend + Frontend | Revocable sessions or secure refresh-token flow; logout invalidation; safer token storage. | Stolen/logged-out sessions can be invalidated server-side. |
+| ER-012 | Backend | Auth rate limits, lockout/backoff, security audit logs. | Brute-force attempts are throttled and observable. |
+| ER-016 | Backend | Decimal/minor-unit money model and financial coverage labels. | Financial answers cannot be confused with accounting-grade profit. |
 
-## Phase 2: enterprise-safe data ingestion and financial engine
+## Phase 3: P1 production reliability
 
-Goal: make restaurant data imports auditable and financial answers defensible.
+Goal: make production operations auditable and safer before real customers.
 
-| Workstream | Owner | Deliverables | Exit criteria |
+| Finding | Owner | Deliverables | Exit criteria |
 | --- | --- | --- | --- |
-| Import jobs | Backend + Frontend | Server-side import job, file hash, preview, rejected rows, confirmation token, duplicate report. | User confirms the exact previewed dataset before live writes. |
-| Duplicate safety | Backend | Source keys/fingerprints for staff shifts and other mutable import types. | Re-importing the same file does not double count labor or sales. |
-| Money model | Backend | Decimal/minor-unit calculations; contribution margin and estimated operating profit separated. | Reports disclose calculation coverage and avoid misleading labels. |
-| Data quality model | Backend + Data/AI | Missing data coverage scores by branch and report period. | AI answers name missing data precisely before giving financial conclusions. |
+| ER-013 | Backend + DevOps/QA | Structured sanitized error logging with request IDs. | Logs no longer emit raw unhandled error objects. |
+| ER-014 | Backend + Frontend | Server-side import jobs, file hash, preview token, rejected rows, immutable audit record. | User confirms the exact previewed data before live writes. |
+| ER-015 | Backend | Duplicate protection for staff shifts and clearly defined menu economics scope. | Re-importing files cannot inflate labor; menu scope is explicit. |
+| ER-017 | Backend + Data/AI | Auditable AI tool trace and tool-result citations. | Numeric AI answers can be traced to exact tool output. |
+| ER-018 | Backend + Data/AI + Security | Tenant-level AI consent/settings, redaction policy, provider disclosure. | External AI processing is explicitly governed per tenant. |
+| ER-021 | Backend + DevOps/QA | PostgreSQL migration plan or production scaling guardrails; import/report work separated from request path. | Production database strategy can support customer concurrency safely. |
 
-## Phase 3: AI governance and answer quality
+## Phase 4: P2 maintainability/observability
 
-Goal: make AI answers auditable, grounded and acceptable for business operators.
+Goal: improve maintainability, supportability, and production diagnosis.
 
-| Workstream | Owner | Deliverables | Exit criteria |
+| Finding | Owner | Deliverables | Exit criteria |
 | --- | --- | --- | --- |
-| Tool trace | Data/AI + Backend | Structured tool planner/caller, persisted tool trace, model response metadata. | Every numeric AI answer can be traced to exact tool output. |
-| Provider controls | Data/AI + Backend | Tenant-level OpenAI enable/disable, redaction policy, model allowlist, provider disclosure. | A customer can decide whether external AI processing is allowed. |
-| Action approval | Backend + Frontend | Pending actions include exact item, branch, user, expiry, preview diff and approval UI. | AI cannot execute or imply changes without exact owner confirmation. |
-| Evaluation lifecycle | Data/AI + QA | Versioned eval dataset, regression thresholds, Arabic/English quality tests in CI. | Prompt/tool changes cannot merge if eval quality drops. |
-| Knowledge governance | Data/AI + Backend | Document visibility, delete, re-index, branch scope, source citations. | Knowledge answers cite approved sources and respect role/branch access. |
+| ER-022 | Frontend | Split legacy workspace into feature modules and route-level pages. | Core frontend behavior is testable by feature area. |
+| ER-023 | Frontend | Tenant-scoped storage cleanup and query keys. | Logging out or switching users cannot show stale tenant state. |
+| ER-024 | Frontend + Data/AI | UTF-8 normalization and Arabic/Chinese encoding tests. | Arabic/Chinese labels and assistant text render correctly. |
+| ER-025 | Backend + Frontend | API versioning, OpenAPI, typed DTOs, contract tests. | Frontend/backend API changes are contract-checked. |
+| ER-026 | Backend + Frontend | Centralized validation schemas and stable problem codes. | Client/server validation rules stay aligned. |
+| ER-027 | Backend + Frontend | Standard API error contract with `code`, `message`, `requestId`, and details. | Clients can handle errors reliably. |
+| ER-028 | Backend + DevOps/QA | Request logs, metrics, traces, uptime checks, SLOs and alerts. | Production incidents are visible and diagnosable. |
+| ER-029 | DevOps/QA | Multi-stage Docker build, non-root runtime, production dependency pruning, healthcheck. | Container image meets baseline production hardening. |
+| ER-030 | Backend + DevOps/QA | Production env schema/allowlist and protected debug output. | Misconfiguration fails fast without leaking deployment detail. |
+| ER-032 | Backend + QA | Test bootstrap creates isolated DB path and cleans state. | Tests cannot accidentally use local/product data. |
+| ER-033 | Backend | Split `index.js` into routers/controllers/services/policies. | API code is modular without changing monorepo shape. |
+| ER-034 | DevOps/QA | Mark stale historical docs or move them to archive. | Team members can distinguish current guidance from historical audit docs. |
+| ER-038 | DevOps/QA | Dependency scanning and automated update workflow. | Dependency vulnerabilities are surfaced automatically. |
 
-## Phase 4: observability, CI/CD and release readiness
+## Phase 5: P3 scalability
 
-Goal: make changes safely deployable by a team.
+Goal: prepare for larger restaurants, more branches, and heavier data.
 
-| Workstream | Owner | Deliverables | Exit criteria |
+| Finding | Owner | Deliverables | Exit criteria |
 | --- | --- | --- | --- |
-| CI pipeline | DevOps/QA | GitHub Actions for install, lint, frontend tests, backend tests/evals, build, audit. | PRs cannot merge without green checks. |
-| CODEOWNERS | DevOps/QA + Leads | Activate `.github/CODEOWNERS` from the template. | Backend/frontend/data/devops owners review their sections. |
-| Docker hardening | DevOps/QA | pnpm frozen install, multi-stage image, non-root runtime, healthcheck. | Production image is reproducible and healthchecked. |
-| Observability | Backend + DevOps/QA | Request IDs, structured logs, metrics, uptime checks, alerts. | Operators can identify error rate, latency, AI failures and import failures. |
-| Release process | DevOps/QA | Staging environment, deployment checklist, rollback plan. | Every production deploy has a verified staging build and rollback path. |
+| ER-036 | Backend + DevOps/QA | Background jobs for imports, reports, knowledge indexing, and heavy analytics. | Large work no longer blocks web requests. |
+| ER-037 | Backend + Data/AI | Full-text/vector search and normalized order-item fact tables. | Knowledge and analytics remain fast at larger data volume. |
 
-## Phase 5: scale and maintainability
+## Current validation gate
 
-Goal: support larger restaurants, more branches and heavier data.
+Every merge should pass:
 
-| Workstream | Owner | Deliverables | Exit criteria |
-| --- | --- | --- | --- |
-| PostgreSQL analytics model | Backend | Normalized order item fact tables, indexed branch/date/channel dimensions. | Menu/profit reports do not parse JSON order items at read time. |
-| Background jobs | Backend + DevOps/QA | Queue for imports, reports, knowledge indexing and heavy analytics. | Large imports no longer block web requests. |
-| Search upgrade | Data/AI | Full-text or vector retrieval with permissions and citations. | Knowledge search remains fast and relevant at large document volume. |
-| Frontend feature modularization | Frontend | Replace legacy workspace with route-level feature modules and shared query hooks. | Dashboard/imports/assistant/report pages can be owned independently. |
-| API contracts | Backend + Frontend | OpenAPI, generated clients/types, contract tests. | Frontend and backend changes are contract-checked. |
+```bash
+pnpm validate
+```
 
-## Suggested milestone sequence
+Current gate includes:
 
-1. P0 data safety: storage, backups, restore, secret rotation.
-2. P1 tenant/branch/auth: explicit context, branch-scoped APIs, roles, sessions, invites.
-3. P1 import/finance correctness: import jobs, duplicate protection, decimal money.
-4. P1/P2 AI governance: tool traces, consent, redaction, eval CI.
-5. P2 platform readiness: CI, observability, Docker hardening, release workflow.
-6. P3 scale: PostgreSQL analytics, queues, search, API contracts.
-
-## Definition of enterprise-ready beta
-
-The product can be considered ready for a small real-customer beta when:
-
-- Production data is durable and restorable.
-- Migrations are versioned and tested.
-- Multi-tenant and branch isolation pass automated tests.
-- Invite/session/auth flows are hardened.
-- Imports are previewed, confirmed, deduplicated and audited.
-- AI answers include tool traces for numbers and never hide provider failures.
-- CI blocks unsafe merges.
-- A staging deploy and rollback plan exist.
-- Operational logs/metrics can identify production incidents.
+- Frontend lint.
+- Prettier format check.
+- Workspace typecheck hook.
+- Frontend tests.
+- Backend tests.
+- AI evaluation dataset.
+- Frontend production build.
