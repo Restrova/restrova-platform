@@ -1,7 +1,7 @@
 import { executeTool } from "./tools.js";
 import { dataConnectionStatus } from "./dataImport.js";
 
-export const SYSTEM_PROMPT = `You are Restaurant Decision AI, an expert AI restaurant manager assistant. Your job is to answer like ChatGPT, but specialized for restaurants.
+export const SYSTEM_PROMPT = `You are Restrova Decision AI, an expert AI restaurant manager assistant inside Restrova Platform. Your job is to answer like ChatGPT, but specialized for restaurants.
 
 You help restaurant owners, managers, waiters, chefs, and operators with menu planning, food cost control, customer service, complaints, staffing, inventory, reservations, delivery, marketing, daily operations, product setup, and real-data connection questions.
 
@@ -46,9 +46,12 @@ Safety rules:
 - Confirm the result of operational changes.
 - Never imply that a recommendation has been executed when it has not.`;
 
-const money = (value) => new Intl.NumberFormat(undefined, { style: "currency", currency: "CNY", maximumFractionDigits: 2 }).format(Number(value) || 0);
+const money = (value) =>
+  new Intl.NumberFormat(undefined, { style: "currency", currency: "CNY", maximumFractionDigits: 2 }).format(
+    Number(value) || 0
+  );
 const isArabic = (text) => /[\u0600-\u06FF]/.test(text);
-const normalizeScope = (scope) => typeof scope === "object" ? scope : { restaurantId: scope };
+const normalizeScope = (scope) => (typeof scope === "object" ? scope : { restaurantId: scope });
 const DEFAULT_OPENAI_MODEL = "gpt-5.6";
 const OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses";
 
@@ -57,7 +60,7 @@ export function getAiRuntimeStatus() {
   return {
     aiConfigured,
     mode: aiConfigured ? "openai" : "demo",
-    model: aiConfigured ? (process.env.OPENAI_MODEL || DEFAULT_OPENAI_MODEL) : "built-in"
+    model: aiConfigured ? process.env.OPENAI_MODEL || DEFAULT_OPENAI_MODEL : "built-in"
   };
 }
 
@@ -71,7 +74,7 @@ function logAiEvent(event, details = {}) {
     errorType: details.errorType
   };
   const compact = Object.fromEntries(Object.entries(safe).filter(([, value]) => value !== undefined));
-  const line = JSON.stringify({ source: "restaurant-ai", ...compact });
+  const line = JSON.stringify({ source: "restrova-platform", ...compact });
   if (details.success === false || event === "openai_request_failed") console.warn(line);
   else console.info(line);
 }
@@ -86,7 +89,7 @@ function extractResponseText(payload) {
   if (typeof payload?.output_text === "string" && payload.output_text.trim()) return payload.output_text.trim();
   const blocks = Array.isArray(payload?.output) ? payload.output : [];
   return blocks
-    .flatMap((item) => Array.isArray(item.content) ? item.content : [])
+    .flatMap((item) => (Array.isArray(item.content) ? item.content : []))
     .map((content) => content.text || content?.content?.text || "")
     .filter(Boolean)
     .join("\n")
@@ -177,14 +180,22 @@ function formatGeneralManagerAdvice(q) {
   if (!topic) return null;
 
   const responses = {
-    waste: "Direct answer:\nStart by reducing over-prep, not by cutting quality.\n\nWhy:\nMost restaurant waste comes from inaccurate prep levels, weak portion control, and ingredients that are not cross-used across the menu. Without your waste log I cannot give a dollar amount, but the operating logic is clear: measure waste by item, then attack the top two causes.\n\nRecommended steps:\n1. Track waste daily by ingredient for 7 days.\n2. Compare prep quantity with actual sales by daypart.\n3. Set par levels for high-waste items.\n4. Cross-use fragile ingredients in specials before they expire.\n5. Review portion sizes with the kitchen lead.\n\nNext action:\nUpload inventory and sales data, then ask: “Which ingredients are likely causing waste?”",
-    complaints: "Direct answer:\nHandle complaints with speed, ownership, and a visible fix.\n\nWhy:\nThe goal is not only to satisfy one guest; it is to protect repeat business and stop the same issue from spreading across shifts.\n\nRecommended response flow:\n1. Acknowledge the issue without arguing.\n2. Apologize briefly and specifically.\n3. Fix the immediate guest problem.\n4. Record the reason: food quality, wait time, wrong order, cleanliness, or staff attitude.\n5. Review patterns by shift and menu item.\n\nExample:\n“You are right to point that out. I am sorry the experience missed our standard. I will fix this now and also log it so we can stop it happening again.”",
-    marketing: "Direct answer:\nMarket the dishes and moments that already prove demand, not random discounts.\n\nWhy:\nDiscounts can increase traffic while damaging margin. A stronger restaurant strategy is to promote high-margin popular dishes, slow hours, and repeat visits.\n\nRecommended steps:\n1. Pick one hero dish with strong margin.\n2. Create a simple offer for a quiet daypart.\n3. Post short video/photo content around the dish, not the restaurant in general.\n4. Give staff one sentence to recommend it.\n5. Track orders before and after the promotion.\n\nNext action:\nAsk me: “Which dish should I promote?” and I will use menu sales and margin data.",
-    pricing: "Direct answer:\nDo not raise prices evenly across the whole menu. Adjust items based on margin, demand, and customer sensitivity.\n\nWhy:\nA popular high-margin item may not need a change. A low-margin popular item may need a price increase, portion adjustment, or supplier review.\n\nRecommended steps:\n1. Rank dishes by contribution margin.\n2. Identify high-sales / low-margin items first.\n3. Test small increases on items with strong demand.\n4. Improve descriptions before changing price if perceived value is weak.\n5. Review results after one week.\n\nRule of thumb:\nIf the item sells well but margin is weak, fix it before touching the rest of the menu.",
-    training: "Direct answer:\nTrain staff around repeatable service behaviors, not long lectures.\n\nWhy:\nRestaurant training works when it is short, observable, and tied to shift performance.\n\nRecommended steps:\n1. Choose one behavior per week: greeting, upselling, complaint handling, table checks, or closing duties.\n2. Demonstrate the standard in one minute.\n3. Let staff practice the exact phrase or action.\n4. Observe during service.\n5. Give feedback the same day.\n\nExample:\nFor servers: “Recommend one high-margin item naturally: 'If you like something rich, the Lobster Pasta is our best seller tonight.'”",
-    channels: "Direct answer:\nTreat dine-in, reservations, delivery, and takeaway as separate profit channels.\n\nWhy:\nDelivery can increase revenue but hurt profit if packaging, commission, and kitchen timing are not controlled.\n\nRecommended steps:\n1. Track sales and costs by channel.\n2. Limit delivery menus to items that travel well.\n3. Set prep-time rules for busy hours.\n4. Watch refunds and complaints by channel.\n5. Promote pickup when delivery commission is too high.\n\nNext action:\nUpload order data with channel labels, then ask: “Which channel is most profitable?”",
-    startup: "Direct answer:\nBuild the restaurant around unit economics before branding.\n\nWhy:\nA beautiful restaurant fails if rent, labor, food cost, and average check do not work together.\n\nRecommended steps:\n1. Define concept, target customer, and average check.\n2. Estimate rent, labor, food cost, and break-even sales.\n3. Build a small menu with shared ingredients.\n4. Test pricing and portions before launch.\n5. Create daily operating reports from day one.\n\nNext action:\nPrepare estimated menu prices, food costs, rent, staff wages, and expected orders; then I can help build a break-even plan.",
-    improvement: "Direct answer:\nImprove the restaurant by fixing the highest-impact constraint first, not by changing everything at once.\n\nWhy:\nA general manager looks for the bottleneck: weak sales, weak margin, low stock, slow service, poor reviews, or overstaffing. The right answer depends on which constraint is costing the most.\n\nRecommended steps:\n1. Check today’s sales and profit.\n2. Identify weak menu items.\n3. Check low inventory before peak service.\n4. Review staffing against expected demand.\n5. Pick one action for the next shift.\n\nNext action:\nAsk: “What needs my attention today?” and I will prioritize sales, menu profit, and inventory together."
+    waste:
+      "Direct answer:\nStart by reducing over-prep, not by cutting quality.\n\nWhy:\nMost restaurant waste comes from inaccurate prep levels, weak portion control, and ingredients that are not cross-used across the menu. Without your waste log I cannot give a dollar amount, but the operating logic is clear: measure waste by item, then attack the top two causes.\n\nRecommended steps:\n1. Track waste daily by ingredient for 7 days.\n2. Compare prep quantity with actual sales by daypart.\n3. Set par levels for high-waste items.\n4. Cross-use fragile ingredients in specials before they expire.\n5. Review portion sizes with the kitchen lead.\n\nNext action:\nUpload inventory and sales data, then ask: “Which ingredients are likely causing waste?”",
+    complaints:
+      "Direct answer:\nHandle complaints with speed, ownership, and a visible fix.\n\nWhy:\nThe goal is not only to satisfy one guest; it is to protect repeat business and stop the same issue from spreading across shifts.\n\nRecommended response flow:\n1. Acknowledge the issue without arguing.\n2. Apologize briefly and specifically.\n3. Fix the immediate guest problem.\n4. Record the reason: food quality, wait time, wrong order, cleanliness, or staff attitude.\n5. Review patterns by shift and menu item.\n\nExample:\n“You are right to point that out. I am sorry the experience missed our standard. I will fix this now and also log it so we can stop it happening again.”",
+    marketing:
+      "Direct answer:\nMarket the dishes and moments that already prove demand, not random discounts.\n\nWhy:\nDiscounts can increase traffic while damaging margin. A stronger restaurant strategy is to promote high-margin popular dishes, slow hours, and repeat visits.\n\nRecommended steps:\n1. Pick one hero dish with strong margin.\n2. Create a simple offer for a quiet daypart.\n3. Post short video/photo content around the dish, not the restaurant in general.\n4. Give staff one sentence to recommend it.\n5. Track orders before and after the promotion.\n\nNext action:\nAsk me: “Which dish should I promote?” and I will use menu sales and margin data.",
+    pricing:
+      "Direct answer:\nDo not raise prices evenly across the whole menu. Adjust items based on margin, demand, and customer sensitivity.\n\nWhy:\nA popular high-margin item may not need a change. A low-margin popular item may need a price increase, portion adjustment, or supplier review.\n\nRecommended steps:\n1. Rank dishes by contribution margin.\n2. Identify high-sales / low-margin items first.\n3. Test small increases on items with strong demand.\n4. Improve descriptions before changing price if perceived value is weak.\n5. Review results after one week.\n\nRule of thumb:\nIf the item sells well but margin is weak, fix it before touching the rest of the menu.",
+    training:
+      "Direct answer:\nTrain staff around repeatable service behaviors, not long lectures.\n\nWhy:\nRestaurant training works when it is short, observable, and tied to shift performance.\n\nRecommended steps:\n1. Choose one behavior per week: greeting, upselling, complaint handling, table checks, or closing duties.\n2. Demonstrate the standard in one minute.\n3. Let staff practice the exact phrase or action.\n4. Observe during service.\n5. Give feedback the same day.\n\nExample:\nFor servers: “Recommend one high-margin item naturally: 'If you like something rich, the Lobster Pasta is our best seller tonight.'”",
+    channels:
+      "Direct answer:\nTreat dine-in, reservations, delivery, and takeaway as separate profit channels.\n\nWhy:\nDelivery can increase revenue but hurt profit if packaging, commission, and kitchen timing are not controlled.\n\nRecommended steps:\n1. Track sales and costs by channel.\n2. Limit delivery menus to items that travel well.\n3. Set prep-time rules for busy hours.\n4. Watch refunds and complaints by channel.\n5. Promote pickup when delivery commission is too high.\n\nNext action:\nUpload order data with channel labels, then ask: “Which channel is most profitable?”",
+    startup:
+      "Direct answer:\nBuild the restaurant around unit economics before branding.\n\nWhy:\nA beautiful restaurant fails if rent, labor, food cost, and average check do not work together.\n\nRecommended steps:\n1. Define concept, target customer, and average check.\n2. Estimate rent, labor, food cost, and break-even sales.\n3. Build a small menu with shared ingredients.\n4. Test pricing and portions before launch.\n5. Create daily operating reports from day one.\n\nNext action:\nPrepare estimated menu prices, food costs, rent, staff wages, and expected orders; then I can help build a break-even plan.",
+    improvement:
+      "Direct answer:\nImprove the restaurant by fixing the highest-impact constraint first, not by changing everything at once.\n\nWhy:\nA general manager looks for the bottleneck: weak sales, weak margin, low stock, slow service, poor reviews, or overstaffing. The right answer depends on which constraint is costing the most.\n\nRecommended steps:\n1. Check today’s sales and profit.\n2. Identify weak menu items.\n3. Check low inventory before peak service.\n4. Review staffing against expected demand.\n5. Pick one action for the next shift.\n\nNext action:\nAsk: “What needs my attention today?” and I will prioritize sales, menu profit, and inventory together."
   };
 
   return responses[topic];
@@ -230,7 +241,9 @@ function formatRestaurantLogicReasoning(q) {
   if (/yesterday was unusually busy.*exactly how many cooks.*tomorrow/i.test(q)) {
     return "Direct answer:\nI cannot give an exact number of cooks from that information alone.\n\nWhy:\n“Yesterday was unusually busy” is a signal, but it is not enough to calculate tomorrow’s kitchen staffing safely.\n\nInformation needed:\n1. Expected customers tomorrow by hour.\n2. Opening hours and peak period.\n3. Menu complexity and prep load.\n4. Average preparation time per order.\n5. Available equipment and stations.\n6. Current cooks’ productivity.\n7. Delivery/takeaway volume.\n\nManager recommendation:\nUse yesterday as a warning, then forecast tomorrow’s covers. If the forecast is close to yesterday’s peak, schedule an extra cook or on-call support rather than guessing an exact number.";
   }
-  if (/180 customers.*one waiter.*20 customers.*seven waiters.*temporary waiters.*\$60|180.*20.*seven waiters/i.test(q)) {
+  if (
+    /180 customers.*one waiter.*20 customers.*seven waiters.*temporary waiters.*\$60|180.*20.*seven waiters/i.test(q)
+  ) {
     return "Direct answer:\nYou need 2 more waiters, and hiring both temporary waiters is reasonable if serving the expected demand generates more than $120 in contribution.\n\nCalculation:\nRequired waiters = 180 customers ÷ 20 customers per waiter = 9 waiters\nAvailable waiters = 7\nShortage = 9 − 7 = 2 waiters\nTemporary labor cost = 2 × $60 = $120.\n\nManager recommendation:\nHire both if the expected extra sales and service protection are worth more than $120. If margin is tight, first confirm the 180-customer forecast and the main service period length.";
   }
   if (/reducing food waste important.*profitability/i.test(q)) {
@@ -246,7 +259,8 @@ function formatRestaurantLogicReasoning(q) {
 }
 
 function formatDaily(data) {
-  if (!data.orders) return `There are no recorded orders for ${data.date}.\n\nRecommendation: Import or enter sales data before making an operating decision.`;
+  if (!data.orders)
+    return `There are no recorded orders for ${data.date}.\n\nRecommendation: Import or enter sales data before making an operating decision.`;
   return `Today’s performance\n\nSales: ${money(data.revenue)}\nOrders: ${data.orders}\nProfit: ${money(data.profit)}\nMargin: ${data.margin_percent}%\nPeak hour: ${data.peak_hour || "Not available"}\n\nRecommendation: Protect service quality during ${data.peak_hour || "the next busy period"} and review low-stock items before the next shift.`;
 }
 
@@ -256,13 +270,23 @@ function formatProfit(data) {
 
 function formatInventory(data) {
   const low = data.items.filter((item) => item.status === "low");
-  if (!low.length) return "Inventory is healthy. No items are below their reorder threshold.\n\nRecommendation: Keep the current ordering cadence and recheck before the next peak service.";
+  if (!low.length)
+    return "Inventory is healthy. No items are below their reorder threshold.\n\nRecommendation: Keep the current ordering cadence and recheck before the next peak service.";
   return `Inventory needs attention\n\n${low.map((item) => `• ${item.item_name}: ${item.quantity} remaining (reorder at ${item.threshold})`).join("\n")}\n\nRecommendation: Reorder ${low.map((item) => item.item_name).join(" and ")} before the next busy service.`;
 }
 
 function formatTopDishes(items) {
-  if (!items.length) return "There is not enough order data to rank dishes yet.\n\nRecommendation: Import recent orders to unlock menu analysis.";
-  return `Top dishes this month\n\n${items.slice(0, 5).map((item, index) => `${index + 1}. ${item.name} — ${item.units} sold, ${money(item.revenue)} revenue, ${item.margin_percent}% margin`).join("\n")}\n\nRecommendation: Keep the leading dishes prominent and compare their margins before running promotions.`;
+  if (!items.length)
+    return "There is not enough order data to rank dishes yet.\n\nRecommendation: Import recent orders to unlock menu analysis.";
+  return `Top dishes this month\n\n${items
+    .slice(0, 5)
+    .map(
+      (item, index) =>
+        `${index + 1}. ${item.name} — ${item.units} sold, ${money(item.revenue)} revenue, ${item.margin_percent}% margin`
+    )
+    .join(
+      "\n"
+    )}\n\nRecommendation: Keep the leading dishes prominent and compare their margins before running promotions.`;
 }
 
 function formatStaffing(data) {
@@ -270,7 +294,8 @@ function formatStaffing(data) {
 }
 
 function formatRefunds(data) {
-  if (!data.refunds) return `No refunds are recorded for this ${data.range}.\n\nRecommendation: Verify that POS refund imports are current.`;
+  if (!data.refunds)
+    return `No refunds are recorded for this ${data.range}.\n\nRecommendation: Verify that POS refund imports are current.`;
   return `Refund review\n\nRefunds: ${data.refunds}\nRefunded value: ${money(data.refunded_amount)}\nTop reasons: ${data.top_reasons.map((item) => `${item.reason} (${item.count})`).join(", ") || "Not specified"}\n\nRecommendation: Investigate the most common reason first and compare it with the affected menu items or shifts.`;
 }
 
@@ -282,18 +307,30 @@ function formatKnowledgeResults(query, restaurantId, arabic = false) {
       : "I did not find a clear match in the uploaded books or training material for this question.\n\nRecommendation: Ask a more specific question, or import the relevant manual first.";
   }
   const sources = [...new Set(data.results.map((item) => item.title))].slice(0, 3).join(", ");
-  const snippets = data.results.slice(0, 3).map((item, index) => {
-    const clean = item.excerpt.replace(/\s+/g, " ").trim().slice(0, 260);
-    return `${index + 1}. ${item.title}: ${clean}${clean.length >= 260 ? "..." : ""}`;
-  }).join("\n");
+  const snippets = data.results
+    .slice(0, 3)
+    .map((item, index) => {
+      const clean = item.excerpt.replace(/\s+/g, " ").trim().slice(0, 260);
+      return `${index + 1}. ${item.title}: ${clean}${clean.length >= 260 ? "..." : ""}`;
+    })
+    .join("\n");
   return arabic
     ? `إجابة مبنية على المعرفة المستوردة\n\nالمصادر: ${sources}\n\n${snippets}\n\nالقرار العملي: استخدم هذه المراجع كدليل، ثم اربطها ببيانات مطعمك الفعلية قبل تغيير التشغيل أو القائمة.`
     : `Knowledge-based guidance\n\nSources: ${sources}\n\n${snippets}\n\nPractical decision: Use these references as guidance, then connect them to your live restaurant data before changing operations or the menu.`;
 }
 
 function formatLowPerformance(items) {
-  if (!items.length) return "No menu item currently meets the low-performance threshold.\n\nRecommendation: Keep monitoring contribution margin and unit sales each week.";
-  return `Menu profit risks\n\n${items.slice(0, 4).map((item, index) => `${index + 1}. ${item.name}: ${item.margin_percent}% margin, ${item.units} sold, ${money(item.profit)} contribution`).join("\n")}\n\nRecommendation: Review ${items[0].name} first. Check its portion cost and price before considering removal.`;
+  if (!items.length)
+    return "No menu item currently meets the low-performance threshold.\n\nRecommendation: Keep monitoring contribution margin and unit sales each week.";
+  return `Menu profit risks\n\n${items
+    .slice(0, 4)
+    .map(
+      (item, index) =>
+        `${index + 1}. ${item.name}: ${item.margin_percent}% margin, ${item.units} sold, ${money(item.profit)} contribution`
+    )
+    .join(
+      "\n"
+    )}\n\nRecommendation: Review ${items[0].name} first. Check its portion cost and price before considering removal.`;
 }
 
 function formatAttention(restaurantId) {
@@ -301,7 +338,14 @@ function formatAttention(restaurantId) {
   const inventory = executeTool("get_inventory_status", {}, restaurantId);
   const weak = executeTool("get_low_performance_items", {}, restaurantId);
   const topRisk = weak[0];
-  return `What needs attention\n\n1. Inventory: ${inventory.low_stock_count} item${inventory.low_stock_count === 1 ? "" : "s"} below threshold${inventory.low_stock_count ? ` — ${inventory.items.filter((item) => item.status === "low").map((item) => item.item_name).join(", ")}` : ""}.\n2. Menu profit: ${topRisk ? `${topRisk.name} has the weakest margin at ${topRisk.margin_percent}%` : "No item is currently below the performance threshold"}.\n3. Today: ${money(daily.revenue)} sales from ${daily.orders} orders, with ${money(daily.profit)} estimated profit.\n\nPriority: ${inventory.low_stock_count ? "Reorder low-stock ingredients before the next service." : topRisk ? `Review the cost and price of ${topRisk.name}.` : "No urgent exception is visible; protect today’s service quality."}`;
+  return `What needs attention\n\n1. Inventory: ${inventory.low_stock_count} item${inventory.low_stock_count === 1 ? "" : "s"} below threshold${
+    inventory.low_stock_count
+      ? ` — ${inventory.items
+          .filter((item) => item.status === "low")
+          .map((item) => item.item_name)
+          .join(", ")}`
+      : ""
+  }.\n2. Menu profit: ${topRisk ? `${topRisk.name} has the weakest margin at ${topRisk.margin_percent}%` : "No item is currently below the performance threshold"}.\n3. Today: ${money(daily.revenue)} sales from ${daily.orders} orders, with ${money(daily.profit)} estimated profit.\n\nPriority: ${inventory.low_stock_count ? "Reorder low-stock ingredients before the next service." : topRisk ? `Review the cost and price of ${topRisk.name}.` : "No urgent exception is visible; protect today’s service quality."}`;
 }
 
 function formatGeneralRestaurantHelpPrefinal(scope) {
@@ -327,7 +371,8 @@ Ask: “Give me today’s business summary and tell me the first action I should
 }
 
 function formatDailyPrefinal(data) {
-  if (!data.orders) return `Direct answer:
+  if (!data.orders)
+    return `Direct answer:
 I do not have recorded orders for ${data.date}, so I cannot judge today’s performance yet.
 
 What is missing:
@@ -353,7 +398,8 @@ Ask “What needs attention?” to compare sales, menu profit, and stock risks t
 }
 
 function formatProfitPrefinal(data) {
-  if (!data.orders) return `Direct answer:
+  if (!data.orders)
+    return `Direct answer:
 I cannot calculate a useful ${data.range} profit summary because there are no recorded orders in that range.
 
 What is missing:
@@ -380,7 +426,8 @@ Review low-margin dishes first; small price or food-cost improvements usually mo
 
 function formatInventoryPrefinal(data) {
   const low = data.items.filter((item) => item.status === "low");
-  if (!data.items.length) return `Direct answer:
+  if (!data.items.length)
+    return `Direct answer:
 I cannot check stock risk because no inventory rows are connected yet.
 
 What is missing:
@@ -390,17 +437,28 @@ What is missing:
 
 Next action:
 Import an inventory CSV from Connect real data, then ask “What inventory needs attention?”`;
-  if (!low.length) return "Inventory is healthy based on the connected inventory rows. No items are below their reorder threshold.\n\nRecommendation: Keep the current ordering cadence and recheck before the next peak service.";
+  if (!low.length)
+    return "Inventory is healthy based on the connected inventory rows. No items are below their reorder threshold.\n\nRecommendation: Keep the current ordering cadence and recheck before the next peak service.";
   return `Inventory needs attention\n\n${low.map((item) => `• ${item.item_name}: ${item.quantity} remaining (reorder at ${item.threshold})`).join("\n")}\n\nRecommendation: Reorder ${low.map((item) => item.item_name).join(" and ")} before the next busy service.`;
 }
 
 function formatTopDishesPrefinal(items) {
-  if (!items.length) return "Direct answer:\nI cannot rank dishes yet because item-level order data is missing.\n\nWhat is missing:\n- Menu item names\n- Quantity sold\n- Revenue and cost per item\n\nNext action:\nImport orders and menu costs, then ask “Which dishes are selling best?”";
-  return `Top dishes this month\n\n${items.slice(0, 5).map((item, index) => `${index + 1}. ${item.name} — ${item.units} sold, ${money(item.revenue)} revenue, ${item.margin_percent}% margin`).join("\n")}\n\nRecommendation: Keep the leading dishes prominent and compare their margins before running promotions.`;
+  if (!items.length)
+    return "Direct answer:\nI cannot rank dishes yet because item-level order data is missing.\n\nWhat is missing:\n- Menu item names\n- Quantity sold\n- Revenue and cost per item\n\nNext action:\nImport orders and menu costs, then ask “Which dishes are selling best?”";
+  return `Top dishes this month\n\n${items
+    .slice(0, 5)
+    .map(
+      (item, index) =>
+        `${index + 1}. ${item.name} — ${item.units} sold, ${money(item.revenue)} revenue, ${item.margin_percent}% margin`
+    )
+    .join(
+      "\n"
+    )}\n\nRecommendation: Keep the leading dishes prominent and compare their margins before running promotions.`;
 }
 
 function formatStaffingPrefinal(data) {
-  if (!data.expected_orders) return `Direct answer:
+  if (!data.expected_orders)
+    return `Direct answer:
 I cannot recommend staffing confidently because there is no demand signal for the selected period.
 
 What is missing:
@@ -415,7 +473,8 @@ Import recent orders and staff shifts, then ask “Do we need more staff tonight
 
 function formatRefundsPrefinal(data, scope) {
   const readiness = getDataReadiness(scope);
-  if (!data.refunds) return `No refunds are recorded for this ${data.range}.
+  if (!data.refunds)
+    return `No refunds are recorded for this ${data.range}.
 
 Recommendation:
 Verify that POS refund imports are current before concluding there were truly no refunds.${formatConnectionHint(readiness)}`;
@@ -423,8 +482,17 @@ Verify that POS refund imports are current before concluding there were truly no
 }
 
 function formatLowPerformancePrefinal(items) {
-  if (!items.length) return "Direct answer:\nI do not see a low-performance dish from the connected item data.\n\nImportant:\nThis does not prove every dish is profitable. It only means no item crossed the current low-performance threshold in the available data.\n\nNext action:\nKeep monitoring contribution margin, unit sales, refunds, and ingredient cost each week.";
-  return `Menu profit risks\n\n${items.slice(0, 4).map((item, index) => `${index + 1}. ${item.name}: ${item.margin_percent}% margin, ${item.units} sold, ${money(item.profit)} contribution`).join("\n")}\n\nRecommendation: Review ${items[0].name} first. Check its portion cost and price before considering removal.`;
+  if (!items.length)
+    return "Direct answer:\nI do not see a low-performance dish from the connected item data.\n\nImportant:\nThis does not prove every dish is profitable. It only means no item crossed the current low-performance threshold in the available data.\n\nNext action:\nKeep monitoring contribution margin, unit sales, refunds, and ingredient cost each week.";
+  return `Menu profit risks\n\n${items
+    .slice(0, 4)
+    .map(
+      (item, index) =>
+        `${index + 1}. ${item.name}: ${item.margin_percent}% margin, ${item.units} sold, ${money(item.profit)} contribution`
+    )
+    .join(
+      "\n"
+    )}\n\nRecommendation: Review ${items[0].name} first. Check its portion cost and price before considering removal.`;
 }
 
 function formatAttentionPrefinal(scope) {
@@ -437,13 +505,15 @@ function formatAttentionPrefinal(scope) {
   const priorities = [];
   if (!readiness.hasOrders) priorities.push("Import today’s POS orders before making a sales or staffing decision.");
   if (inventory.low_stock_count) priorities.push(`Reorder low-stock ingredients first: ${lowNames.join(", ")}.`);
-  if (topRisk) priorities.push(`Review ${topRisk.name}; it has the weakest visible margin at ${topRisk.margin_percent}%.`);
-  if (!priorities.length) priorities.push("No urgent exception is visible in connected data; protect service quality and keep monitoring.");
+  if (topRisk)
+    priorities.push(`Review ${topRisk.name}; it has the weakest visible margin at ${topRisk.margin_percent}%.`);
+  if (!priorities.length)
+    priorities.push("No urgent exception is visible in connected data; protect service quality and keep monitoring.");
 
   return `What needs attention
 
 1. Inventory: ${readiness.hasInventory ? `${inventory.low_stock_count} item${inventory.low_stock_count === 1 ? "" : "s"} below threshold${lowNames.length ? ` — ${lowNames.join(", ")}` : ""}` : "inventory data is not connected"}.
-2. Menu profit: ${readiness.hasMenu && readiness.hasOrders ? topRisk ? `${topRisk.name} has the weakest margin at ${topRisk.margin_percent}%` : "no item is currently below the performance threshold" : "menu and order data are not complete enough for a strong conclusion"}.
+2. Menu profit: ${readiness.hasMenu && readiness.hasOrders ? (topRisk ? `${topRisk.name} has the weakest margin at ${topRisk.margin_percent}%` : "no item is currently below the performance threshold") : "menu and order data are not complete enough for a strong conclusion"}.
 3. Today: ${readiness.hasOrders ? `${money(daily.revenue)} sales from ${daily.orders} orders, with ${money(daily.profit)} estimated gross profit` : "no orders connected for this operating day"}.
 
 Priority:
@@ -452,35 +522,51 @@ ${priorities[0]}${formatConnectionHint(readiness)}`;
 
 function demoReplyArabic(text, restaurantId) {
   const q = text.trim();
-  if (/(أوقف|عطّل|احذف|فعّل).*(طبق|عنصر)|أنشئ.*تقرير/.test(q)) return "هذا الإجراء سيغيّر بيانات المطعم. يرجى تأكيد الإجراء المحدد بوضوح قبل التنفيذ.";
-  if (/(كتاب|دليل|سياسة|وصفة|تدريب|إجراء|معيار|منطقي|بشري|محادثة|حوار|تفكير|استيضاح)/.test(q)) return formatKnowledgeResults(text, restaurantId, true);
+  if (/(أوقف|عطّل|احذف|فعّل).*(طبق|عنصر)|أنشئ.*تقرير/.test(q))
+    return "هذا الإجراء سيغيّر بيانات المطعم. يرجى تأكيد الإجراء المحدد بوضوح قبل التنفيذ.";
+  if (/(كتاب|دليل|سياسة|وصفة|تدريب|إجراء|معيار|منطقي|بشري|محادثة|حوار|تفكير|استيضاح)/.test(q))
+    return formatKnowledgeResults(text, restaurantId, true);
   if (/(استرداد|مرتجع|مرتجعات|إرجاع)/.test(q)) {
     const range = q.includes("شهر") ? "month" : q.includes("اليوم") ? "today" : "week";
     const data = executeTool("get_refund_summary", { range }, restaurantId);
-    if (!data.refunds) return "لا توجد عمليات استرداد مسجلة لهذه الفترة.\n\nالتوصية: تأكد من تحديث بيانات الاسترداد المستوردة من نظام نقاط البيع.";
+    if (!data.refunds)
+      return "لا توجد عمليات استرداد مسجلة لهذه الفترة.\n\nالتوصية: تأكد من تحديث بيانات الاسترداد المستوردة من نظام نقاط البيع.";
     return `مراجعة الاستردادات\n\nعدد العمليات: ${data.refunds}\nالقيمة المستردة: ${money(data.refunded_amount)}\nأهم الأسباب: ${data.top_reasons.map((item) => `${item.reason} (${item.count})`).join("، ") || "غير محدد"}\n\nالتوصية: ابدأ بالتحقيق في السبب الأكثر تكراراً وقارنه بالأطباق أو الورديات المتأثرة.`;
   }
-  if (/(مرحبا|مرحباً|السلام عليكم|اهلا|أهلا)/.test(q)) return "مرحباً، أنا جاهز. اسألني عن مبيعات اليوم، أرباح الأسبوع، أداء الأطباق، المخزون، أو احتياج الموظفين.";
+  if (/(مرحبا|مرحباً|السلام عليكم|اهلا|أهلا)/.test(q))
+    return "مرحباً، أنا جاهز. اسألني عن مبيعات اليوم، أرباح الأسبوع، أداء الأطباق، المخزون، أو احتياج الموظفين.";
   if (/(شكرا|شكراً|ممتاز)/.test(q)) return "على الرحب والسعة. ما القرار الذي تريد تحليله الآن؟";
-  if (/(ماذا تستطيع|ماذا يمكنك|ساعدني|مساعدة)/.test(q)) return "أستطيع مساعدتك في خمسة قرارات:\n\n• تلخيص مبيعات وأرباح اليوم\n• تحديد أفضل وأضعف الأطباق\n• كشف نقص المخزون\n• اقتراح عدد الموظفين حسب الطلب\n• إنشاء تقرير تشغيلي بعد موافقتك\n\nجرّب: «ما الذي يحتاج إلى انتباهي اليوم؟»";
+  if (/(ماذا تستطيع|ماذا يمكنك|ساعدني|مساعدة)/.test(q))
+    return "أستطيع مساعدتك في خمسة قرارات:\n\n• تلخيص مبيعات وأرباح اليوم\n• تحديد أفضل وأضعف الأطباق\n• كشف نقص المخزون\n• اقتراح عدد الموظفين حسب الطلب\n• إنشاء تقرير تشغيلي بعد موافقتك\n\nجرّب: «ما الذي يحتاج إلى انتباهي اليوم؟»";
   if (/(انتباه|الأولوية|الاولويه|المشاكل|مشكلة|مهم اليوم)/.test(q) && !/(مخزون|ناقص|ينفد|مكونات)/.test(q)) {
     const daily = executeTool("get_daily_sales", { date: new Date().toISOString().slice(0, 10) }, restaurantId);
     const inventory = executeTool("get_inventory_status", {}, restaurantId);
     const weak = executeTool("get_low_performance_items", {}, restaurantId);
     const risk = weak[0];
-    const lowNames = inventory.items.filter((item) => item.status === "low").map((item) => item.item_name).join("، ");
+    const lowNames = inventory.items
+      .filter((item) => item.status === "low")
+      .map((item) => item.item_name)
+      .join("، ");
     return `ما يحتاج إلى انتباهك\n\n1. المخزون: ${inventory.low_stock_count} عناصر تحت حد إعادة الطلب${lowNames ? ` — ${lowNames}` : ""}.\n2. ربحية القائمة: ${risk ? `${risk.name} لديه أضعف هامش ربح بنسبة ${risk.margin_percent}%` : "لا يوجد طبق تحت حد الأداء حالياً"}.\n3. اليوم: المبيعات ${money(daily.revenue)} من ${daily.orders} طلباً، والربح التقديري ${money(daily.profit)}.\n\nالأولوية: ${inventory.low_stock_count ? "أعد طلب المكونات الناقصة قبل الخدمة القادمة." : risk ? `راجع تكلفة وسعر ${risk.name}.` : "لا توجد مشكلة عاجلة؛ ركّز على جودة الخدمة."}`;
   }
   if (/(مخزون|ناقص|ينفد|مكونات|إعادة الطلب)/.test(q)) {
     const data = executeTool("get_inventory_status", {}, restaurantId);
     const low = data.items.filter((item) => item.status === "low");
-    if (!low.length) return "المخزون بحالة جيدة، ولا يوجد أي عنصر تحت حد إعادة الطلب.\n\nالتوصية: استمر على وتيرة التوريد الحالية وراجع المخزون قبل فترة الذروة.";
+    if (!low.length)
+      return "المخزون بحالة جيدة، ولا يوجد أي عنصر تحت حد إعادة الطلب.\n\nالتوصية: استمر على وتيرة التوريد الحالية وراجع المخزون قبل فترة الذروة.";
     return `تنبيهات المخزون\n\n${low.map((item) => `• ${item.item_name}: المتبقي ${item.quantity} (حد إعادة الطلب ${item.threshold})`).join("\n")}\n\nالتوصية: أعد طلب ${low.map((item) => item.item_name).join(" و")} قبل الخدمة القادمة.`;
   }
   if (/(أسوأ|اضعف|أضعف|يخسر|خسارة|هامش منخفض|يضر.*الربح)/.test(q)) {
     const items = executeTool("get_low_performance_items", {}, restaurantId);
-    if (!items.length) return "لا يوجد طبق تحت حد الأداء حالياً.\n\nالتوصية: واصل مراجعة هامش المساهمة والمبيعات أسبوعياً.";
-    return `مخاطر ربحية القائمة\n\n${items.slice(0, 4).map((item, index) => `${index + 1}. ${item.name}: هامش ${item.margin_percent}%، بيع ${item.units}، مساهمة ${money(item.profit)}`).join("\n")}\n\nالتوصية: راجع ${items[0].name} أولاً، وتحقق من تكلفة الحصة والسعر قبل التفكير في إيقافه.`;
+    if (!items.length)
+      return "لا يوجد طبق تحت حد الأداء حالياً.\n\nالتوصية: واصل مراجعة هامش المساهمة والمبيعات أسبوعياً.";
+    return `مخاطر ربحية القائمة\n\n${items
+      .slice(0, 4)
+      .map(
+        (item, index) =>
+          `${index + 1}. ${item.name}: هامش ${item.margin_percent}%، بيع ${item.units}، مساهمة ${money(item.profit)}`
+      )
+      .join("\n")}\n\nالتوصية: راجع ${items[0].name} أولاً، وتحقق من تكلفة الحصة والسعر قبل التفكير في إيقافه.`;
   }
   if (/(أفضل|افضل|الأكثر مبيع|طبق|الأطباق)/.test(q)) {
     const items = executeTool("get_top_dishes", {}, restaurantId);
@@ -492,7 +578,11 @@ function demoReplyArabic(text, restaurantId) {
     return `ملخص الربح\n\nالإيرادات: ${money(data.revenue)}\nالتكاليف: ${money(data.cost)}\nالربح: ${money(data.profit)}\nهامش الربح: ${data.margin_percent}%\nالطلبات: ${data.orders}\n\nالتوصية: ابدأ بمراجعة الأطباق منخفضة الهامش لأن تحسين السعر أو تكلفة المكونات سيؤثر سريعاً في الربح.`;
   }
   if (/(موظف|موظفين|عمال|نادل|طباخ|وردية|ازدحام|الليلة)/.test(q)) {
-    const data = executeTool("suggest_staffing", { level: q.includes("ازدحام") ? "busy" : "auto", date_time: new Date().toISOString() }, restaurantId);
+    const data = executeTool(
+      "suggest_staffing",
+      { level: q.includes("ازدحام") ? "busy" : "auto", date_time: new Date().toISOString() },
+      restaurantId
+    );
     return `توقع الاحتياج للموظفين\n\nالطلبات المتوقعة: ${data.expected_orders}\nالقرار: ${data.expected_orders >= 40 ? "أضف نادلاً وطباخ خط إضافياً خلال الذروة." : data.expected_orders >= 25 ? "أضف نادلاً مرناً خلال ساعة الذروة." : "عدد الموظفين المعتاد كافٍ."}\n\nالتوصية: أكّد توفر الفريق مع مسؤول الوردية قبل تعديل الجدول.`;
   }
   if (/(اليوم|المبيعات|الطلبات|الأداء|ملخص|كيف.*المطعم)/.test(q)) {
@@ -505,30 +595,81 @@ function demoReplyArabic(text, restaurantId) {
 export function demoReply(text, restaurantId) {
   if (isArabic(text)) return demoReplyArabic(text, restaurantId);
   const q = text.toLowerCase().trim();
+  if (
+    /(another|other|different).*(restaurant|branch|organization|tenant).*(private|sales|inventory|orders|profit)|private.*(restaurant|branch|organization|tenant).*(sales|inventory|orders|profit)/.test(
+      q
+    )
+  ) {
+    return "I can only use data from the restaurant and branch your signed-in account is authorized to access.\n\nI cannot provide another business's private sales, inventory, orders, or profit data.\n\nAsk me for your own authorized restaurant summary, inventory risk, menu profit, or branch performance instead.";
+  }
+  if (
+    /(exact|precise).*(profit|margin).*(without|no).*(data|orders|costs)|without.*(data|orders|costs).*(exact|precise).*(profit|margin)/.test(
+      q
+    )
+  ) {
+    return "I cannot calculate exact profit without restaurant data.\n\nWhat is missing:\n1. Order revenue after discounts and refunds.\n2. Menu item costs or ingredient costs.\n3. Labor costs for the period.\n4. Delivery commissions, payment fees, rent allocation, and other operating costs if you want true net profit.\n\nNext action: import orders, refunds, menu costs, and staff/labor data, then ask for the profit range again.";
+  }
   const logicReasoning = formatRestaurantLogicReasoning(q);
   if (logicReasoning) return logicReasoning;
-  if (/(customer satisfaction|restaurant next door|weather|competitor)/.test(q)) return "I do not have the required data to answer that reliably. Connect the relevant customer, competitor, or weather data first.";
-  if (/(deactivate|disable|delete|activate).*(dish|item)|create.*report/.test(q)) return "This action changes restaurant data. Please confirm the exact action before I execute it.";
-  if (/(book|manual|policy|sop|recipe|training|procedure|service standard|operating standard|logical|human|conversation|reasoning|answer quality|dialogue|intent|clarifying question)/.test(q)) return formatKnowledgeResults(text, restaurantId);
+  if (/(customer satisfaction|restaurant next door|weather|competitor)/.test(q))
+    return "I do not have the required data to answer that reliably. Connect the relevant customer, competitor, or weather data first.";
+  if (/(deactivate|disable|delete|activate).*(dish|item)|create.*report/.test(q))
+    return "This action changes restaurant data. Please confirm the exact action before I execute it.";
+  if (
+    /(book|manual|policy|sop|recipe|training|procedure|service standard|operating standard|logical|human|conversation|reasoning|answer quality|dialogue|intent|clarifying question)/.test(
+      q
+    )
+  )
+    return formatKnowledgeResults(text, restaurantId);
   const managerAdvice = formatGeneralManagerAdvice(q);
   if (managerAdvice) return managerAdvice;
   if (/^(hi|hello|hey|good (morning|afternoon|evening))[!. ]*$/.test(q)) {
     return "Hello — I’m ready. Ask me about today’s sales, weekly profit, top dishes, inventory, or staffing.";
   }
   if (/^(thanks|thank you)[!. ]*$/.test(q)) return "You are welcome. I am ready for the next restaurant decision.";
-  if (/^(good|very good|nice|great|perfect|excellent|awesome|amazing|okay|ok|cool|done|got it|understood|sounds good)[!. ]*$/.test(q)) return formatSocialAcknowledgement();
-  if (/(speak|answer|reply|talk|understand).*(arabic|english|language)|arabic|العربية|عربي/.test(q)) return formatCapabilities();
-  if (/(real|actual|live|my|own|demo|sample|seed).*(data|restaurant|pos|sales)|data.*(real|actual|live|mine|own|demo|sample|seed)|connect.*data|upload.*data|need.*data|i need.*real data|is it.*real data|is this.*real|is this.*demo/.test(q)) return formatRealDataStatus();
-  if (/(what can you do|help|capabilities)/.test(q)) return "I can help with five decisions:\n\n• Summarize today’s sales and profit\n• Find top and weak menu items\n• Flag low inventory\n• Suggest staffing from demand\n• Create an operating report after your confirmation\n\nTry: “What needs my attention today?”";
-  if (/(what needs|attention|priority|priorities|worry|problem)/.test(q) && !/(inventory|stock|restock|ingredient|run out)/.test(q)) return formatAttentionPrefinal(restaurantId);
-  let name = "get_daily_sales", args = { date: new Date().toISOString().slice(0, 10) };
-  if (/(refund|refunded|return|chargeback)/.test(q)) { name = "get_refund_summary"; args = { range: q.includes("month") ? "month" : q.includes("today") ? "today" : "week" }; }
-  else if (/(inventory|stock|restock|ingredient|run out)/.test(q)) { name = "get_inventory_status"; args = {}; }
-  else if (/(worst|weak|losing|low.?margin|hurt.*profit|underperform)/.test(q)) { name = "get_low_performance_items"; args = {}; }
-  else if (/(top|best|popular|selling|dish|menu item)/.test(q)) { name = "get_top_dishes"; args = {}; }
-  else if (/(profit|margin|revenue|cost|week|month)/.test(q)) { name = "get_profit_summary"; args = { range: q.includes("month") ? "month" : q.includes("today") ? "today" : "week" }; }
-  else if (/(staff|server|cook|shift|busy|tonight)/.test(q)) { name = "suggest_staffing"; args = { level: q.includes("busy") ? "busy" : "auto", date_time: new Date().toISOString() }; }
-  else if (!/(today|sales|orders|doing|performance|summary)/.test(q)) return formatGeneralRestaurantHelpPrefinal(restaurantId);
+  if (
+    /^(good|very good|nice|great|perfect|excellent|awesome|amazing|okay|ok|cool|done|got it|understood|sounds good)[!. ]*$/.test(
+      q
+    )
+  )
+    return formatSocialAcknowledgement();
+  if (/(speak|answer|reply|talk|understand).*(arabic|english|language)|arabic|العربية|عربي/.test(q))
+    return formatCapabilities();
+  if (
+    /(real|actual|live|my|own|demo|sample|seed).*(data|restaurant|pos|sales)|data.*(real|actual|live|mine|own|demo|sample|seed)|connect.*data|upload.*data|need.*data|i need.*real data|is it.*real data|is this.*real|is this.*demo/.test(
+      q
+    )
+  )
+    return formatRealDataStatus();
+  if (/(what can you do|help|capabilities)/.test(q))
+    return "I can help with five decisions:\n\n• Summarize today’s sales and profit\n• Find top and weak menu items\n• Flag low inventory\n• Suggest staffing from demand\n• Create an operating report after your confirmation\n\nTry: “What needs my attention today?”";
+  if (
+    /(what needs|attention|priority|priorities|worry|problem)/.test(q) &&
+    !/(inventory|stock|restock|ingredient|run out)/.test(q)
+  )
+    return formatAttentionPrefinal(restaurantId);
+  let name = "get_daily_sales",
+    args = { date: new Date().toISOString().slice(0, 10) };
+  if (/(refund|refunded|return|chargeback)/.test(q)) {
+    name = "get_refund_summary";
+    args = { range: q.includes("month") ? "month" : q.includes("today") ? "today" : "week" };
+  } else if (/(inventory|stock|restock|ingredient|run out)/.test(q)) {
+    name = "get_inventory_status";
+    args = {};
+  } else if (/(worst|weak|losing|low.?margin|hurt.*profit|underperform)/.test(q)) {
+    name = "get_low_performance_items";
+    args = {};
+  } else if (/(top|best|popular|selling|dish|menu item)/.test(q)) {
+    name = "get_top_dishes";
+    args = {};
+  } else if (/(profit|margin|revenue|cost|week|month)/.test(q)) {
+    name = "get_profit_summary";
+    args = { range: q.includes("month") ? "month" : q.includes("today") ? "today" : "week" };
+  } else if (/(staff|server|cook|shift|busy|tonight)/.test(q)) {
+    name = "suggest_staffing";
+    args = { level: q.includes("busy") ? "busy" : "auto", date_time: new Date().toISOString() };
+  } else if (!/(today|sales|orders|doing|performance|summary)/.test(q))
+    return formatGeneralRestaurantHelpPrefinal(restaurantId);
   const data = executeTool(name, args, restaurantId);
   if (name === "get_daily_sales") return formatDailyPrefinal(data);
   if (name === "get_profit_summary") return formatProfitPrefinal(data);
@@ -541,20 +682,50 @@ export function demoReply(text, restaurantId) {
 
 export function inferTools(text) {
   const q = text.toLowerCase();
+  if (
+    /(another|other|different).*(restaurant|branch|organization|tenant).*(private|sales|inventory|orders|profit)|private.*(restaurant|branch|organization|tenant).*(sales|inventory|orders|profit)/.test(
+      q
+    )
+  )
+    return [];
+  if (
+    /(exact|precise).*(profit|margin).*(without|no).*(data|orders|costs)|without.*(data|orders|costs).*(exact|precise).*(profit|margin)/.test(
+      q
+    )
+  )
+    return [];
   if (formatRestaurantLogicReasoning(q)) return [];
-  if (/(book|manual|policy|sop|recipe|training|procedure|service standard|operating standard|logical|human|conversation|reasoning|answer quality|dialogue|intent|clarifying question|كتاب|دليل|سياسة|وصفة|تدريب|إجراء|معيار|منطقي|بشري|محادثة|حوار|تفكير|استيضاح)/.test(q)) return ["search_knowledge_base"];
+  if (
+    /(book|manual|policy|sop|recipe|training|procedure|service standard|operating standard|logical|human|conversation|reasoning|answer quality|dialogue|intent|clarifying question|كتاب|دليل|سياسة|وصفة|تدريب|إجراء|معيار|منطقي|بشري|محادثة|حوار|تفكير|استيضاح)/.test(
+      q
+    )
+  )
+    return ["search_knowledge_base"];
   if (formatGeneralManagerAdvice(q)) return [];
-  if (/(customer satisfaction|food waste|restaurant next door|weather|competitor|رضا العملاء|هدر الطعام|المطعم المجاور|الطقس)/.test(q)) return [];
+  if (
+    /(customer satisfaction|food waste|restaurant next door|weather|competitor|رضا العملاء|هدر الطعام|المطعم المجاور|الطقس)/.test(
+      q
+    )
+  )
+    return [];
   if (/(speak|answer|reply|talk|understand).*(arabic|english|language)|arabic|العربية|عربي/.test(q)) return [];
-  if (/(real|actual|live|my|own|demo|sample|seed).*(data|restaurant|pos|sales)|data.*(real|actual|live|mine|own|demo|sample|seed)|connect.*data|upload.*data|need.*data|i need.*real data|is it.*real data|is this.*real|is this.*demo/.test(q)) return [];
-  if (/(deactivate|disable|delete|activate).*(dish|item)|(أوقف|عطّل|احذف|فعّل).*(طبق|عنصر)/.test(q)) return ["flag_menu_item"];
+  if (
+    /(real|actual|live|my|own|demo|sample|seed).*(data|restaurant|pos|sales)|data.*(real|actual|live|mine|own|demo|sample|seed)|connect.*data|upload.*data|need.*data|i need.*real data|is it.*real data|is this.*real|is this.*demo/.test(
+      q
+    )
+  )
+    return [];
+  if (/(deactivate|disable|delete|activate).*(dish|item)|(أوقف|عطّل|احذف|فعّل).*(طبق|عنصر)/.test(q))
+    return ["flag_menu_item"];
   if (/create.*report|أنشئ.*تقرير/.test(q)) return ["create_report"];
   if (/(refund|refunded|return|chargeback|استرداد|مرتجع|إرجاع)/.test(q)) return ["get_refund_summary"];
-  if (/(attention|priority|operational risk|manager brief|انتباه|الأولوية|المشاكل|خطر تشغيلي|موجز المدير)/.test(q)) return ["get_daily_sales", "get_low_performance_items", "get_inventory_status"];
+  if (/(attention|priority|operational risk|manager brief|انتباه|الأولوية|المشاكل|خطر تشغيلي|موجز المدير)/.test(q))
+    return ["get_daily_sales", "get_low_performance_items", "get_inventory_status"];
   if (/(inventory|stock|restock|ingredient|run .*out|مخزون|ناقص|ينفد|مكونات)/.test(q)) return ["get_inventory_status"];
   if (/(worst|weak|losing|margin|dish|menu|أسوأ|أضعف|هامش|طبق|الأطباق)/.test(q)) return ["get_low_performance_items"];
   if (/(profit|revenue|cost|week|month|ربح|أرباح|إيراد|تكلفة|أسبوع|شهر)/.test(q)) return ["get_profit_summary"];
-  if (/(staff|server|cook|shift|tonight|موظف|موظفين|نادل|طباخ|وردية|الليلة)/.test(q)) return ["get_daily_sales", "suggest_staffing"];
+  if (/(staff|server|cook|shift|tonight|موظف|موظفين|نادل|طباخ|وردية|الليلة)/.test(q))
+    return ["get_daily_sales", "suggest_staffing"];
   if (/(today|sales|orders|performance|summary|اليوم|المبيعات|الطلبات|الأداء|ملخص)/.test(q)) return ["get_daily_sales"];
   return [];
 }
@@ -611,7 +782,13 @@ ${toolBackedDraft}`
     } catch {
       // Keep the sanitized HTTP status if the error payload is not JSON.
     }
-    logAiEvent("openai_request_failed", { mode: runtime.mode, model: runtime.model, success: false, status: response.status, errorType });
+    logAiEvent("openai_request_failed", {
+      mode: runtime.mode,
+      model: runtime.model,
+      success: false,
+      status: response.status,
+      errorType
+    });
     const error = new Error("OpenAI request failed");
     error.status = response.status;
     error.errorType = errorType;
@@ -624,7 +801,12 @@ ${toolBackedDraft}`
     error.errorType = "empty_response";
     throw error;
   }
-  logAiEvent("openai_request_succeeded", { mode: runtime.mode, model: runtime.model, success: true, status: response.status });
+  logAiEvent("openai_request_succeeded", {
+    mode: runtime.mode,
+    model: runtime.model,
+    success: true,
+    status: response.status
+  });
   return content;
 }
 

@@ -33,7 +33,8 @@ if (isProduction) {
   const weakSecrets = new Set(["secret", "changeme", "change-me", "replace-this-in-production", "your-strong-secret"]);
   const jwtSecret = process.env.JWT_SECRET || "";
   if (!jwtSecret) failStartup("JWT_SECRET is required in production.");
-  if (jwtSecret.length < 32 || weakSecrets.has(jwtSecret.toLowerCase())) failStartup("JWT_SECRET must be a strong non-placeholder value of at least 32 characters.");
+  if (jwtSecret.length < 32 || weakSecrets.has(jwtSecret.toLowerCase()))
+    failStartup("JWT_SECRET must be a strong non-placeholder value of at least 32 characters.");
   if (bcryptCost < 12) failStartup("BCRYPT_COST must be at least 12 in production.");
 }
 

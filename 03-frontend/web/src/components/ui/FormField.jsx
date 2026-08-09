@@ -18,21 +18,32 @@ export function FormField({
   const errorId = error ? `${inputId}-error` : undefined;
   const describedBy = [descriptionId, errorId].filter(Boolean).join(" ") || undefined;
 
-  const field = typeof children === "function"
-    ? children({ id: inputId, describedBy, invalid: Boolean(error), disabled })
-    : children;
+  const field =
+    typeof children === "function"
+      ? children({ id: inputId, describedBy, invalid: Boolean(error), disabled })
+      : children;
 
   return (
     <div className="ui-form-field">
       <div className="ui-form-field__label-row">
-        <label className="ui-form-field__label" htmlFor={inputId}>{label}</label>
+        <label className="ui-form-field__label" htmlFor={inputId}>
+          {label}
+        </label>
         {(required || optional) && (
           <span className="ui-form-field__meta">{required ? t("common.required") : t("common.optional")}</span>
         )}
       </div>
       {field}
-      {description && <p className="ui-form-field__description" id={descriptionId}>{description}</p>}
-      {error && <p className="ui-form-field__error" id={errorId}>{error}</p>}
+      {description && (
+        <p className="ui-form-field__description" id={descriptionId}>
+          {description}
+        </p>
+      )}
+      {error && (
+        <p className="ui-form-field__error" id={errorId}>
+          {error}
+        </p>
+      )}
     </div>
   );
 }

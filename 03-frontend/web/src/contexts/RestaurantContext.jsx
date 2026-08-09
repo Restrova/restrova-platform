@@ -16,7 +16,9 @@ function getStoredId(key) {
 }
 
 function isDemoSession(session) {
-  return Boolean(session?.user?.email?.endsWith(".test") || session?.organization?.name?.toLowerCase().includes("demo"));
+  return Boolean(
+    session?.user?.email?.endsWith(".test") || session?.organization?.name?.toLowerCase().includes("demo")
+  );
 }
 
 export function RestaurantProvider({ children }) {
@@ -64,53 +66,74 @@ export function RestaurantProvider({ children }) {
     }
   }, [branches, selectedBranchId]);
 
-  const setSelectedRestaurantId = useCallback((restaurantId) => {
-    const normalized = normalizeId(restaurantId);
-    const restaurant = restaurants.find((item) => item.id === normalized);
-    if (!restaurant) return false;
-    setSelectedRestaurantIdState(normalized);
-    localStorage.setItem(RESTAURANT_KEY, normalized);
-    const nextBranch = branches[0]?.id || "";
-    setSelectedBranchIdState(nextBranch);
-    if (nextBranch) localStorage.setItem(BRANCH_KEY, nextBranch);
-    else localStorage.removeItem(BRANCH_KEY);
-    queryClient.invalidateQueries();
-    return true;
-  }, [branches, queryClient, restaurants]);
-
-  const setSelectedBranchId = useCallback((branchId) => {
-    const normalized = normalizeId(branchId);
-    if (!normalized) {
-      setSelectedBranchIdState("");
-      localStorage.removeItem(BRANCH_KEY);
+  const setSelectedRestaurantId = useCallback(
+    (restaurantId) => {
+      const normalized = normalizeId(restaurantId);
+      const restaurant = restaurants.find((item) => item.id === normalized);
+      if (!restaurant) return false;
+      setSelectedRestaurantIdState(normalized);
+      localStorage.setItem(RESTAURANT_KEY, normalized);
+      const nextBranch = branches[0]?.id || "";
+      setSelectedBranchIdState(nextBranch);
+      if (nextBranch) localStorage.setItem(BRANCH_KEY, nextBranch);
+      else localStorage.removeItem(BRANCH_KEY);
       queryClient.invalidateQueries();
       return true;
-    }
-    const branch = branches.find((item) => item.id === normalized);
-    if (!branch) return false;
-    setSelectedBranchIdState(normalized);
-    localStorage.setItem(BRANCH_KEY, normalized);
-    queryClient.invalidateQueries();
-    return true;
-  }, [branches, queryClient]);
+    },
+    [branches, queryClient, restaurants]
+  );
 
-  const selectedRestaurant = restaurants.find((restaurant) => restaurant.id === selectedRestaurantId) || restaurants[0] || null;
+  const setSelectedBranchId = useCallback(
+    (branchId) => {
+      const normalized = normalizeId(branchId);
+      if (!normalized) {
+        setSelectedBranchIdState("");
+        localStorage.removeItem(BRANCH_KEY);
+        queryClient.invalidateQueries();
+        return true;
+      }
+      const branch = branches.find((item) => item.id === normalized);
+      if (!branch) return false;
+      setSelectedBranchIdState(normalized);
+      localStorage.setItem(BRANCH_KEY, normalized);
+      queryClient.invalidateQueries();
+      return true;
+    },
+    [branches, queryClient]
+  );
+
+  const selectedRestaurant =
+    restaurants.find((restaurant) => restaurant.id === selectedRestaurantId) || restaurants[0] || null;
   const selectedBranch = branches.find((branch) => branch.id === selectedBranchId) || branches[0] || null;
 
-  const value = useMemo(() => ({
-    loading: auth.status === "checking",
-    error: auth.error,
-    restaurants,
-    branches,
-    selectedRestaurantId: selectedRestaurant?.id || "",
-    selectedBranchId: selectedBranch?.id || "",
-    selectedRestaurant,
-    selectedBranch,
-    role: auth.user?.role || "viewer",
-    demoMode: isDemoSession(session),
-    setSelectedRestaurantId,
-    setSelectedBranchId
-  }), [auth.error, auth.status, auth.user?.role, branches, restaurants, selectedBranch, selectedRestaurant, session, setSelectedBranchId, setSelectedRestaurantId]);
+  const value = useMemo(
+    () => ({
+      loading: auth.status === "checking",
+      error: auth.error,
+      restaurants,
+      branches,
+      selectedRestaurantId: selectedRestaurant?.id || "",
+      selectedBranchId: selectedBranch?.id || "",
+      selectedRestaurant,
+      selectedBranch,
+      role: auth.user?.role || "viewer",
+      demoMode: isDemoSession(session),
+      setSelectedRestaurantId,
+      setSelectedBranchId
+    }),
+    [
+      auth.error,
+      auth.status,
+      auth.user?.role,
+      branches,
+      restaurants,
+      selectedBranch,
+      selectedRestaurant,
+      session,
+      setSelectedBranchId,
+      setSelectedRestaurantId
+    ]
+  );
 
   return <RestaurantContext.Provider value={value}>{children}</RestaurantContext.Provider>;
 }

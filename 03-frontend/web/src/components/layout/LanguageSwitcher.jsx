@@ -12,7 +12,9 @@ export function LanguageSwitcher({ compact = false }) {
         onChange={(event) => locale.setLocale(event.target.value)}
       >
         {Object.entries(locale.locales).map(([value, meta]) => (
-          <option key={value} value={value}>{meta.label}</option>
+          <option key={value} value={value}>
+            {meta.label}
+          </option>
         ))}
       </select>
     </label>

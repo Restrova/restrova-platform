@@ -33,7 +33,10 @@ CREATE TABLE IF NOT EXISTS pending_ai_actions (id INTEGER PRIMARY KEY, restauran
 `);
 
 function ensureColumn(table, column, definition) {
-  const exists = db.prepare(`PRAGMA table_info(${table})`).all().some((row) => row.name === column);
+  const exists = db
+    .prepare(`PRAGMA table_info(${table})`)
+    .all()
+    .some((row) => row.name === column);
   if (!exists) db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
 }
 
@@ -66,23 +69,51 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_refunds_source_key ON refunds(restaurant_i
 function ensureAccessRecords() {
   const restaurants = db.prepare("SELECT id,name,owner_id,organization_id FROM restaurants").all();
   const insertOrg = db.prepare("INSERT INTO organizations(name,currency,timezone,language) VALUES (?,?,?,?)");
-  const updateRestaurant = db.prepare("UPDATE restaurants SET organization_id=?,currency='CNY',timezone='Asia/Shanghai',language='ar',business_type='yemeni' WHERE id=?");
-  const insertBranch = db.prepare("INSERT OR IGNORE INTO branches(organization_id,restaurant_id,name,code,city,operating_day_start,operating_day_end) VALUES (?,?,?,?,?,?,?)");
-  const insertMembership = db.prepare("INSERT OR IGNORE INTO organization_users(organization_id,owner_id,role,branch_id) VALUES (?,?,?,?)");
+  const updateRestaurant = db.prepare(
+    "UPDATE restaurants SET organization_id=?,currency='CNY',timezone='Asia/Shanghai',language='ar',business_type='yemeni' WHERE id=?"
+  );
+  const insertBranch = db.prepare(
+    "INSERT OR IGNORE INTO branches(organization_id,restaurant_id,name,code,city,operating_day_start,operating_day_end) VALUES (?,?,?,?,?,?,?)"
+  );
+  const insertMembership = db.prepare(
+    "INSERT OR IGNORE INTO organization_users(organization_id,owner_id,role,branch_id) VALUES (?,?,?,?)"
+  );
 
   restaurants.forEach((restaurant) => {
     let organizationId = restaurant.organization_id;
     if (!organizationId) {
-      organizationId = Number(insertOrg.run(`${restaurant.name} Organization`, "CNY", "Asia/Shanghai", "ar").lastInsertRowid);
+      organizationId = Number(
+        insertOrg.run(`${restaurant.name} Organization`, "CNY", "Asia/Shanghai", "ar").lastInsertRowid
+      );
       updateRestaurant.run(organizationId, restaurant.id);
     }
     let branch = db.prepare("SELECT id FROM branches WHERE restaurant_id=? ORDER BY id LIMIT 1").get(restaurant.id);
     if (!branch) {
-      insertBranch.run(organizationId, restaurant.id, `${restaurant.name} - Guangzhou`, "GZ-01", "Guangzhou", "10:00", "02:00");
+      insertBranch.run(
+        organizationId,
+        restaurant.id,
+        `${restaurant.name} - Guangzhou`,
+        "GZ-01",
+        "Guangzhou",
+        "10:00",
+        "02:00"
+      );
       branch = db.prepare("SELECT id FROM branches WHERE restaurant_id=? ORDER BY id LIMIT 1").get(restaurant.id);
     }
-    ["orders", "inventory", "refunds", "staff_shifts", "chat_sessions", "reports", "knowledge_documents", "knowledge_chunks"].forEach((table) => {
-      db.prepare(`UPDATE ${table} SET branch_id=? WHERE restaurant_id=? AND branch_id IS NULL`).run(branch.id, restaurant.id);
+    [
+      "orders",
+      "inventory",
+      "refunds",
+      "staff_shifts",
+      "chat_sessions",
+      "reports",
+      "knowledge_documents",
+      "knowledge_chunks"
+    ].forEach((table) => {
+      db.prepare(`UPDATE ${table} SET branch_id=? WHERE restaurant_id=? AND branch_id IS NULL`).run(
+        branch.id,
+        restaurant.id
+      );
     });
     insertMembership.run(organizationId, restaurant.owner_id, "owner", null);
   });
@@ -90,27 +121,67 @@ function ensureAccessRecords() {
 
 function seed() {
   if (db.prepare("SELECT count(*) n FROM owners").get().n) return;
-  const owner = db.prepare("INSERT INTO owners(email,password_hash,name) VALUES (?,?,?)").run("owner@harbor.test", bcrypt.hashSync("demo1234", 10), "Demo Owner").lastInsertRowid;
-  const organization = db.prepare("INSERT INTO organizations(name,currency,timezone,language) VALUES (?,?,?,?)").run("Sana'a Hospitality", "CNY", "Asia/Shanghai", "ar").lastInsertRowid;
-  const restaurant = db.prepare("INSERT INTO restaurants(name,owner_id,organization_id,currency,timezone,language,business_type) VALUES (?,?,?,?,?,?,?)").run("مطعم صنعاء", owner, organization, "CNY", "Asia/Shanghai", "ar", "yemeni").lastInsertRowid;
-  const branch = db.prepare("INSERT INTO branches(organization_id,restaurant_id,name,code,city,operating_day_start,operating_day_end) VALUES (?,?,?,?,?,?,?)").run(organization, restaurant, "مطعم صنعاء - فرع قوانغتشو", "GZ-01", "Guangzhou", "10:00", "02:00").lastInsertRowid;
-  db.prepare("INSERT INTO organization_users(organization_id,owner_id,role,branch_id) VALUES (?,?,?,?)").run(organization, owner, "owner", null);
+  const owner = db
+    .prepare("INSERT INTO owners(email,password_hash,name) VALUES (?,?,?)")
+    .run("owner@harbor.test", bcrypt.hashSync("demo1234", 10), "Demo Owner").lastInsertRowid;
+  const organization = db
+    .prepare("INSERT INTO organizations(name,currency,timezone,language) VALUES (?,?,?,?)")
+    .run("Sana'a Hospitality", "CNY", "Asia/Shanghai", "ar").lastInsertRowid;
+  const restaurant = db
+    .prepare(
+      "INSERT INTO restaurants(name,owner_id,organization_id,currency,timezone,language,business_type) VALUES (?,?,?,?,?,?,?)"
+    )
+    .run("مطعم صنعاء", owner, organization, "CNY", "Asia/Shanghai", "ar", "yemeni").lastInsertRowid;
+  const branch = db
+    .prepare(
+      "INSERT INTO branches(organization_id,restaurant_id,name,code,city,operating_day_start,operating_day_end) VALUES (?,?,?,?,?,?,?)"
+    )
+    .run(organization, restaurant, "مطعم صنعاء - فرع قوانغتشو", "GZ-01", "Guangzhou", "10:00", "02:00").lastInsertRowid;
+  db.prepare("INSERT INTO organization_users(organization_id,owner_id,role,branch_id) VALUES (?,?,?,?)").run(
+    organization,
+    owner,
+    "owner",
+    null
+  );
   const menu = [
-    ["مندي دجاج", 48, 24], ["مندي لحم", 88, 58], ["حنيذ", 78, 46],
-    ["سلتة", 38, 15], ["فحسة", 42, 17], ["Lobster Pasta", 31, 22.5]
+    ["مندي دجاج", 48, 24],
+    ["مندي لحم", 88, 58],
+    ["حنيذ", 78, 46],
+    ["سلتة", 38, 15],
+    ["فحسة", 42, 17],
+    ["Lobster Pasta", 31, 22.5]
   ];
   const insertMenu = db.prepare("INSERT INTO menu_items(restaurant_id,name,price,cost) VALUES (?,?,?,?)");
   menu.forEach((m) => insertMenu.run(restaurant, ...m));
-  const insertInventory = db.prepare("INSERT INTO inventory(restaurant_id,branch_id,item_name,quantity,threshold) VALUES (?,?,?,?,?)");
-  [["Salmon fillet", 8, 10], ["Burger buns", 42, 15], ["Tomatoes", 12, 10], ["Lobster", 4, 8], ["Coffee beans", 18, 6]].forEach((x) => insertInventory.run(restaurant, branch, ...x));
-  const insertOrder = db.prepare("INSERT INTO orders(restaurant_id,branch_id,items,total_price,cost,created_at) VALUES (?,?,?,?,?,?)");
+  const insertInventory = db.prepare(
+    "INSERT INTO inventory(restaurant_id,branch_id,item_name,quantity,threshold) VALUES (?,?,?,?,?)"
+  );
+  [
+    ["Salmon fillet", 8, 10],
+    ["Burger buns", 42, 15],
+    ["Tomatoes", 12, 10],
+    ["Lobster", 4, 8],
+    ["Coffee beans", 18, 6]
+  ].forEach((x) => insertInventory.run(restaurant, branch, ...x));
+  const insertOrder = db.prepare(
+    "INSERT INTO orders(restaurant_id,branch_id,items,total_price,cost,created_at) VALUES (?,?,?,?,?,?)"
+  );
   const now = new Date();
   for (let day = 0; day < 14; day++) {
     for (let i = 0; i < 18 + ((day * 7) % 13); i++) {
       const item = menu[(i + day) % menu.length];
       const qty = 1 + (i % 2);
-      const d = new Date(now); d.setDate(now.getDate() - day); d.setHours(11 + (i % 11), (i * 13) % 60, 0, 0);
-      insertOrder.run(restaurant, branch, JSON.stringify([{ name: item[0], quantity: qty, price: item[1], cost: item[2] }]), item[1] * qty, item[2] * qty, d.toISOString());
+      const d = new Date(now);
+      d.setDate(now.getDate() - day);
+      d.setHours(11 + (i % 11), (i * 13) % 60, 0, 0);
+      insertOrder.run(
+        restaurant,
+        branch,
+        JSON.stringify([{ name: item[0], quantity: qty, price: item[1], cost: item[2] }]),
+        item[1] * qty,
+        item[2] * qty,
+        d.toISOString()
+      );
     }
   }
 }

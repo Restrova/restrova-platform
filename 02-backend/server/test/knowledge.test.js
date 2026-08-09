@@ -9,11 +9,14 @@ const restaurantId = db.prepare("SELECT id FROM restaurants ORDER BY id LIMIT 1"
 
 test("knowledge documents are chunked, searchable, and restaurant scoped", () => {
   const title = `Service Manual ${Date.now()}`;
-  const result = importKnowledgeDocument({
-    title,
-    source: "owner-upload",
-    content: "Hospitality rule: greet every guest within thirty seconds and confirm allergies before order entry."
-  }, restaurantId);
+  const result = importKnowledgeDocument(
+    {
+      title,
+      source: "owner-upload",
+      content: "Hospitality rule: greet every guest within thirty seconds and confirm allergies before order entry."
+    },
+    restaurantId
+  );
   try {
     assert.equal(result.chunks, 1);
     assert.ok(knowledgeStatus(restaurantId).documents >= 1);

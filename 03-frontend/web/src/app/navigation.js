@@ -144,7 +144,9 @@ export const navigationGroups = [
   }
 ];
 
-export const navigationItems = navigationGroups.flatMap((group) => group.items.map((item) => ({ ...item, groupId: group.id })));
+export const navigationItems = navigationGroups.flatMap((group) =>
+  group.items.map((item) => ({ ...item, groupId: group.id }))
+);
 export const mobilePriorityItems = navigationItems.filter((item) => item.mobilePriority).slice(0, 4);
 
 export function roleCanAccess(item, role) {
@@ -152,10 +154,12 @@ export function roleCanAccess(item, role) {
 }
 
 export function getNavigationForRole(role) {
-  return navigationGroups.map((group) => ({
-    ...group,
-    items: group.items.filter((item) => roleCanAccess(item, role))
-  })).filter((group) => group.items.length > 0);
+  return navigationGroups
+    .map((group) => ({
+      ...group,
+      items: group.items.filter((item) => roleCanAccess(item, role))
+    }))
+    .filter((group) => group.items.length > 0);
 }
 
 export function findNavigationItem(pathname) {

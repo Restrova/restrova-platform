@@ -33,15 +33,19 @@ describe("AuthBoundary", () => {
 
   it("renders protected routes after restoring a valid session", async () => {
     localStorage.setItem("token", "test-token");
-    vi.stubGlobal("fetch", vi.fn(async () => ({
-      ok: true,
-      text: async () => JSON.stringify({
-        user: { id: 1, email: "owner@example.com", role: "owner" },
-        restaurant: { id: 1, name: "Harbor" },
-        organization: { id: 1, name: "Harbor Group", currency: "CNY", timezone: "Asia/Shanghai", language: "ar" },
-        branches: []
-      })
-    })));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => ({
+        ok: true,
+        text: async () =>
+          JSON.stringify({
+            user: { id: 1, email: "owner@example.com", role: "owner" },
+            restaurant: { id: 1, name: "Harbor" },
+            organization: { id: 1, name: "Harbor Group", currency: "CNY", timezone: "Asia/Shanghai", language: "ar" },
+            branches: []
+          })
+      }))
+    );
 
     renderProtectedRoute();
     await waitFor(() => expect(screen.getByText("Protected workspace")).toBeInTheDocument());

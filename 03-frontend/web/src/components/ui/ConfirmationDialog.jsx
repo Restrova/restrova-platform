@@ -24,22 +24,31 @@ export function ConfirmationDialog({
   const dialogRef = useRef(null);
   const previousFocus = useRef(null);
 
-  const setOpen = useCallback((next) => {
-    if (loading) return;
-    onOpenChange?.(next);
-    if (open === undefined) setInternalOpen(next);
-  }, [loading, onOpenChange, open]);
+  const setOpen = useCallback(
+    (next) => {
+      if (loading) return;
+      onOpenChange?.(next);
+      if (open === undefined) setInternalOpen(next);
+    },
+    [loading, onOpenChange, open]
+  );
 
   useEffect(() => {
     if (!isOpen) return undefined;
     previousFocus.current = document.activeElement;
-    const focusable = dialogRef.current?.querySelector("button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])");
+    const focusable = dialogRef.current?.querySelector(
+      "button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])"
+    );
     focusable?.focus();
 
     const onKeyDown = (event) => {
       if (event.key === "Escape" && !loading) setOpen(false);
       if (event.key !== "Tab") return;
-      const nodes = [...dialogRef.current.querySelectorAll("button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])")].filter((node) => !node.disabled);
+      const nodes = [
+        ...dialogRef.current.querySelectorAll(
+          "button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])"
+        )
+      ].filter((node) => !node.disabled);
       if (!nodes.length) return;
       const first = nodes[0];
       const last = nodes[nodes.length - 1];
@@ -60,14 +69,25 @@ export function ConfirmationDialog({
   }, [isOpen, loading, setOpen]);
 
   const triggerElement = trigger
-    ? cloneElement(trigger, { onClick: (event) => { trigger.props.onClick?.(event); setOpen(true); } })
+    ? cloneElement(trigger, {
+        onClick: (event) => {
+          trigger.props.onClick?.(event);
+          setOpen(true);
+        }
+      })
     : null;
 
   return (
     <>
       {triggerElement}
       {isOpen && (
-        <div className="ui-dialog-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setOpen(false); }}>
+        <div
+          className="ui-dialog-backdrop"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setOpen(false);
+          }}
+        >
           <section
             ref={dialogRef}
             className="ui-dialog"
@@ -77,15 +97,21 @@ export function ConfirmationDialog({
             aria-describedby={description || children ? descriptionId : undefined}
           >
             <header className="ui-dialog__header">
-              <h2 id={titleId} className="ui-card__title">{title}</h2>
-              <Button variant="ghost" aria-label={t("common.close")} onClick={() => setOpen(false)} disabled={loading}><X size={16} /></Button>
+              <h2 id={titleId} className="ui-card__title">
+                {title}
+              </h2>
+              <Button variant="ghost" aria-label={t("common.close")} onClick={() => setOpen(false)} disabled={loading}>
+                <X size={16} />
+              </Button>
             </header>
             <div className="ui-dialog__body" id={description || children ? descriptionId : undefined}>
               {description && <p>{description}</p>}
               {children}
             </div>
             <footer className="ui-dialog__footer">
-              <Button variant="outline" onClick={() => setOpen(false)} disabled={loading}>{cancelLabel || t("common.cancel")}</Button>
+              <Button variant="outline" onClick={() => setOpen(false)} disabled={loading}>
+                {cancelLabel || t("common.cancel")}
+              </Button>
               <Button
                 variant={danger ? "danger" : "primary"}
                 loading={loading}

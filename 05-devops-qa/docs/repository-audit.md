@@ -226,4 +226,3 @@ Implement Task 1 only:
 Account, organization, restaurant, branches, and users.
 
 Do not begin import staging, calculations, alerts, reports, or recommendation tracking until Task 1 passes its acceptance tests.
-

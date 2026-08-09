@@ -21,7 +21,9 @@ export function SidebarNavigationItem({ item, collapsed = false, onNavigate }) {
         <>
           <Icon size={18} aria-hidden="true" />
           <span className={collapsed ? "sr-only" : ""}>{label}</span>
-          <span className="sidebar-nav__state sr-only">{isNavigationItemActive(item, location.pathname) || isActive ? label : ""}</span>
+          <span className="sidebar-nav__state sr-only">
+            {isNavigationItemActive(item, location.pathname) || isActive ? label : ""}
+          </span>
         </>
       )}
     </NavLink>

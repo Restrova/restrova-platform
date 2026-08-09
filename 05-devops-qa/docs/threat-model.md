@@ -42,23 +42,23 @@ It does not cover external POS vendors, Railway account security, GitHub account
 
 ## Threats and mitigations
 
-| Threat | Risk | Current mitigation | Proof |
-| --- | --- | --- | --- |
-| Anonymous access to private APIs | Data exposure | Bearer JWT middleware on private routes | `security.test.js` |
-| Forged or expired JWT | Account takeover | HS256 verification, issuer, audience, expiration, tenant ID checks | `security.test.js` |
-| Cross-restaurant ID tampering | Tenant data exposure/mutation | Server-side organization and restaurant checks | `security.test.js` |
-| Branch manager accessing another branch | Branch data exposure/mutation | Branch queries scoped to assigned branch | `security.test.js` |
-| Viewer mutating protected resources | Unauthorized writes | Role-based authorization middleware | `security.test.js` |
-| Browser from unapproved origin calling API | CSRF-like browser abuse and unwanted embedding | CORS allow-list and no credentials | `security.test.js` |
-| XSS impact amplification | Token/data theft | CSP and security headers | `security.test.js` checks header presence |
-| Oversized request body | Memory pressure / denial of service | Express JSON body size limit | `security.test.js` |
-| Malformed JSON | Parser errors leaking internals | Sanitized parse error responses | `security.test.js` |
-| Stack traces or secrets in API errors | Secret leakage | Sanitized global error handler | `security.test.js` checks body errors |
-| Brute-force login | Account compromise | Authentication rate limiter | Implemented; no dedicated proof test yet |
-| High-rate API abuse | Service degradation | API rate limiter | Implemented; no dedicated proof test yet |
-| SQL injection | Data exposure/mutation | Prepared statements and zod validation | Not exhaustively fuzz-tested |
-| Unsafe file/path upload | Path traversal or storage abuse | Current APIs accept text payloads, not arbitrary upload paths | Not applicable to current endpoints |
-| OpenAI secret exposure | Credential theft | OpenAI key is read server-side only and must not be logged | Covered by code review, not by automated secret scanner |
+| Threat                                     | Risk                                           | Current mitigation                                                 | Proof                                                   |
+| ------------------------------------------ | ---------------------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------- |
+| Anonymous access to private APIs           | Data exposure                                  | Bearer JWT middleware on private routes                            | `security.test.js`                                      |
+| Forged or expired JWT                      | Account takeover                               | HS256 verification, issuer, audience, expiration, tenant ID checks | `security.test.js`                                      |
+| Cross-restaurant ID tampering              | Tenant data exposure/mutation                  | Server-side organization and restaurant checks                     | `security.test.js`                                      |
+| Branch manager accessing another branch    | Branch data exposure/mutation                  | Branch queries scoped to assigned branch                           | `security.test.js`                                      |
+| Viewer mutating protected resources        | Unauthorized writes                            | Role-based authorization middleware                                | `security.test.js`                                      |
+| Browser from unapproved origin calling API | CSRF-like browser abuse and unwanted embedding | CORS allow-list and no credentials                                 | `security.test.js`                                      |
+| XSS impact amplification                   | Token/data theft                               | CSP and security headers                                           | `security.test.js` checks header presence               |
+| Oversized request body                     | Memory pressure / denial of service            | Express JSON body size limit                                       | `security.test.js`                                      |
+| Malformed JSON                             | Parser errors leaking internals                | Sanitized parse error responses                                    | `security.test.js`                                      |
+| Stack traces or secrets in API errors      | Secret leakage                                 | Sanitized global error handler                                     | `security.test.js` checks body errors                   |
+| Brute-force login                          | Account compromise                             | Authentication rate limiter                                        | Implemented; no dedicated proof test yet                |
+| High-rate API abuse                        | Service degradation                            | API rate limiter                                                   | Implemented; no dedicated proof test yet                |
+| SQL injection                              | Data exposure/mutation                         | Prepared statements and zod validation                             | Not exhaustively fuzz-tested                            |
+| Unsafe file/path upload                    | Path traversal or storage abuse                | Current APIs accept text payloads, not arbitrary upload paths      | Not applicable to current endpoints                     |
+| OpenAI secret exposure                     | Credential theft                               | OpenAI key is read server-side only and must not be logged         | Covered by code review, not by automated secret scanner |
 
 ## Residual risks
 

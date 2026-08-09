@@ -14,10 +14,21 @@ export function inviteUser(user, body) {
   let invited = userRepository.findOwnerIdentityByEmail(parsed.email);
   const temporaryPassword = generateTemporaryPassword();
   if (!invited) {
-    invited = userRepository.createOwnerIdentity(parsed.email, bcrypt.hashSync(temporaryPassword, config.bcryptCost), parsed.name || parsed.email.split("@")[0]);
+    invited = userRepository.createOwnerIdentity(
+      parsed.email,
+      bcrypt.hashSync(temporaryPassword, config.bcryptCost),
+      parsed.name || parsed.email.split("@")[0]
+    );
   }
   userRepository.upsertOrganizationUser(user.organization_id, invited.id, parsed.role, parsed.branchId || null);
-  return { id: invited.id, email: invited.email, name: invited.name, role: parsed.role, branch_id: parsed.branchId || null, temporaryPassword };
+  return {
+    id: invited.id,
+    email: invited.email,
+    name: invited.name,
+    role: parsed.role,
+    branch_id: parsed.branchId || null,
+    temporaryPassword
+  };
 }
 
 export function listUsers(user) {

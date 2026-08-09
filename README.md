@@ -1,6 +1,6 @@
-# Restaurant Decision AI — Built-in Prefinal Edition
+# Restrova Platform — Restaurant Decision AI
 
-The AI decision layer for restaurant owners. Ask for a daily summary, find menu profit leaks, and catch inventory risks in seconds. The assistant uses restaurant-scoped tools, never invents business figures, and requires owner approval before operational changes.
+Restrova Platform is the AI decision layer for restaurant owners. Ask for a daily summary, find menu profit leaks, and catch inventory risks in seconds. The assistant uses restaurant-scoped tools, never invents business figures, and requires owner approval before operational changes.
 
 ## Quick start
 
@@ -61,6 +61,7 @@ The next implementation task is Task 1 only: account registration, organization,
 - `POST /api/data/import`
 - `POST /api/actions/:hash/confirm`
 - `GET /api/health`
+- `GET /api/ready`
 
 ## Real restaurant data imports
 
@@ -137,9 +138,9 @@ Set a strong `JWT_SECRET`, use TLS, move SQLite to a durable volume (or swap to 
 
 The repository includes a Render Blueprint that builds the React frontend, serves it from Express, creates a generated JWT secret, and mounts SQLite on `/var/data`. Keep that disk enabled or switch to PostgreSQL before storing real restaurant data.
 
-[Deploy to Render](https://render.com/deploy?repo=https://github.com/sami124-coder/AI-restaurant-)
+[Deploy to Render](https://render.com/deploy?repo=https://github.com/Restrova/restrova-platform)
 
-During setup, no AI provider key is needed. `/api/health` reports the non-secret AI status, including `aiConfigured`, `mode`, `model`, and `version: "prefinal"`.
+During setup, no AI provider key is needed. `/api/health` reports the non-secret AI status, including `aiConfigured`, `mode`, `model`, and `version: "prefinal"`. `/api/ready` checks runtime readiness without returning secrets.
 
 ### Optional OpenAI model mode
 
@@ -167,7 +168,7 @@ Runtime behavior:
 The included `05-devops-qa/Dockerfile` and root `railway.json` also support deployment on Railway:
 
 1. Create a Railway project and choose **Deploy from GitHub repo**.
-2. Select `sami124-coder/AI-restaurant-`.
+2. Select `Restrova/restrova-platform`.
 3. Add `JWT_SECRET` and `DATABASE_PATH`.
 4. Generate a public domain from the service networking settings.
 

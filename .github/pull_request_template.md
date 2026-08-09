@@ -1,27 +1,62 @@
-## Summary
+## What changed?
 
 -
 
-## Scope
+## Why?
+
+-
+
+## Type of change
 
 - [ ] Backend
 - [ ] Frontend
 - [ ] Data/AI
 - [ ] DevOps/QA
 - [ ] Documentation only
+- [ ] Bug fix
+- [ ] Feature
+- [ ] Refactor
+- [ ] Test only
+- [ ] CI/CD
 
-## Validation
+## Testing performed
 
+- [ ] `pnpm format:check`
+- [ ] `pnpm lint`
+- [ ] `pnpm typecheck`
+- [ ] `pnpm test`
 - [ ] `pnpm validate`
+- [ ] Other:
 
-## Risk notes
+## Screenshots / recordings
 
-- Breaking change: yes / no
-- Database migration required: yes / no
-- Environment variable change required: yes / no
+Required for UI changes. Do not include private customer data.
 
-## Security checklist
+## Security impact
 
-- [ ] No secrets, private restaurant data, database files, or copyrighted book text committed.
+- [ ] No auth/authorization impact
+- [ ] Auth/authorization impact explained below
+- [ ] No secrets, private restaurant data, database files, or copyrighted book text committed
+- [ ] Logs do not expose sensitive data
+- Notes:
+
+## Database impact
+
+- [ ] No database change
+- [ ] Migration required
+- [ ] Seed/test data only
+- Notes:
+
+## AI behavior impact
+
+- [ ] No AI behavior change
+- [ ] Evals updated
+- [ ] Tool authorization/grounding reviewed
+- Notes:
+
+## Checklist
+
 - [ ] Tenant/branch/role impact considered.
-- [ ] Logs do not expose sensitive data.
+- [ ] Breaking change: no / yes, explained.
+- [ ] Documentation updated.
+- [ ] Ready for review; no direct merge to `main` without CI and approval.

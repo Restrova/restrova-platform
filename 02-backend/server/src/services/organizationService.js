@@ -6,7 +6,13 @@ export function createOrganization(user, body) {
 }
 
 export function currentOrganization(user) {
-  return { id: user.organization_id, name: user.organization_name, currency: user.currency, timezone: user.timezone, language: user.language };
+  return {
+    id: user.organization_id,
+    name: user.organization_name,
+    currency: user.currency,
+    timezone: user.timezone,
+    language: user.language
+  };
 }
 
 export function createRestaurant(user, body) {
@@ -14,5 +20,11 @@ export function createRestaurant(user, body) {
 }
 
 export function currentRestaurant(user) {
-  return { id: user.restaurant_id, name: user.restaurant_name, currency: user.currency, timezone: user.timezone, language: user.language };
+  return {
+    id: user.restaurant_id,
+    name: user.restaurant_name,
+    currency: user.currency,
+    timezone: user.timezone,
+    language: user.language
+  };
 }

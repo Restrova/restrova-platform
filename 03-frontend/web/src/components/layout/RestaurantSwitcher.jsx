@@ -23,7 +23,9 @@ export function RestaurantSwitcher({ compact = false }) {
         onChange={(event) => restaurant.setSelectedRestaurantId(event.target.value)}
       >
         {restaurant.restaurants.map((item) => (
-          <option key={item.id} value={item.id}>{item.name}</option>
+          <option key={item.id} value={item.id}>
+            {item.name}
+          </option>
         ))}
       </select>
       {restaurant.demoMode && <Badge variant="warning">{t("navigation.demoMode")}</Badge>}

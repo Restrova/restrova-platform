@@ -45,8 +45,9 @@ describe("AppShell", () => {
 
   it("shows active sidebar route, collapses, expands and persists preference", async () => {
     renderWithShell({ route: "/app/menu-profitability" });
-    const activeLink = (await screen.findAllByRole("link", { name: /ربحية القائمة/ }))
-      .find((link) => link.getAttribute("href") === "/app/menu-profitability");
+    const activeLink = (await screen.findAllByRole("link", { name: /ربحية القائمة/ })).find(
+      (link) => link.getAttribute("href") === "/app/menu-profitability"
+    );
     expect(activeLink).toHaveAttribute("aria-current", "page");
     await userEvent.click(screen.getByRole("button", { name: "طي الشريط الجانبي" }));
     expect(localStorage.getItem("sidebarCollapsed")).toBe("true");
@@ -73,11 +74,11 @@ describe("AppShell", () => {
     const trigger = await screen.findByRole("button", { name: "فتح التنقل" });
     trigger.focus();
     await userEvent.click(trigger);
-    expect(screen.getByRole("dialog", { name: "Restaurant Decision AI" })).toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: "Restrova Platform" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "إغلاق التنقل" })).toHaveFocus();
     expect(document.body.style.overflow).toBe("hidden");
     await userEvent.keyboard("{Escape}");
-    await waitFor(() => expect(screen.queryByRole("dialog", { name: "Restaurant Decision AI" })).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByRole("dialog", { name: "Restrova Platform" })).not.toBeInTheDocument());
     expect(trigger).toHaveFocus();
   });
 
@@ -86,7 +87,7 @@ describe("AppShell", () => {
     const workspaceLinks = await screen.findAllByRole("link", { name: /مساحة العمل الحالية/ });
     expect(workspaceLinks.some((link) => link.getAttribute("href") === "/app/workspace")).toBe(true);
     await userEvent.click(screen.getByRole("button", { name: "المزيد" }));
-    expect(screen.getByRole("dialog", { name: "Restaurant Decision AI" })).toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: "Restrova Platform" })).toBeInTheDocument();
   });
 
   it("logs out through centralized auth and redirects to login", async () => {

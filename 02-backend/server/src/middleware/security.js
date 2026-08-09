@@ -59,26 +59,30 @@ export function configureSecurity(app) {
   };
   if (config.isProduction) cspDirectives.upgradeInsecureRequests = [];
 
-  app.use(helmet({
-    contentSecurityPolicy: { directives: cspDirectives },
-    crossOriginResourcePolicy: { policy: "same-origin" },
-    referrerPolicy: { policy: "no-referrer" }
-  }));
+  app.use(
+    helmet({
+      contentSecurityPolicy: { directives: cspDirectives },
+      crossOriginResourcePolicy: { policy: "same-origin" },
+      referrerPolicy: { policy: "no-referrer" }
+    })
+  );
 
-  app.use(cors({
-    origin(origin, callback) {
-      if (!origin) return callback(null, true);
-      if (config.cors.allowedOrigins.has(origin)) return callback(null, true);
-      const error = new Error("Origin not allowed");
-      error.status = 403;
-      error.code = "FORBIDDEN";
-      return callback(error);
-    },
-    credentials: false,
-    methods: ["GET", "POST", "PATCH", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    maxAge: 600
-  }));
+  app.use(
+    cors({
+      origin(origin, callback) {
+        if (!origin) return callback(null, true);
+        if (config.cors.allowedOrigins.has(origin)) return callback(null, true);
+        const error = new Error("Origin not allowed");
+        error.status = 403;
+        error.code = "FORBIDDEN";
+        return callback(error);
+      },
+      credentials: false,
+      methods: ["GET", "POST", "PATCH", "OPTIONS"],
+      allowedHeaders: ["Content-Type", "Authorization"],
+      maxAge: 600
+    })
+  );
 
   app.use("/api", apiRateLimit);
   app.use(express.json({ limit: config.requestBodyLimit, strict: true, type: "application/json" }));
