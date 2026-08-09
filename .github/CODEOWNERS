@@ -1,0 +1,20 @@
+# Restrova Platform CODEOWNERS
+
+* @Restrova/devops-qa
+
+/apps/api/ @Restrova/backend
+/apps/web/ @Restrova/frontend
+
+/packages/database/ @Restrova/backend
+/packages/domain/ @Restrova/backend
+/packages/shared/ @Restrova/backend @Restrova/frontend
+/packages/config/ @Restrova/backend @Restrova/devops-qa
+
+/infrastructure/ @Restrova/devops-qa
+/.github/ @Restrova/devops-qa
+/tests/e2e/ @Restrova/devops-qa @Restrova/frontend
+/docs/ @Restrova/devops-qa
+
+/package.json @Restrova/devops-qa
+/pnpm-lock.yaml @Restrova/devops-qa
+/pnpm-workspace.yaml @Restrova/devops-qa
