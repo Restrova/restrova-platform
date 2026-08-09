@@ -16,7 +16,10 @@ export function Sidebar({ collapsed, onCollapsedChange }) {
   const ToggleIcon = collapsed ? ExpandIcon : CollapseIcon;
 
   return (
-    <aside className={`app-sidebar ${collapsed ? "is-collapsed" : ""}`.trim()} aria-label={t("navigation.mainNavigation")}>
+    <aside
+      className={`app-sidebar ${collapsed ? "is-collapsed" : ""}`.trim()}
+      aria-label={t("navigation.mainNavigation")}
+    >
       <div className="app-sidebar__product">
         <Link to="/app/dashboard" className="product-mark" aria-label={t("common.productName")}>
           <Store size={22} />
@@ -31,7 +34,10 @@ export function Sidebar({ collapsed, onCollapsedChange }) {
 
       <div className="app-sidebar__restaurant">
         {collapsed ? (
-          <span className="restaurant-compact" title={restaurant.selectedRestaurant?.name || t("navigation.currentRestaurant")}>
+          <span
+            className="restaurant-compact"
+            title={restaurant.selectedRestaurant?.name || t("navigation.currentRestaurant")}
+          >
             {(restaurant.selectedRestaurant?.name || "R").slice(0, 1).toUpperCase()}
           </span>
         ) : (

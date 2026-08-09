@@ -301,4 +301,3 @@ Every completed task must include:
 - Manual test path.
 - Screens changed.
 - Known limitations.
-

@@ -28,7 +28,7 @@ export const dictionaries = {
       unknown: "غير معروف",
       open: "فتح",
       reload: "إعادة تحميل",
-      productName: "Restaurant Decision AI"
+      productName: "Restrova Platform"
     },
     navigation: {
       dashboard: "مركز القرار",
@@ -139,7 +139,7 @@ export const dictionaries = {
       unknown: "Unknown",
       open: "Open",
       reload: "Reload",
-      productName: "Restaurant Decision AI"
+      productName: "Restrova Platform"
     },
     navigation: {
       dashboard: "Decision Center",
@@ -250,7 +250,7 @@ export const dictionaries = {
       unknown: "未知",
       open: "打开",
       reload: "重新加载",
-      productName: "Restaurant Decision AI"
+      productName: "Restrova Platform"
     },
     navigation: {
       dashboard: "决策中心",

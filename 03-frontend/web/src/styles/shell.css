@@ -415,8 +415,14 @@
 }
 
 @keyframes drawer-enter {
-  from { transform: translateX(-8%); opacity: 0.85; }
-  to { transform: translateX(0); opacity: 1; }
+  from {
+    transform: translateX(-8%);
+    opacity: 0.85;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
 
 [dir="rtl"] .mobile-drawer__panel {
@@ -424,6 +430,12 @@
 }
 
 @keyframes drawer-enter-rtl {
-  from { transform: translateX(8%); opacity: 0.85; }
-  to { transform: translateX(0); opacity: 1; }
+  from {
+    transform: translateX(8%);
+    opacity: 0.85;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }

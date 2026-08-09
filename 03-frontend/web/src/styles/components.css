@@ -16,7 +16,10 @@
   padding-inline: var(--space-4);
   font-weight: var(--font-weight-semibold);
   text-decoration: none;
-  transition: background var(--duration-fast) var(--easing-standard), border-color var(--duration-fast) var(--easing-standard), color var(--duration-fast) var(--easing-standard);
+  transition:
+    background var(--duration-fast) var(--easing-standard),
+    border-color var(--duration-fast) var(--easing-standard),
+    color var(--duration-fast) var(--easing-standard);
 }
 
 .ui-button:hover:not(:disabled) {
@@ -83,7 +86,9 @@
 }
 
 @keyframes ui-spin {
-  to { transform: rotate(1turn); }
+  to {
+    transform: rotate(1turn);
+  }
 }
 
 .ui-card {
@@ -98,7 +103,10 @@
 }
 
 .ui-card--interactive {
-  transition: border-color var(--duration-fast) var(--easing-standard), box-shadow var(--duration-fast) var(--easing-standard), transform var(--duration-fast) var(--easing-standard);
+  transition:
+    border-color var(--duration-fast) var(--easing-standard),
+    box-shadow var(--duration-fast) var(--easing-standard),
+    transform var(--duration-fast) var(--easing-standard);
 }
 
 .ui-card--interactive:hover {
@@ -251,7 +259,12 @@
 .ui-skeleton {
   display: block;
   border-radius: var(--radius-md);
-  background: linear-gradient(90deg, var(--color-skeleton-base), var(--color-skeleton-highlight), var(--color-skeleton-base));
+  background: linear-gradient(
+    90deg,
+    var(--color-skeleton-base),
+    var(--color-skeleton-highlight),
+    var(--color-skeleton-base)
+  );
   background-size: 200% 100%;
   animation: ui-skeleton 1.5s var(--easing-standard) infinite;
 }
@@ -266,7 +279,9 @@
 }
 
 @keyframes ui-skeleton {
-  to { background-position-x: -200%; }
+  to {
+    background-position-x: -200%;
+  }
 }
 
 .ui-empty,

@@ -20,13 +20,17 @@ export function MobileDrawer({ open, onClose }) {
     previousFocus.current = document.activeElement;
     const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    const focusable = panelRef.current?.querySelector("button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])");
+    const focusable = panelRef.current?.querySelector(
+      "button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])"
+    );
     focusable?.focus();
 
     const onKeyDown = (event) => {
       if (event.key === "Escape") onClose();
       if (event.key !== "Tab") return;
-      const nodes = [...panelRef.current.querySelectorAll("button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])")].filter((node) => !node.disabled);
+      const nodes = [
+        ...panelRef.current.querySelectorAll("button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])")
+      ].filter((node) => !node.disabled);
       if (!nodes.length) return;
       const first = nodes[0];
       const last = nodes[nodes.length - 1];
@@ -50,7 +54,13 @@ export function MobileDrawer({ open, onClose }) {
   if (!open) return null;
 
   return (
-    <div className="mobile-drawer" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+    <div
+      className="mobile-drawer"
+      role="presentation"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
       <aside
         className="mobile-drawer__panel"
         ref={panelRef}

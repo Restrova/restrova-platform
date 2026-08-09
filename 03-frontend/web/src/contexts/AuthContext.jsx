@@ -86,18 +86,21 @@ export function AuthProvider({ children }) {
     notifyAuthChange();
   }, []);
 
-  const value = useMemo(() => ({
-    ...state,
-    isAuthenticated: state.status === "authenticated",
-    user: state.session?.user || null,
-    organization: state.session?.organization || null,
-    restaurant: state.session?.restaurant || null,
-    branches: state.session?.branches || [],
-    login,
-    logout,
-    register,
-    restore
-  }), [login, logout, register, restore, state]);
+  const value = useMemo(
+    () => ({
+      ...state,
+      isAuthenticated: state.status === "authenticated",
+      user: state.session?.user || null,
+      organization: state.session?.organization || null,
+      restaurant: state.session?.restaurant || null,
+      branches: state.session?.branches || [],
+      login,
+      logout,
+      register,
+      restore
+    }),
+    [login, logout, register, restore, state]
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

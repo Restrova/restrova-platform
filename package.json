@@ -1,7 +1,12 @@
 {
-  "name": "ai-restaurant-manager",
+  "name": "restrova-platform",
   "private": true,
   "version": "1.0.0",
+  "description": "Restrova Platform monorepo for AI-assisted restaurant operations.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Restrova/restrova-platform.git"
+  },
   "packageManager": "pnpm@11.17.0",
   "engines": {
     "node": ">=22",

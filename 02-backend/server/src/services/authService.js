@@ -11,7 +11,12 @@ export const roleRank = { viewer: 1, branch_manager: 2, owner: 3 };
 
 export function signContext(context) {
   return jwt.sign(
-    { ownerId: context.owner_id, restaurantId: context.restaurant_id, organizationId: context.organization_id, role: context.role },
+    {
+      ownerId: context.owner_id,
+      restaurantId: context.restaurant_id,
+      organizationId: context.organization_id,
+      role: context.role
+    },
     config.jwt.secret,
     { algorithm: "HS256", expiresIn: config.jwt.expiresIn, issuer: config.jwt.issuer, audience: config.jwt.audience }
   );
@@ -20,7 +25,13 @@ export function signContext(context) {
 export function serializeMe(user) {
   return {
     user: { id: user.owner_id, email: user.email, name: user.name, role: user.role },
-    organization: { id: user.organization_id, name: user.organization_name, currency: user.currency, timezone: user.timezone, language: user.language },
+    organization: {
+      id: user.organization_id,
+      name: user.organization_name,
+      currency: user.currency,
+      timezone: user.timezone,
+      language: user.language
+    },
     restaurant: { id: user.restaurant_id, name: user.restaurant_name },
     branches: listBranchesForUser(user)
   };
@@ -31,11 +42,21 @@ export function authenticateBearerHeader(authHeader = "") {
   if (!match) throw authRequired();
   let token;
   try {
-    token = jwt.verify(match[1], config.jwt.secret, { algorithms: ["HS256"], issuer: config.jwt.issuer, audience: config.jwt.audience, clockTolerance: 5 });
+    token = jwt.verify(match[1], config.jwt.secret, {
+      algorithms: ["HS256"],
+      issuer: config.jwt.issuer,
+      audience: config.jwt.audience,
+      clockTolerance: 5
+    });
   } catch {
     throw authRequired();
   }
-  if (!Number.isInteger(token.ownerId) || !Number.isInteger(token.organizationId) || !Number.isInteger(token.restaurantId)) throw authRequired();
+  if (
+    !Number.isInteger(token.ownerId) ||
+    !Number.isInteger(token.organizationId) ||
+    !Number.isInteger(token.restaurantId)
+  )
+    throw authRequired();
   const context = authRepository.getAuthContext(token.ownerId, token.organizationId, token.restaurantId);
   if (!context) throw authRequired();
   return context;
@@ -55,7 +76,11 @@ export function login(body) {
   if (!owner || !bcrypt.compareSync(parsed.data.password, owner.password_hash)) throw authRequired();
   const context = authRepository.getAuthContext(owner.id, parsed.data.organizationId, parsed.data.restaurantId);
   if (!context) throw forbidden("No access to that organization or restaurant");
-  return { token: signContext(context), restaurant: { id: context.restaurant_id, name: context.restaurant_name }, ...serializeMe(context) };
+  return {
+    token: signContext(context),
+    restaurant: { id: context.restaurant_id, name: context.restaurant_name },
+    ...serializeMe(context)
+  };
 }
 
 export function generateTemporaryPassword() {

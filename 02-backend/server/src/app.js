@@ -5,10 +5,12 @@ import { config } from "./config/appConfig.js";
 import { configureSecurity } from "./middleware/security.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { apiRoutes } from "./routes/apiRoutes.js";
+import { requestLogger } from "./observability/logger.js";
 
 export function createApp() {
   const app = express();
   configureSecurity(app);
+  app.use(requestLogger);
   app.use("/api", apiRoutes);
 
   if (config.isProduction) {

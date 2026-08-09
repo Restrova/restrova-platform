@@ -16,7 +16,14 @@ export function createTestSession(overrides = {}) {
   return {
     token: "test-token",
     user: { id: 1, email: "owner@harbor.test", name: "Demo Owner", role: "owner", ...overrides.user },
-    organization: { id: 1, name: "Demo Group", currency: "CNY", timezone: "Asia/Shanghai", language: "ar", ...overrides.organization },
+    organization: {
+      id: 1,
+      name: "Demo Group",
+      currency: "CNY",
+      timezone: "Asia/Shanghai",
+      language: "ar",
+      ...overrides.organization
+    },
     restaurant: { id: 10, name: "Harbor Demo", ...overrides.restaurant },
     branches: [
       { id: 101, name: "Main Branch", code: "MAIN" },
@@ -37,12 +44,13 @@ export function stubAuthenticatedFetch(session = createTestSession()) {
     if (String(url).includes("/api/dashboard")) {
       return {
         ok: true,
-        text: async () => JSON.stringify({
-          sales: { net_revenue: 0, profit: 0, orders: 0, margin_percent: 0 },
-          inventory: { low_stock_count: 0 },
-          topDishes: [],
-          currency: "CNY"
-        })
+        text: async () =>
+          JSON.stringify({
+            sales: { net_revenue: 0, profit: 0, orders: 0, margin_percent: 0 },
+            inventory: { low_stock_count: 0 },
+            topDishes: [],
+            currency: "CNY"
+          })
       };
     }
     if (String(url).includes("/api/branches")) {

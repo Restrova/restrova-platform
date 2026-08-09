@@ -34,19 +34,23 @@ export function LocaleProvider({ children }) {
 
   const formatterOptions = useCallback((options = {}) => ({ locale, ...options }), [locale]);
 
-  const value = useMemo(() => ({
-    locale,
-    direction,
-    locales: localeMeta,
-    setLocale,
-    t,
-    formatNumber: (valueToFormat, options) => formatNumberValue(valueToFormat, formatterOptions(options)),
-    formatCurrency: (valueToFormat, options) => formatCurrencyValue(valueToFormat, formatterOptions(options)),
-    formatPercent: (valueToFormat, options) => formatPercentValue(valueToFormat, formatterOptions(options)),
-    formatDate: (valueToFormat, options) => formatDateValue(valueToFormat, formatterOptions(options)),
-    formatDateTime: (valueToFormat, options) => formatDateTimeValue(valueToFormat, formatterOptions(options)),
-    formatCompactNumber: (valueToFormat, options) => formatCompactNumberValue(valueToFormat, formatterOptions(options))
-  }), [direction, formatterOptions, locale, setLocale, t]);
+  const value = useMemo(
+    () => ({
+      locale,
+      direction,
+      locales: localeMeta,
+      setLocale,
+      t,
+      formatNumber: (valueToFormat, options) => formatNumberValue(valueToFormat, formatterOptions(options)),
+      formatCurrency: (valueToFormat, options) => formatCurrencyValue(valueToFormat, formatterOptions(options)),
+      formatPercent: (valueToFormat, options) => formatPercentValue(valueToFormat, formatterOptions(options)),
+      formatDate: (valueToFormat, options) => formatDateValue(valueToFormat, formatterOptions(options)),
+      formatDateTime: (valueToFormat, options) => formatDateTimeValue(valueToFormat, formatterOptions(options)),
+      formatCompactNumber: (valueToFormat, options) =>
+        formatCompactNumberValue(valueToFormat, formatterOptions(options))
+    }),
+    [direction, formatterOptions, locale, setLocale, t]
+  );
 
   return <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>;
 }

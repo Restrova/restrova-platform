@@ -16,8 +16,12 @@ describe("UI primitives", () => {
     const onClick = vi.fn();
     renderWithLocale(
       <>
-        <Button variant="danger" onClick={onClick}>Delete</Button>
-        <Button loading loadingLabel="Saving">Save</Button>
+        <Button variant="danger" onClick={onClick}>
+          Delete
+        </Button>
+        <Button loading loadingLabel="Saving">
+          Save
+        </Button>
         <Button aria-label="Icon only">★</Button>
       </>
     );
@@ -109,13 +113,7 @@ describe("UI primitives", () => {
 
   it("shows loading confirmation state", () => {
     renderWithLocale(
-      <ConfirmationDialog
-        open
-        title="Saving"
-        description="Please wait."
-        loading
-        onOpenChange={() => {}}
-      />
+      <ConfirmationDialog open title="Saving" description="Please wait." loading onOpenChange={() => {}} />
     );
     expect(screen.getByRole("button", { name: /loading.*تأكيد/i })).toBeDisabled();
   });

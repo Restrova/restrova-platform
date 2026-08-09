@@ -129,7 +129,10 @@ test("branch managers are scoped to their assigned branch only", async (t) => {
 
   const branches = await request(server, "/api/branches", { token: login.payload.token });
   assert.equal(branches.status, 200);
-  assert.deepEqual(branches.payload.map((branch) => branch.id), [secondBranch.payload.id]);
+  assert.deepEqual(
+    branches.payload.map((branch) => branch.id),
+    [secondBranch.payload.id]
+  );
   assert.notEqual(branches.payload[0].id, owner.branches[0].id);
 });
 
@@ -192,9 +195,16 @@ test("security headers and restrictive CORS are active", async (t) => {
 
   const health = await request(server, "/api/health");
   assert.equal(health.status, 200);
+  assert.ok(health.headers.get("x-request-id"));
   assert.equal(health.headers.get("x-content-type-options"), "nosniff");
   assert.equal(health.headers.get("x-frame-options"), "SAMEORIGIN");
   assert.match(health.headers.get("content-security-policy") || "", /default-src 'self'/);
+
+  const ready = await request(server, "/api/ready", { headers: { "X-Request-Id": "test-request-id" } });
+  assert.equal(ready.status, 200);
+  assert.equal(ready.headers.get("x-request-id"), "test-request-id");
+  assert.equal(ready.payload.status, "ready");
+  assert.equal(ready.payload.checks.database, "ok");
 
   const allowed = await request(server, "/api/health", { headers: { Origin: "http://allowed.test" } });
   assert.equal(allowed.status, 200);

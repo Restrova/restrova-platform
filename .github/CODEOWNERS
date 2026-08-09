@@ -1,12 +1,12 @@
-# Repository ownership
+# Restrova Platform ownership
 
-* @sami124-coder
+* @Restrova/devops-qa
 
-/02-backend/ @sami124-coder
-/03-frontend/ @sami124-coder
-/04-data-ai/ @sami124-coder
-/05-devops-qa/ @sami124-coder
-/.github/ @sami124-coder
-/package.json @sami124-coder
-/pnpm-lock.yaml @sami124-coder
-/pnpm-workspace.yaml @sami124-coder
+/02-backend/ @Restrova/backend
+/03-frontend/ @Restrova/frontend
+/04-data-ai/ @Restrova/ai-data
+/05-devops-qa/ @Restrova/devops-qa
+/.github/ @Restrova/devops-qa
+/package.json @Restrova/devops-qa
+/pnpm-lock.yaml @Restrova/devops-qa
+/pnpm-workspace.yaml @Restrova/devops-qa

@@ -28,7 +28,10 @@ test("menu import validates and stores restaurant-scoped economics", () => {
 });
 
 test("import rejects missing required columns", () => {
-  assert.throws(() => previewRestaurantData("inventory", "item_name,quantity\nFlour,10"), /Missing required columns: threshold/);
+  assert.throws(
+    () => previewRestaurantData("inventory", "item_name,quantity\nFlour,10"),
+    /Missing required columns: threshold/
+  );
 });
 
 test("order import is duplicate-safe and does not double dish revenue for quantity", () => {
@@ -40,7 +43,9 @@ test("order import is duplicate-safe and does not double dish revenue for quanti
     assert.equal(first.imported, 1);
     assert.equal(second.imported, 0);
     assert.equal(second.skipped_duplicates, 1);
-    const order = db.prepare("SELECT items FROM orders WHERE restaurant_id=? AND source_key=?").get(restaurantId, `qty-${name}`);
+    const order = db
+      .prepare("SELECT items FROM orders WHERE restaurant_id=? AND source_key=?")
+      .get(restaurantId, `qty-${name}`);
     const item = JSON.parse(order.items)[0];
     assert.equal(item.quantity, 2);
     assert.equal(item.price, 20);

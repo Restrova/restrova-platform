@@ -21,7 +21,14 @@ export function branchIdFromRequest(user, requestData = {}) {
 }
 
 export function toolScope(user) {
-  return { restaurantId: user.restaurant_id, branchId: defaultBranchId(user), role: user.role, ownerId: user.owner_id, currency: user.currency, timezone: user.timezone };
+  return {
+    restaurantId: user.restaurant_id,
+    branchId: defaultBranchId(user),
+    role: user.role,
+    ownerId: user.owner_id,
+    currency: user.currency,
+    timezone: user.timezone
+  };
 }
 
 export function listBranches(user) {

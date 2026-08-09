@@ -4,8 +4,14 @@ export function Card({ children, variant = "default", interactive = false, class
     variant === "muted" ? "ui-card--muted" : "",
     interactive ? "ui-card--interactive" : "",
     className
-  ].filter(Boolean).join(" ");
-  return <article className={classes} {...props}>{children}</article>;
+  ]
+    .filter(Boolean)
+    .join(" ");
+  return (
+    <article className={classes} {...props}>
+      {children}
+    </article>
+  );
 }
 
 export function CardHeader({ children, status, className = "" }) {

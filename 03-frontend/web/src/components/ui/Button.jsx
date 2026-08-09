@@ -1,26 +1,31 @@
 import { forwardRef } from "react";
 
-export const Button = forwardRef(function Button({
-  children,
-  variant = "primary",
-  size = "medium",
-  type = "button",
-  disabled = false,
-  loading = false,
-  leadingIcon,
-  trailingIcon,
-  fullWidth = false,
-  className = "",
-  loadingLabel = "Loading",
-  ...props
-}, ref) {
+export const Button = forwardRef(function Button(
+  {
+    children,
+    variant = "primary",
+    size = "medium",
+    type = "button",
+    disabled = false,
+    loading = false,
+    leadingIcon,
+    trailingIcon,
+    fullWidth = false,
+    className = "",
+    loadingLabel = "Loading",
+    ...props
+  },
+  ref
+) {
   const classes = [
     "ui-button",
     `ui-button--${variant}`,
     `ui-button--${size}`,
     fullWidth ? "ui-button--full" : "",
     className
-  ].filter(Boolean).join(" ");
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   return (
     <button

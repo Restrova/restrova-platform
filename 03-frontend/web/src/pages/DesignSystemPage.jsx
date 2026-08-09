@@ -32,10 +32,26 @@ const semanticSwatches = [
 ];
 
 const statuses = [
-  "neutral", "info", "success", "warning", "danger",
-  "complete", "partial", "missing", "stale", "failed",
-  "proposed", "accepted", "rejected", "in_progress", "completed", "cancelled",
-  "low", "medium", "high", "critical"
+  "neutral",
+  "info",
+  "success",
+  "warning",
+  "danger",
+  "complete",
+  "partial",
+  "missing",
+  "stale",
+  "failed",
+  "proposed",
+  "accepted",
+  "rejected",
+  "in_progress",
+  "completed",
+  "cancelled",
+  "low",
+  "medium",
+  "high",
+  "critical"
 ];
 
 export function DesignSystemPage() {
@@ -58,7 +74,9 @@ export function DesignSystemPage() {
           {({ id }) => (
             <select id={id} value={locale.locale} onChange={(event) => locale.setLocale(event.target.value)}>
               {Object.entries(localeMeta).map(([value, meta]) => (
-                <option key={value} value={value}>{meta.label}</option>
+                <option key={value} value={value}>
+                  {meta.label}
+                </option>
               ))}
             </select>
           )}
@@ -81,14 +99,21 @@ export function DesignSystemPage() {
         <p className="text-page-title">Page title / عنوان الصفحة / 页面标题</p>
         <p className="text-section-title">Section title / عنوان القسم / 分区标题</p>
         <p className="text-body">Body text keeps Arabic comfortable: خدمة المطاعم تحتاج قرارات واضحة وسريعة.</p>
-        <p className="text-numeric">{locale.formatCurrency(123456.78)} · {locale.formatCompactNumber(128000)}</p>
+        <p className="text-numeric">
+          {locale.formatCurrency(123456.78)} · {locale.formatCompactNumber(128000)}
+        </p>
       </section>
 
       <section>
         <h2 className="text-section-title">{locale.t("designSystem.spacing")}</h2>
         <div className="design-system-row">
           {["1", "2", "3", "4", "6", "8", "10", "12"].map((space) => (
-            <span key={space} className="ui-skeleton" style={{ inlineSize: `var(--space-${space})`, blockSize: "2rem" }} aria-hidden="true" />
+            <span
+              key={space}
+              className="ui-skeleton"
+              style={{ inlineSize: `var(--space-${space})`, blockSize: "2rem" }}
+              aria-hidden="true"
+            />
           ))}
         </div>
       </section>
@@ -97,12 +122,16 @@ export function DesignSystemPage() {
         <h2 className="text-section-title">{locale.t("designSystem.buttons")}</h2>
         <div className="design-system-row">
           {["primary", "secondary", "outline", "ghost", "danger"].map((variant) => (
-            <Button key={variant} variant={variant} leadingIcon={<Sparkles size={16} />}>{variant}</Button>
+            <Button key={variant} variant={variant} leadingIcon={<Sparkles size={16} />}>
+              {variant}
+            </Button>
           ))}
           <Button size="small">small</Button>
           <Button size="large">large</Button>
           <Button disabled>disabled</Button>
-          <Button loading loadingLabel={locale.t("common.loading")}>loading</Button>
+          <Button loading loadingLabel={locale.t("common.loading")}>
+            loading
+          </Button>
         </div>
       </section>
 
@@ -110,10 +139,20 @@ export function DesignSystemPage() {
         <h2 className="text-section-title">{locale.t("designSystem.inputs")}</h2>
         <div className="design-system-grid">
           <FormField label="Search" description="Useful for filters." id="search-field">
-            {({ id, describedBy }) => <Input id={id} aria-describedby={describedBy} type="search" leadingIcon={<Search size={16} />} placeholder={locale.t("common.search")} />}
+            {({ id, describedBy }) => (
+              <Input
+                id={id}
+                aria-describedby={describedBy}
+                type="search"
+                leadingIcon={<Search size={16} />}
+                placeholder={locale.t("common.search")}
+              />
+            )}
           </FormField>
           <FormField label="Email" error="Use a valid email address." required id="email-field">
-            {({ id, describedBy, invalid }) => <Input id={id} aria-describedby={describedBy} invalid={invalid} type="email" />}
+            {({ id, describedBy, invalid }) => (
+              <Input id={id} aria-describedby={describedBy} invalid={invalid} type="email" />
+            )}
           </FormField>
           <FormField label="Disabled" optional id="disabled-field">
             {({ id }) => <Input id={id} disabled value="Read only" onChange={() => {}} />}
@@ -130,7 +169,9 @@ export function DesignSystemPage() {
               <CardDescription>{locale.t("designSystem.sampleDescription")}</CardDescription>
             </CardHeader>
             <CardContent>Content area</CardContent>
-            <CardFooter><Button variant="outline">{locale.t("common.continue")}</Button></CardFooter>
+            <CardFooter>
+              <Button variant="outline">{locale.t("common.continue")}</Button>
+            </CardFooter>
           </Card>
           <Card variant="muted" interactive>
             <CardContent>Muted interactive card</CardContent>
@@ -141,10 +182,16 @@ export function DesignSystemPage() {
       <section>
         <h2 className="text-section-title">{locale.t("designSystem.badges")}</h2>
         <div className="design-system-row">
-          {["neutral", "info", "success", "warning", "danger"].map((variant) => <Badge key={variant} variant={variant}>{variant}</Badge>)}
+          {["neutral", "info", "success", "warning", "danger"].map((variant) => (
+            <Badge key={variant} variant={variant}>
+              {variant}
+            </Badge>
+          ))}
         </div>
         <div className="design-system-row">
-          {statuses.map((status) => <StatusBadge key={status} status={status} />)}
+          {statuses.map((status) => (
+            <StatusBadge key={status} status={status} />
+          ))}
         </div>
       </section>
 
@@ -180,7 +227,9 @@ export function DesignSystemPage() {
           <Badge>{locale.formatCurrency(561)}</Badge>
           <Badge>{locale.formatPercent(0.481)}</Badge>
           <Badge>{locale.formatDateTime("2026-07-16T18:43:00Z")}</Badge>
-          <Badge><Check size={12} /> {locale.t("designSystem.rtlExample")}</Badge>
+          <Badge>
+            <Check size={12} /> {locale.t("designSystem.rtlExample")}
+          </Badge>
           <Badge>{locale.t("designSystem.ltrExample")}</Badge>
         </div>
       </section>

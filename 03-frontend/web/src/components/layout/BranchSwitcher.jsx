@@ -17,7 +17,9 @@ export function BranchSwitcher() {
       >
         {!restaurant.branches.length && <option value="">{t("navigation.noBranchSelected")}</option>}
         {restaurant.branches.map((branch) => (
-          <option key={branch.id} value={branch.id}>{branch.name || branch.code}</option>
+          <option key={branch.id} value={branch.id}>
+            {branch.name || branch.code}
+          </option>
         ))}
       </select>
     </label>

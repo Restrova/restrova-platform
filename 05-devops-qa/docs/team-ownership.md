@@ -1,33 +1,35 @@
-# Team ownership map
+# Restrova team ownership map
 
-This document organizes the repository by team responsibility. The main source folders are now physically grouped by role, while a few root-level files remain at the root because package managers and deployment services expect them there.
+This document organizes the repository by team responsibility. Root-level package and deployment files remain at the root because package managers and hosting services expect them there.
 
 ## Role sections
 
-| Team role | Arabic label | Primary folders | Scope |
-| --- | --- | --- | --- |
-| Backend developer | مطور Backend | `02-backend/server/` | APIs, auth, database, tools, secure server runtime |
-| Frontend developer | مطور Frontend | `03-frontend/web/` | React UI, routes, shell, localization, accessibility |
-| Data/AI engineer | مهندس AI وData | `04-data-ai/evals/`, `02-backend/server/src/ai.js`, `02-backend/server/src/tools.js` | Assistant behavior, restaurant reasoning, evals, knowledge retrieval |
-| DevOps/QA engineer | مهندس QA وDevOps | `05-devops-qa/`, root package/workspace/deployment files | Deployment, environment safety, validation, release quality |
+| Team                    | Arabic label     | Primary folders                                                                      | Scope                                                                |
+| ----------------------- | ---------------- | ------------------------------------------------------------------------------------ | -------------------------------------------------------------------- |
+| Restrova Backend Team   | مطور Backend     | `02-backend/server/`                                                                 | APIs, auth, database, tools, secure server runtime                   |
+| Restrova Frontend Team  | مطور Frontend    | `03-frontend/web/`                                                                   | React UI, routes, shell, localization, accessibility                 |
+| Restrova AI/Data Team   | مهندس AI وData   | `04-data-ai/evals/`, `02-backend/server/src/ai.js`, `02-backend/server/src/tools.js` | Assistant behavior, restaurant reasoning, evals, knowledge retrieval |
+| Restrova DevOps/QA Team | مهندس QA وDevOps | `05-devops-qa/`, `.github/`, root package/workspace/deployment files                 | Deployment, environment safety, validation, release quality          |
 
 ## Repository map
 
 ```text
-AI-restaurant-manager/
-├── 02-backend/             # Backend developer
+restrova-platform/
+├── 02-backend/             # Backend Team
 │   └── server/
-│   ├── src/                 # API, auth, database, AI/tools integration
-│   └── test/                # Backend tests
-├── 03-frontend/            # Frontend developer
+│       ├── src/             # API, auth, database, AI/tools integration
+│       ├── test/            # Backend tests
+│       └── db/              # Migration-ready database structure
+├── 03-frontend/            # Frontend Team
 │   └── web/
-│   └── src/                 # React app, routes, components, contexts, styles, tests
-├── 04-data-ai/             # Data/AI engineer
+│       └── src/             # React app, routes, components, contexts, styles, tests
+├── 04-data-ai/             # AI/Data Team
 │   └── evals/               # Evaluation dataset and runner
-├── 05-devops-qa/           # DevOps/QA engineer
+├── 05-devops-qa/           # DevOps/QA Team
 │   ├── Dockerfile
-│   ├── docs/
-│   └── github-templates/
+│   └── docs/
+├── .github/                # DevOps/QA Team
+├── docs/                   # Shared architecture/development/operations/security docs
 ├── railway.json            # DevOps/QA
 ├── render.yaml             # DevOps/QA
 ├── package.json            # Shared scripts/workspace commands
@@ -37,21 +39,18 @@ AI-restaurant-manager/
 ## Working rules
 
 1. Backend changes should include backend tests or a clear reason tests were not needed.
-2. Frontend changes should keep Arabic RTL, English LTR, and Simplified Chinese LTR behavior intact.
-3. Data/AI changes should update evals when assistant behavior changes.
+2. Frontend changes should preserve Arabic RTL, English LTR, and Simplified Chinese LTR behavior.
+3. AI/Data changes should update evals when assistant behavior changes.
 4. DevOps/QA changes should document required environment variables and deployment verification.
-5. No role should commit secrets, private restaurant data, or copyrighted book content.
+5. No team should commit secrets, private restaurant data, local database files, or copyrighted book content.
 
-## Handoff checklist
+## Restrova GitHub organization teams
 
-Before handing work to another teammate, include:
+The committed `.github/CODEOWNERS` expects these teams:
 
-- Files changed.
-- Reason for the change.
-- Commands run.
-- Known limitations.
-- Screenshots or logs when UI/deployment behavior changed.
+- `@Restrova/backend`
+- `@Restrova/frontend`
+- `@Restrova/ai-data`
+- `@Restrova/devops-qa`
 
-## Suggested GitHub ownership template
-
-Fill real GitHub usernames in `05-devops-qa/github-templates/CODEOWNERS.example`, then copy it to `.github/CODEOWNERS` when the team is ready for enforced reviews.
+Create those teams in the Restrova GitHub organization and give them repository access before enabling required CODEOWNERS reviews.

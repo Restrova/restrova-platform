@@ -7,6 +7,7 @@ const router = Router();
 const asyncHandler = (handler) => (req, res, next) => Promise.resolve(handler(req, res, next)).catch(next);
 
 router.get("/health", controller.health);
+router.get("/ready", controller.ready);
 
 router.post("/auth/register", authRateLimit, asyncHandler(controller.register));
 router.post("/auth/login", authRateLimit, asyncHandler(controller.login));

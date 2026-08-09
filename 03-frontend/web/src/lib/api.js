@@ -37,10 +37,10 @@ export async function api(path, options = {}) {
       window.dispatchEvent(new Event("auth-change"));
     }
 
-    throw new ApiError(
-      (body && typeof body === "object" && body.error) || "Unable to complete request",
-      { status: response.status, data: body }
-    );
+    throw new ApiError((body && typeof body === "object" && body.error) || "Unable to complete request", {
+      status: response.status,
+      data: body
+    });
   }
 
   return body;

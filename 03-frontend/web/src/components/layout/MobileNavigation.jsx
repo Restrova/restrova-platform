@@ -15,7 +15,12 @@ export function MobileNavigation({ onMore }) {
         const Icon = item.icon;
         const label = t(item.translationKey);
         return (
-          <NavLink key={item.id} to={item.path} className={({ isActive }) => `mobile-bottom-nav__item ${isActive ? "is-active" : ""}`.trim()} end>
+          <NavLink
+            key={item.id}
+            to={item.path}
+            className={({ isActive }) => `mobile-bottom-nav__item ${isActive ? "is-active" : ""}`.trim()}
+            end
+          >
             <Icon size={18} aria-hidden="true" />
             <span>{label}</span>
           </NavLink>

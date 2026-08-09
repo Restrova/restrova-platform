@@ -61,11 +61,11 @@ Allow a real owner to create an account, create an organization, create a restau
 
 Roles:
 
-| Role | Permissions |
-| --- | --- |
-| owner | All restaurants, branches, users, imports, reports, recommendations |
-| branch_manager | Assigned branch data only |
-| viewer | Read-only reports and dashboards |
+| Role           | Permissions                                                         |
+| -------------- | ------------------------------------------------------------------- |
+| owner          | All restaurants, branches, users, imports, reports, recommendations |
+| branch_manager | Assigned branch data only                                           |
+| viewer         | Read-only reports and dashboards                                    |
 
 Required API:
 
@@ -273,4 +273,3 @@ Seed 45 days of data including:
 - Net-profit accounting.
 - Automated execution without approval.
 - Complex role matrix beyond owner, branch manager, viewer.
-
