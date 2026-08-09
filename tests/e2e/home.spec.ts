@@ -6,16 +6,21 @@ test('shows the application foundation', async ({ page }) => {
 });
 
 test('supports registration and authenticated session state', async ({ page }) => {
-  await page.route('**/auth/register', async (route) => route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify({ data: { userId: 'user-1' } }) }));
+  await page.route('**/auth/register', async (route) =>
+    route.fulfill({
+      status: 201,
+      contentType: 'application/json',
+      body: JSON.stringify({ data: { userId: 'user-1' } }),
+    }),
+  );
   await page.goto('/');
   await page.getByRole('button', { name: 'Create an account' }).click();
   await page.getByLabel('Email').fill('owner@example.com');
   await page.getByLabel('Password').fill('correct horse battery staple');
-  await page.getByLabel('Your name').fill('Owner');
+  await page.getByLabel('Name').fill('Owner');
   await page.getByLabel('Organization').fill('Test Organization');
   await page.getByLabel('Restaurant').fill('Test Restaurant');
   await page.getByRole('button', { name: 'Register' }).click();
-  await expect(page.getByText('Your tenant workspace is ready.')).toBeVisible();
-  await expect(page.getByTestId('decision-workspace')).toBeVisible();
-  await expect(page.getByTestId('sales-upload')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Restaurant profile' })).toBeVisible();
+  await expect(page.getByText('Organization and owner account')).toBeVisible();
 });
