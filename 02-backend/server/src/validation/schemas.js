@@ -1,0 +1,108 @@
+import { z } from "zod";
+import { validationError } from "../errors/appError.js";
+
+export const timeSchema = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Use HH:MM time.");
+
+export function validate(schema, data) {
+  const result = schema.safeParse(data);
+  if (!result.success) throw validationError("Invalid request");
+  return result.data;
+}
+
+export const registerSchema = z.object({
+  name: z.string().trim().min(1).max(120),
+  email: z.string().email(),
+  password: z.string().min(8).max(200),
+  organizationName: z.string().trim().min(1).max(160),
+  restaurantName: z.string().trim().min(1).max(160),
+  branchName: z.string().trim().min(1).max(160),
+  branchCode: z.string().trim().min(1).max(40).default("GZ-01"),
+  city: z.string().trim().min(1).max(120).default("Guangzhou"),
+  currency: z.string().trim().length(3).default("CNY"),
+  timezone: z.string().trim().min(1).max(80).default("Asia/Shanghai"),
+  language: z.string().trim().min(2).max(10).default("ar"),
+  operatingDayStart: timeSchema.default("10:00"),
+  operatingDayEnd: timeSchema.default("02:00")
+});
+
+export const loginSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(8),
+  organizationId: z.number().int().positive().optional(),
+  restaurantId: z.number().int().positive().optional()
+});
+
+export const organizationSchema = z.object({
+  name: z.string().trim().min(1).max(160),
+  currency: z.string().trim().length(3).default("CNY"),
+  timezone: z.string().trim().min(1).max(80).default("Asia/Shanghai"),
+  language: z.string().trim().min(2).max(10).default("ar")
+});
+
+export const restaurantSchema = z.object({
+  name: z.string().trim().min(1).max(160),
+  businessType: z.string().trim().min(1).max(80).default("yemeni")
+});
+
+export const branchCreateSchema = z.object({
+  name: z.string().trim().min(1).max(160),
+  code: z.string().trim().min(1).max(40),
+  city: z.string().trim().min(1).max(120),
+  address: z.string().trim().max(240).optional(),
+  phone: z.string().trim().max(80).optional(),
+  posSystem: z.string().trim().max(120).optional(),
+  operatingDayStart: timeSchema.default("10:00"),
+  operatingDayEnd: timeSchema.default("02:00")
+});
+
+export const branchUpdateSchema = z.object({
+  name: z.string().trim().min(1).max(160).optional(),
+  code: z.string().trim().min(1).max(40).optional(),
+  city: z.string().trim().min(1).max(120).optional(),
+  address: z.string().trim().max(240).nullable().optional(),
+  phone: z.string().trim().max(80).nullable().optional(),
+  posSystem: z.string().trim().max(120).nullable().optional(),
+  operatingDayStart: timeSchema.optional(),
+  operatingDayEnd: timeSchema.optional()
+});
+
+export const inviteUserSchema = z.object({
+  email: z.string().email(),
+  name: z.string().trim().max(120).optional(),
+  role: z.enum(["branch_manager", "viewer"]),
+  branchId: z.number().int().positive().optional()
+});
+
+export const updateUserRoleSchema = z.object({
+  role: z.enum(["owner", "branch_manager", "viewer"]),
+  branchId: z.number().int().positive().nullable().optional()
+});
+
+export const importPreviewSchema = z.object({
+  type: z.enum(["orders", "refunds", "menu_items", "inventory", "staff_shifts"]),
+  csv: z.string().min(1).max(2_500_000)
+});
+
+export const importConfirmSchema = importPreviewSchema.extend({
+  branchId: z.number().int().positive().optional(),
+  confirm: z.literal(true)
+});
+
+export const knowledgeImportSchema = z.object({
+  title: z.string().trim().min(1).max(200),
+  source: z.string().trim().max(500).optional(),
+  content: z.string().trim().min(1).max(2_500_000)
+});
+
+export const chatSchema = z.object({
+  message: z.string().trim().min(1).max(4000),
+  sessionId: z.number().int().positive().optional()
+});
+
+export const feedbackSchema = z.object({
+  sessionId: z.number().int().positive(),
+  messageId: z.number().int().positive(),
+  rating: z.enum(["approved", "needs_correction"]),
+  correctedAnswer: z.string().trim().max(12000).optional(),
+  correctTools: z.array(z.string().min(1).max(80)).max(12).default([])
+});
