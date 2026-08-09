@@ -4,7 +4,8 @@
   "scripts": {
     "dev": "node --watch src/index.js",
     "start": "node src/index.js",
-    "test": "node --test --test-concurrency=1 && pnpm run eval",
+    "test": "pnpm run test:unit && pnpm run eval",
+    "test:unit": "node --test --test-concurrency=1",
     "eval": "node ../../04-data-ai/evals/run-evals.js"
   },
   "dependencies": {
