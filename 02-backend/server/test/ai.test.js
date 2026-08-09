@@ -5,6 +5,17 @@ import { db } from "../src/db.js";
 
 const restaurantId = db.prepare("SELECT id FROM restaurants ORDER BY id LIMIT 1").get().id;
 
+function ensureCurrentMonthMenuFixture() {
+  const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  const currentOrders = db.prepare("SELECT count(*) count FROM orders WHERE restaurant_id=? AND created_at>=?").get(restaurantId, since).count;
+  if (currentOrders > 0) return;
+  const branchId = db.prepare("SELECT id FROM branches WHERE restaurant_id=? ORDER BY id LIMIT 1").get(restaurantId)?.id || null;
+  db.prepare("INSERT OR IGNORE INTO orders(restaurant_id,branch_id,items,total_price,cost,created_at,source_key) VALUES (?,?,?,?,?,?,?)")
+    .run(restaurantId, branchId, JSON.stringify([{ name: "Security Test Low Margin Dish", quantity: 2, price: 10, cost: 9 }]), 20, 18, new Date().toISOString(), `test-current-menu-${restaurantId}`);
+}
+
+ensureCurrentMonthMenuFixture();
+
 test("AI runtime status never exposes secrets", () => {
   const originalKey = process.env.OPENAI_API_KEY;
   const originalModel = process.env.OPENAI_MODEL;

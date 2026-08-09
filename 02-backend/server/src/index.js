@@ -14,17 +14,125 @@ import { executeTool } from "./tools.js";
 import { dataConnectionStatus, importRestaurantData, previewRestaurantData } from "./dataImport.js";
 import { importKnowledgeDocument, knowledgeStatus, searchKnowledgeBase } from "./knowledge.js";
 
-const app = express();
-app.use(helmet());
-app.use(cors({ origin: process.env.CLIENT_ORIGIN || "http://localhost:5173" }));
-app.use(express.json({ limit: "3mb" }));
-if (process.env.NODE_ENV === "production" && !process.env.JWT_SECRET) {
-  throw new Error("JWT_SECRET is required in production.");
+const NODE_ENV = process.env.NODE_ENV || "development";
+const IS_PRODUCTION = NODE_ENV === "production";
+const IS_TEST = NODE_ENV === "test";
+const REQUEST_BODY_LIMIT = process.env.REQUEST_BODY_LIMIT || "3mb";
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "12h";
+const JWT_ISSUER = process.env.JWT_ISSUER || "ai-restaurant-manager";
+const JWT_AUDIENCE = process.env.JWT_AUDIENCE || "restaurant-manager-api";
+const BCRYPT_COST = Number(process.env.BCRYPT_COST || (IS_TEST ? 4 : 12));
+const API_RATE_LIMIT_MAX = Number(process.env.API_RATE_LIMIT_MAX || (IS_TEST ? 10000 : 300));
+const AUTH_RATE_LIMIT_MAX = Number(process.env.AUTH_RATE_LIMIT_MAX || (IS_TEST ? 10000 : 20));
+const RATE_LIMIT_WINDOW_MS = Number(process.env.RATE_LIMIT_WINDOW_MS || 15 * 60 * 1000);
+const allowedOrigins = new Set(
+  (process.env.CLIENT_ORIGIN || (IS_PRODUCTION ? "" : "http://localhost:5173"))
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean)
+);
+
+function failStartup(message) {
+  throw new Error(`Configuration error: ${message}`);
 }
+
+function validateProductionEnvironment() {
+  if (!Number.isInteger(BCRYPT_COST) || BCRYPT_COST < 4 || BCRYPT_COST > 15) failStartup("BCRYPT_COST must be an integer between 4 and 15.");
+  if (!Number.isInteger(API_RATE_LIMIT_MAX) || API_RATE_LIMIT_MAX < 1) failStartup("API_RATE_LIMIT_MAX must be a positive integer.");
+  if (!Number.isInteger(AUTH_RATE_LIMIT_MAX) || AUTH_RATE_LIMIT_MAX < 1) failStartup("AUTH_RATE_LIMIT_MAX must be a positive integer.");
+  if (!IS_PRODUCTION) return;
+  const jwtSecret = process.env.JWT_SECRET || "";
+  const weakSecrets = new Set(["secret", "changeme", "change-me", "replace-this-in-production", "your-strong-secret"]);
+  if (!jwtSecret) failStartup("JWT_SECRET is required in production.");
+  if (jwtSecret.length < 32 || weakSecrets.has(jwtSecret.toLowerCase())) failStartup("JWT_SECRET must be a strong non-placeholder value of at least 32 characters.");
+  if (BCRYPT_COST < 12) failStartup("BCRYPT_COST must be at least 12 in production.");
+}
+
+validateProductionEnvironment();
+
+const app = express();
+app.disable("x-powered-by");
+if (IS_PRODUCTION) app.set("trust proxy", 1);
+
+const cspDirectives = {
+  defaultSrc: ["'self'"],
+  baseUri: ["'self'"],
+  connectSrc: ["'self'"],
+  fontSrc: ["'self'", "data:"],
+  formAction: ["'self'"],
+  frameAncestors: ["'none'"],
+  imgSrc: ["'self'", "data:"],
+  objectSrc: ["'none'"],
+  scriptSrc: ["'self'"],
+  styleSrc: ["'self'", "'unsafe-inline'"]
+};
+if (IS_PRODUCTION) cspDirectives.upgradeInsecureRequests = [];
+
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: cspDirectives
+  },
+  crossOriginResourcePolicy: { policy: "same-origin" },
+  referrerPolicy: { policy: "no-referrer" }
+}));
+app.use(cors({
+  origin(origin, callback) {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.has(origin)) return callback(null, true);
+    const error = new Error("CORS origin not allowed");
+    error.status = 403;
+    return callback(error);
+  },
+  credentials: false,
+  methods: ["GET", "POST", "PATCH", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  maxAge: 600
+}));
+
 const secret = process.env.JWT_SECRET || crypto.randomBytes(32).toString("hex");
 
 const roleRank = { viewer: 1, branch_manager: 2, owner: 3 };
 const timeSchema = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Use HH:MM time.");
+
+function clientKey(req) {
+  return req.ip || req.socket?.remoteAddress || "unknown";
+}
+
+function createRateLimiter({ windowMs, max, message }) {
+  const buckets = new Map();
+  return (req, res, next) => {
+    const now = Date.now();
+    const key = `${clientKey(req)}:${req.baseUrl || req.path}`;
+    const bucket = buckets.get(key);
+    if (!bucket || bucket.resetAt <= now) {
+      buckets.set(key, { count: 1, resetAt: now + windowMs });
+      res.setHeader("RateLimit-Limit", String(max));
+      res.setHeader("RateLimit-Remaining", String(Math.max(max - 1, 0)));
+      return next();
+    }
+    bucket.count += 1;
+    res.setHeader("RateLimit-Limit", String(max));
+    res.setHeader("RateLimit-Remaining", String(Math.max(max - bucket.count, 0)));
+    res.setHeader("RateLimit-Reset", String(Math.ceil(bucket.resetAt / 1000)));
+    if (bucket.count > max) return res.status(429).json({ error: message });
+    return next();
+  };
+}
+
+const apiRateLimit = createRateLimiter({
+  windowMs: RATE_LIMIT_WINDOW_MS,
+  max: API_RATE_LIMIT_MAX,
+  message: "Too many requests. Please try again later."
+});
+
+const authRateLimit = createRateLimiter({
+  windowMs: RATE_LIMIT_WINDOW_MS,
+  max: AUTH_RATE_LIMIT_MAX,
+  message: "Too many authentication attempts. Please try again later."
+});
+
+app.use("/api", apiRateLimit);
+app.use(express.json({ limit: REQUEST_BODY_LIMIT, strict: true, type: "application/json" }));
 
 function getAuthContext(ownerId, organizationId, restaurantId) {
   const membership = db.prepare(`
@@ -46,12 +154,22 @@ function getAuthContext(ownerId, organizationId, restaurantId) {
 }
 
 function signContext(context) {
-  return jwt.sign({ ownerId: context.owner_id, restaurantId: context.restaurant_id, organizationId: context.organization_id, role: context.role }, secret, { expiresIn: "12h" });
+  return jwt.sign(
+    { ownerId: context.owner_id, restaurantId: context.restaurant_id, organizationId: context.organization_id, role: context.role },
+    secret,
+    { algorithm: "HS256", expiresIn: JWT_EXPIRES_IN, issuer: JWT_ISSUER, audience: JWT_AUDIENCE }
+  );
 }
 
 function auth(req, res, next) {
   try {
-    const token = jwt.verify((req.headers.authorization || "").replace("Bearer ", ""), secret);
+    const authHeader = req.headers.authorization || "";
+    const match = authHeader.match(/^Bearer\s+(.+)$/i);
+    if (!match) return res.status(401).json({ error: "Authentication required" });
+    const token = jwt.verify(match[1], secret, { algorithms: ["HS256"], issuer: JWT_ISSUER, audience: JWT_AUDIENCE, clockTolerance: 5 });
+    if (!Number.isInteger(token.ownerId) || !Number.isInteger(token.organizationId) || !Number.isInteger(token.restaurantId)) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
     const context = getAuthContext(token.ownerId, token.organizationId, token.restaurantId);
     if (!context) return res.status(401).json({ error: "Authentication required" });
     req.user = context;
@@ -115,7 +233,7 @@ app.get("/api/health", (_, res) => {
   const ai = getAiRuntimeStatus();
   res.json({ status: "ok", ai: ai.mode, version: "prefinal", ...ai });
 });
-app.post("/api/auth/register", (req, res, next) => {
+app.post("/api/auth/register", authRateLimit, (req, res, next) => {
   try {
     const parsed = z.object({
       name: z.string().trim().min(1).max(120),
@@ -134,7 +252,7 @@ app.post("/api/auth/register", (req, res, next) => {
     }).parse(req.body);
     const result = db.transaction(() => {
       if (db.prepare("SELECT id FROM owners WHERE lower(email)=lower(?)").get(parsed.email)) throw new Error("Email is already registered.");
-      const ownerId = Number(db.prepare("INSERT INTO owners(email,password_hash,name) VALUES (?,?,?)").run(parsed.email, bcrypt.hashSync(parsed.password, 10), parsed.name).lastInsertRowid);
+      const ownerId = Number(db.prepare("INSERT INTO owners(email,password_hash,name) VALUES (?,?,?)").run(parsed.email, bcrypt.hashSync(parsed.password, BCRYPT_COST), parsed.name).lastInsertRowid);
       const organizationId = Number(db.prepare("INSERT INTO organizations(name,currency,timezone,language) VALUES (?,?,?,?)").run(parsed.organizationName, parsed.currency.toUpperCase(), parsed.timezone, parsed.language).lastInsertRowid);
       const restaurantId = Number(db.prepare("INSERT INTO restaurants(name,owner_id,organization_id,currency,timezone,language,business_type) VALUES (?,?,?,?,?,?,?)").run(parsed.restaurantName, ownerId, organizationId, parsed.currency.toUpperCase(), parsed.timezone, parsed.language, "yemeni").lastInsertRowid);
       const branchId = Number(db.prepare("INSERT INTO branches(organization_id,restaurant_id,name,code,city,operating_day_start,operating_day_end) VALUES (?,?,?,?,?,?,?)").run(organizationId, restaurantId, parsed.branchName, parsed.branchCode, parsed.city, parsed.operatingDayStart, parsed.operatingDayEnd).lastInsertRowid);
@@ -144,7 +262,7 @@ app.post("/api/auth/register", (req, res, next) => {
     res.status(201).json({ token: signContext(result), ...serializeMe(result) });
   } catch (error) { next(error); }
 });
-app.post("/api/auth/login", (req, res) => {
+app.post("/api/auth/login", authRateLimit, (req, res) => {
   const parsed = z.object({ email: z.string().email(), password: z.string().min(8), organizationId: z.number().int().positive().optional(), restaurantId: z.number().int().positive().optional() }).safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: "Valid email and password are required" });
   const owner = db.prepare("SELECT * FROM owners WHERE email=?").get(parsed.data.email);
@@ -226,7 +344,7 @@ app.post("/api/users/invite", auth, requireRole("owner"), (req, res, next) => {
       let user = db.prepare("SELECT id,email,name FROM owners WHERE lower(email)=lower(?)").get(parsed.email);
       const temporaryPassword = generateTemporaryPassword();
       if (!user) {
-        const id = Number(db.prepare("INSERT INTO owners(email,password_hash,name) VALUES (?,?,?)").run(parsed.email, bcrypt.hashSync(temporaryPassword, 10), parsed.name || parsed.email.split("@")[0]).lastInsertRowid);
+        const id = Number(db.prepare("INSERT INTO owners(email,password_hash,name) VALUES (?,?,?)").run(parsed.email, bcrypt.hashSync(temporaryPassword, BCRYPT_COST), parsed.name || parsed.email.split("@")[0]).lastInsertRowid);
         user = db.prepare("SELECT id,email,name FROM owners WHERE id=?").get(id);
       }
       db.prepare("INSERT INTO organization_users(organization_id,owner_id,role,branch_id) VALUES (?,?,?,?) ON CONFLICT(organization_id,owner_id) DO UPDATE SET role=excluded.role,branch_id=excluded.branch_id")
@@ -362,7 +480,7 @@ app.get("/api/training/export", auth, (req, res) => {
     created_at: row.created_at
   })));
 });
-if (process.env.NODE_ENV === "production") {
+if (IS_PRODUCTION) {
   const currentDir = path.dirname(fileURLToPath(import.meta.url));
   const webDist = path.resolve(currentDir, "../../../03-frontend/web/dist");
   app.use(express.static(webDist));
@@ -371,13 +489,44 @@ if (process.env.NODE_ENV === "production") {
     res.sendFile(path.join(webDist, "index.html"));
   });
 }
+function sanitizedErrorType(error) {
+  if (error?.name === "ZodError") return "validation_error";
+  if (error?.type === "entity.too.large") return "payload_too_large";
+  if (error instanceof SyntaxError && error.status === 400 && "body" in error) return "malformed_json";
+  if (error?.message === "CORS origin not allowed") return "cors_origin_denied";
+  return error?.name || "unknown_error";
+}
+
+function logSanitizedError(error, status) {
+  if (IS_TEST) return;
+  console.error(JSON.stringify({
+    source: "restaurant-ai",
+    event: "request_error",
+    status,
+    type: sanitizedErrorType(error)
+  }));
+}
+
 app.use((error, _req, res, _next) => {
-  console.error(error);
+  if (error?.type === "entity.too.large") {
+    logSanitizedError(error, 413);
+    return res.status(413).json({ error: "Payload too large" });
+  }
+  if (error instanceof SyntaxError && error.status === 400 && "body" in error) {
+    logSanitizedError(error, 400);
+    return res.status(400).json({ error: "Malformed JSON body" });
+  }
+  if (error?.message === "CORS origin not allowed") {
+    logSanitizedError(error, 403);
+    return res.status(403).json({ error: "Origin not allowed" });
+  }
   const isBadRequest = error.name === "ZodError" || /already registered|UNIQUE constraint|Preview this CSV|branch is required|Unsupported import|Missing required columns|must be/i.test(error.message || "");
-  res.status(isBadRequest ? 400 : 500).json({ error: error.name === "ZodError" ? "Invalid request" : isBadRequest ? error.message : "Unable to complete request" });
+  const status = isBadRequest ? 400 : 500;
+  logSanitizedError(error, status);
+  res.status(status).json({ error: error.name === "ZodError" ? "Invalid request" : isBadRequest ? error.message : "Unable to complete request" });
 });
 
-if (process.env.NODE_ENV !== "test") {
+if (!IS_TEST) {
   app.listen(process.env.PORT || 4000, () => {
     const ai = getAiRuntimeStatus();
     console.log(`API listening on http://localhost:${process.env.PORT || 4000}`);
