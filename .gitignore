@@ -4,3 +4,22 @@ data/
 .env
 *.log
 .tmp-knowledge/
+
+# Environment
+.env.*
+!.env.example
+
+# Tests and coverage
+coverage/
+test-results/
+playwright-report/
+
+# Local databases
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+
+# OS/editor
+.DS_Store
+Thumbs.db
