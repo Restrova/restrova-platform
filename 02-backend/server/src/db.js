@@ -2,6 +2,7 @@ import Database from "better-sqlite3";
 import bcrypt from "bcryptjs";
 import fs from "node:fs";
 import path from "node:path";
+import { migrate } from "../db/migrate.js";
 
 const file = path.resolve(process.env.DATABASE_PATH || "./data/restaurant.db");
 if (process.env.NODE_ENV === "production" && !process.env.DATABASE_PATH) {
@@ -11,6 +12,7 @@ fs.mkdirSync(path.dirname(file), { recursive: true });
 export const db = new Database(file);
 db.pragma("journal_mode = WAL");
 db.pragma("foreign_keys = ON");
+migrate(db);
 
 db.exec(`
 CREATE TABLE IF NOT EXISTS owners (id INTEGER PRIMARY KEY, email TEXT UNIQUE NOT NULL, password_hash TEXT NOT NULL);
