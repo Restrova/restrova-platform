@@ -2,6 +2,8 @@
 
 Date: 2026-07-20
 
+Update: 2026-08-11 — Task 1 is implemented and Task 2.1 import templates/API are implemented. The remaining staged-import gaps below apply to Task 2.2.
+
 This audit records the current state before expanding the MVP. It follows the requested rule: inspect the repository and document scope before changing database structure or UI flows.
 
 ## Current architecture
@@ -135,7 +137,7 @@ Missing:
 - Confirm import before committing to final tables.
 - Rejected-row storage.
 - Duplicate prevention by organization/branch/order/item key.
-- Downloadable templates.
+- Downloadable templates. **Resolved in Task 2.1 for branches, menu, costs, and sales.**
 - XLSX support.
 - saved original imported file metadata.
 
@@ -221,8 +223,8 @@ pnpm --filter web build
 
 ## Recommended next implementation task
 
-Implement Task 1 only:
+Implement Task 2.2 only:
 
-Account, organization, restaurant, branches, and users.
+Safe CSV/XLSX staged upload, first-20-row preview, typed row validation, persisted import jobs/statistics, confirmation before final writes, and duplicate-safe sales imports.
 
-Do not begin import staging, calculations, alerts, reports, or recommendation tracking until Task 1 passes its acceptance tests.
+Do not begin the Task 3 financial engine until the staged import contract is stable and Task 2 acceptance tests pass.

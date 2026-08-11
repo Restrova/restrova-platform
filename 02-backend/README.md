@@ -23,3 +23,15 @@ From the repository root:
 pnpm --filter server test
 pnpm --filter server eval
 ```
+
+## Task 2.1 — import template API
+
+Authenticated users can inspect and download the platform CSV templates used by the staged-import flow:
+
+```text
+GET /api/data/templates
+GET /api/data/templates/:key
+GET /api/data/templates/:key/download
+```
+
+Supported keys are `branches`, `menu`, `costs`, and `sales`. Downloads are UTF-8 CSV files with a BOM for spreadsheet compatibility. Upload parsing, XLSX support, staging, row validation, and confirmation remain in Task 2.2.

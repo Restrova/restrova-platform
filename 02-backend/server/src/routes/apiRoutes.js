@@ -29,6 +29,9 @@ router.patch("/users/:id/role", auth, requireRole("owner"), asyncHandler(control
 
 router.get("/dashboard", auth, controller.dashboard);
 router.get("/data/status", auth, controller.dataStatus);
+router.get("/data/templates", auth, controller.listImportTemplates);
+router.get("/data/templates/:key", auth, asyncHandler(controller.getImportTemplate));
+router.get("/data/templates/:key/download", auth, asyncHandler(controller.downloadImportTemplate));
 router.post("/data/import/preview", auth, requireOwner, asyncHandler(controller.previewImport));
 router.post("/data/import", auth, requireOwner, asyncHandler(controller.confirmImport));
 
