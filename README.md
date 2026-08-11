@@ -47,7 +47,7 @@ Before adding the next database or UI feature, start with these docs:
 - [`05-devops-qa/docs/mvp-scope.md`](05-devops-qa/docs/mvp-scope.md): frozen MVP scope for a Yemeni restaurant in China.
 - [`05-devops-qa/docs/acceptance-tests.md`](05-devops-qa/docs/acceptance-tests.md): task-by-task acceptance tests and readiness format.
 
-The next implementation task is Task 1 only: account registration, organization, restaurant, branches, roles, and user management.
+Task 1 is implemented. Task 2.1 now provides versioned download templates for branches, menu, costs, and sales. The next implementation step is Task 2.2: safe CSV/XLSX staged upload, validation, preview, import jobs, confirmation, and duplicate protection.
 
 ## API
 
@@ -57,15 +57,20 @@ The next implementation task is Task 1 only: account registration, organization,
 - `GET /api/chat/sessions/:id/messages`
 - `POST /api/chat`
 - `GET /api/data/status`
+- `GET /api/data/templates`
+- `GET /api/data/templates/:key`
+- `GET /api/data/templates/:key/download`
 - `POST /api/data/import/preview`
 - `POST /api/data/import`
 - `POST /api/actions/:hash/confirm`
 - `GET /api/health`
 - `GET /api/ready`
 
-## Real restaurant data imports
+## Legacy restaurant data import
 
-Use **Connect real data** inside the app to upload CSV exports. Column names:
+The existing **Connect real data** flow remains available while Task 2.2 is being built. It uses the legacy CSV contracts below; new integrations should use the Task 2 template API as the contract for `branches`, `menu`, `costs`, and `sales`.
+
+Legacy column names:
 
 | Data type    | Required columns                                 | Optional columns                                                                              |
 | ------------ | ------------------------------------------------ | --------------------------------------------------------------------------------------------- |

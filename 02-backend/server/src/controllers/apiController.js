@@ -7,6 +7,7 @@ import * as knowledgeService from "../services/knowledgeService.js";
 import * as organizationService from "../services/organizationService.js";
 import * as userService from "../services/userService.js";
 import * as healthService from "../services/healthService.js";
+import * as importTemplateService from "../services/importTemplateService.js";
 
 export const health = (_req, res) => res.json(healthService.getHealth());
 export const ready = (_req, res) => res.json(healthService.getReadiness());
@@ -35,6 +36,14 @@ export const updateUserRole = (req, res) =>
 
 export const dashboard = (req, res) => res.json(dashboardService.getDashboard(req.user));
 export const dataStatus = (req, res) => res.json(dataService.getDataStatus(req.user));
+export const listImportTemplates = (_req, res) => res.json(importTemplateService.listImportTemplates());
+export const getImportTemplate = (req, res) => res.json(importTemplateService.getImportTemplate(req.params.key));
+export const downloadImportTemplate = (req, res) => {
+  const file = importTemplateService.buildImportTemplateCsv(req.params.key);
+  res.setHeader("Content-Type", file.contentType);
+  res.setHeader("Content-Disposition", `attachment; filename="${file.filename}"`);
+  return res.send(file.body);
+};
 export const previewImport = (req, res) => res.json(dataService.previewImport(req.body));
 export const confirmImport = (req, res) => res.status(201).json(dataService.confirmImport(req.user, req.body));
 

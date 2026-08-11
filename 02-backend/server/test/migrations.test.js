@@ -10,7 +10,10 @@ test("database migrations apply and are idempotent", () => {
 
   const first = db.prepare("SELECT version FROM schema_migrations ORDER BY version").all();
 
-  assert.deepEqual(first, [{ version: "0001_migration_foundation.sql" }]);
+  assert.deepEqual(first, [
+    { version: "0001_migration_foundation.sql" },
+    { version: "0002_import_templates.sql" }
+  ]);
 
   migrate(db);
 
