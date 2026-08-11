@@ -78,7 +78,6 @@ export const updateUserRoleSchema = z.object({
   branchId: z.number().int().positive().nullable().optional()
 });
 
-
 export const importTemplateKeySchema = z.enum(["branches", "menu", "costs", "sales"]);
 
 export const importPreviewSchema = z.object({

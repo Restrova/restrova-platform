@@ -52,8 +52,14 @@ test("authenticated users can list the four Task 2 import templates", async (t) 
     response.payload.map((template) => template.key),
     ["branches", "costs", "menu", "sales"]
   );
-  assert.equal(response.payload.every((template) => template.version === 1), true);
-  assert.equal(response.payload.every((template) => template.downloadPath.endsWith("/download")), true);
+  assert.equal(
+    response.payload.every((template) => template.version === 1),
+    true
+  );
+  assert.equal(
+    response.payload.every((template) => template.downloadPath.endsWith("/download")),
+    true
+  );
 });
 
 test("template metadata exposes required fields and UTF-8 examples", async (t) => {
@@ -81,10 +87,7 @@ test("template download returns a BOM-prefixed CSV header without sample data", 
 
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") || "", /^text\/csv/);
-  assert.equal(
-    response.headers.get("content-disposition"),
-    'attachment; filename="restrova-branches-template-v1.csv"'
-  );
+  assert.equal(response.headers.get("content-disposition"), 'attachment; filename="restrova-branches-template-v1.csv"');
   assert.deepEqual([...response.payload.subarray(0, 3)], [0xef, 0xbb, 0xbf]);
   assert.equal(
     response.payload.subarray(3).toString("utf8"),
