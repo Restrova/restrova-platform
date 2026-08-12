@@ -54,6 +54,7 @@ router.post(
   asyncHandler(controller.previewStagedImport)
 );
 router.get("/data/import-jobs/:id", auth, requireOwner, asyncHandler(controller.getStagedImportJob));
+router.put("/data/import-jobs/:id/mapping", auth, requireOwner, asyncHandler(controller.updateStagedImportMapping));
 router.post("/data/import-jobs/:id/confirm", auth, requireOwner, asyncHandler(controller.confirmStagedImport));
 router.post("/data/import-jobs/:id/cancel", auth, requireOwner, asyncHandler(controller.cancelStagedImport));
 

@@ -50,3 +50,24 @@ POST /api/data/import-jobs/:id/cancel
 The preview endpoint receives the raw file body with a CSV/XLSX content type. It stores file metadata and SHA-256, validates every row, returns the first 20 rows and row-level errors, and issues a confirmation token bound to the stored job. Confirmation writes accepted rows only. Sales lines are duplicate-safe, money is normalized to integer minor units, UTF-8 Arabic/Chinese text is preserved, and ISO timestamps with `+08:00` are supported.
 
 The older `/api/data/import/preview` and `/api/data/import` routes remain for legacy compatibility.
+
+## Task 2.3 — import validation and mapping
+
+Staged imports now detect common uploaded column aliases and preserve the original uploaded column names in preview responses. Owners can correct a mapping before confirmation:
+
+```text
+PUT /api/data/import-jobs/:id/mapping
+```
+
+The request body contains the complete mapping list:
+
+```json
+{
+  "mappings": [
+    { "sourceColumn": "Sale Price", "targetField": "selling_price" },
+    { "sourceColumn": "Qty", "targetField": "quantity" }
+  ]
+}
+```
+
+Preview responses expose `validationStatus` (`needs_mapping`, `validation_failed`, or `ready`), a computed `workflowStatus`, mapping metadata, row errors with original source columns/values, and separate row warnings. Confirmation is blocked until the validation status is `ready`. A successful manual remap rotates the confirmation token so confirmation remains bound to the latest preview.

@@ -13,7 +13,8 @@ test("database migrations apply and are idempotent", () => {
   assert.deepEqual(first, [
     { version: "0001_migration_foundation.sql" },
     { version: "0002_import_templates.sql" },
-    { version: "0003_staged_imports.sql" }
+    { version: "0003_staged_imports.sql" },
+    { version: "0004_import_mapping_validation.sql" }
   ]);
 
   migrate(db);

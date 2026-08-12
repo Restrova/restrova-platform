@@ -7,27 +7,40 @@ const MAX_ROWS = 10_000;
 function cleanHeader(value) {
   return String(value ?? "")
     .replace(/^\uFEFF/, "")
-    .trim()
-    .toLowerCase();
+    .trim();
 }
 
+function normalizedHeader(value) {
+  return cleanHeader(value).toLowerCase();
+}
 function rowsToObjects(matrix) {
   if (!matrix.length) throw validationError("The uploaded file is empty.");
+
   const headers = matrix[0].map(cleanHeader);
+
   if (!headers.some(Boolean)) throw validationError("The uploaded file has no header row.");
+
   if (headers.some((header) => !header)) throw validationError("Column names cannot be empty.");
-  if (new Set(headers).size !== headers.length) throw validationError("Column names must be unique.");
+
+  const normalizedHeaders = headers.map(normalizedHeader);
+
+  if (new Set(normalizedHeaders).size !== normalizedHeaders.length) {
+    throw validationError("Column names must be unique.");
+  }
 
   const rows = matrix
     .slice(1)
     .filter((cells) => cells.some((value) => String(value ?? "").trim() !== ""))
     .map((cells, index) => {
       if (cells.length > headers.length) throw validationError(`Row ${index + 2} has more values than the header row.`);
+
       return Object.fromEntries(headers.map((header, column) => [header, String(cells[column] ?? "").trim()]));
     });
 
   if (!rows.length) throw validationError("The uploaded file must contain at least one data row.");
+
   if (rows.length > MAX_ROWS) throw validationError(`A single import cannot exceed ${MAX_ROWS.toLocaleString()} rows.`);
+
   return { headers, rows };
 }
 
