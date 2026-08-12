@@ -47,7 +47,7 @@ Before adding the next database or UI feature, start with these docs:
 - [`05-devops-qa/docs/mvp-scope.md`](05-devops-qa/docs/mvp-scope.md): frozen MVP scope for a Yemeni restaurant in China.
 - [`05-devops-qa/docs/acceptance-tests.md`](05-devops-qa/docs/acceptance-tests.md): task-by-task acceptance tests and readiness format.
 
-Task 1 is implemented. Task 2.1 now provides versioned download templates for branches, menu, costs, and sales. The next implementation step is Task 2.2: safe CSV/XLSX staged upload, validation, preview, import jobs, confirmation, and duplicate protection.
+Task 1 and Task 2 are implemented on the backend. Task 2 provides versioned templates plus safe CSV/XLSX staged import jobs with typed validation, first-20-row preview, confirmation tokens, cancellation, audit metadata, and duplicate-safe sales lines. The next backend implementation step is Task 3: the deterministic financial calculation engine.
 
 ## API
 
@@ -62,13 +62,23 @@ Task 1 is implemented. Task 2.1 now provides versioned download templates for br
 - `GET /api/data/templates/:key/download`
 - `POST /api/data/import/preview`
 - `POST /api/data/import`
+- `POST /api/data/import-jobs/preview?templateKey=<key>&filename=<file>`
+- `GET /api/data/import-jobs/:id`
+- `POST /api/data/import-jobs/:id/confirm`
+- `POST /api/data/import-jobs/:id/cancel`
 - `POST /api/actions/:hash/confirm`
 - `GET /api/health`
 - `GET /api/ready`
 
+## Safe staged restaurant data import
+
+New integrations should use the Task 2 contracts for `branches`, `menu`, `costs`, and `sales`. Upload the raw CSV or XLSX file body to `POST /api/data/import-jobs/preview`, passing `templateKey` and `filename` as query parameters. The response stores a server-side import job and returns the first 20 rows, row errors, statistics, and a one-time confirmation token. No final business tables are written during preview. Confirm the exact staged job with `POST /api/data/import-jobs/:id/confirm` and `{ "confirmationToken": "..." }`, or cancel it before confirmation.
+
+The staged importer preserves UTF-8 Arabic/Chinese text, accepts ISO-compatible timestamps including `+08:00`, stores file name/type/size/SHA-256 metadata, validates references, and prevents duplicate sales lines by branch + external order + external line identifiers. Financial money fields are normalized to integer minor units for Task 3.
+
 ## Legacy restaurant data import
 
-The existing **Connect real data** flow remains available while Task 2.2 is being built. It uses the legacy CSV contracts below; new integrations should use the Task 2 template API as the contract for `branches`, `menu`, `costs`, and `sales`.
+The existing **Connect real data** flow remains available for the older CSV contracts below. It is retained for compatibility; new integrations should use the staged Task 2 import jobs.
 
 Legacy column names:
 

@@ -1,10 +1,21 @@
-import { Router } from "express";
+import express, { Router } from "express";
 import * as controller from "../controllers/apiController.js";
 import { auth, requireOwner, requireRole } from "../middleware/auth.js";
 import { authRateLimit } from "../middleware/security.js";
+import { config } from "../config/appConfig.js";
 
 const router = Router();
 const asyncHandler = (handler) => (req, res, next) => Promise.resolve(handler(req, res, next)).catch(next);
+const stagedImportBody = express.raw({
+  limit: config.requestBodyLimit,
+  type: [
+    "text/csv",
+    "application/csv",
+    "text/plain",
+    "application/octet-stream",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+  ]
+});
 
 router.get("/health", controller.health);
 router.get("/ready", controller.ready);
@@ -34,6 +45,17 @@ router.get("/data/templates/:key", auth, asyncHandler(controller.getImportTempla
 router.get("/data/templates/:key/download", auth, asyncHandler(controller.downloadImportTemplate));
 router.post("/data/import/preview", auth, requireOwner, asyncHandler(controller.previewImport));
 router.post("/data/import", auth, requireOwner, asyncHandler(controller.confirmImport));
+
+router.post(
+  "/data/import-jobs/preview",
+  auth,
+  requireOwner,
+  stagedImportBody,
+  asyncHandler(controller.previewStagedImport)
+);
+router.get("/data/import-jobs/:id", auth, requireOwner, asyncHandler(controller.getStagedImportJob));
+router.post("/data/import-jobs/:id/confirm", auth, requireOwner, asyncHandler(controller.confirmStagedImport));
+router.post("/data/import-jobs/:id/cancel", auth, requireOwner, asyncHandler(controller.cancelStagedImport));
 
 router.get("/knowledge/status", auth, controller.knowledgeStatus);
 router.post("/knowledge/import", auth, requireOwner, asyncHandler(controller.importKnowledge));

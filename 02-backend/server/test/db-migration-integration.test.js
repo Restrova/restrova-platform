@@ -26,7 +26,8 @@ test("application database bootstrap records applied migrations", async () => {
 
     assert.deepEqual(migrations, [
       { version: "0001_migration_foundation.sql" },
-      { version: "0002_import_templates.sql" }
+      { version: "0002_import_templates.sql" },
+      { version: "0003_staged_imports.sql" }
     ]);
   } finally {
     if (db?.open) db.close();

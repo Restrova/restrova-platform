@@ -2,7 +2,7 @@
 
 Date: 2026-07-20
 
-Update: 2026-08-11 — Task 1 is implemented and Task 2.1 import templates/API are implemented. The remaining staged-import gaps below apply to Task 2.2.
+Update: 2026-08-11 — Task 1 and the backend Task 2 staged-import contract are implemented. CSV/XLSX parsing, import jobs, row validation, preview binding, confirmation/cancellation, metadata, and duplicate-safe sales are now covered. Frontend import-wizard work remains separate.
 
 This audit records the current state before expanding the MVP. It follows the requested rule: inspect the repository and document scope before changing database structure or UI flows.
 
@@ -223,8 +223,4 @@ pnpm --filter web build
 
 ## Recommended next implementation task
 
-Implement Task 2.2 only:
-
-Safe CSV/XLSX staged upload, first-20-row preview, typed row validation, persisted import jobs/statistics, confirmation before final writes, and duplicate-safe sales imports.
-
-Do not begin the Task 3 financial engine until the staged import contract is stable and Task 2 acceptance tests pass.
+Run the Task 2.2 CI/acceptance suite and keep the staged-import API contract stable. Once those checks pass, begin Task 3 only: the deterministic financial calculation engine using the staged `catalog_items`, `item_costs`, and `sales_lines` data. Frontend import-wizard work can proceed independently against the stable Task 2 API.
