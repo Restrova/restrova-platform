@@ -4,6 +4,13 @@ All notable project changes should be documented here.
 
 This project follows a simple date-based changelog until a formal release process is introduced.
 
+## 2026-08-13
+
+- Added Task 2.3 automatic column alias mapping and manual mapping correction for staged imports.
+- Added `needs_mapping`, `validation_failed`, and `ready` validation states without breaking the existing import job lifecycle status.
+- Added row-level source-column/value diagnostics, separated warnings from blocking errors, and blocked confirmation while validation errors remain.
+- Added mapping persistence, confirmation-token rotation after remapping, a mapping update API, migration coverage, and Task 2.3 acceptance tests.
+
 ## 2026-08-11
 
 - Added Task 2.2 safe staged CSV/XLSX import jobs with first-20-row preview and row-level validation errors.

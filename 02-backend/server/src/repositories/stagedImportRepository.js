@@ -1,13 +1,31 @@
 import { db } from "../db.js";
 
+const insertImportRow = db.prepare(
+  "INSERT INTO import_job_rows(job_id,row_number,status,raw_json,normalized_json,errors_json) VALUES (?,?,?,?,?,?)"
+);
+
+function insertRows(jobId, rows) {
+  for (const row of rows) {
+    insertImportRow.run(
+      jobId,
+      row.rowNumber,
+      row.status,
+      JSON.stringify(row.raw),
+      row.normalized ? JSON.stringify(row.normalized) : null,
+      JSON.stringify(row.errors || [])
+    );
+  }
+}
+
 export function createImportJob(data) {
   const result = db
     .prepare(
       `INSERT INTO import_jobs(
         organization_id,restaurant_id,created_by,template_key,template_version,
         original_filename,content_type,file_type,byte_size,file_sha256,confirmation_token_hash,
-        total_rows,accepted_rows,rejected_rows,duplicate_rows
-      ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+        total_rows,accepted_rows,rejected_rows,duplicate_rows,source_headers_json,mapping_json,
+        validation_status,warning_count
+      ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
     )
     .run(
       data.organizationId,
@@ -24,28 +42,46 @@ export function createImportJob(data) {
       data.totalRows,
       data.acceptedRows,
       data.rejectedRows,
-      data.duplicateRows
+      data.duplicateRows,
+      JSON.stringify(data.sourceHeaders || []),
+      JSON.stringify(data.mappings || []),
+      data.validationStatus || "ready",
+      data.warningCount || 0
     );
   return Number(result.lastInsertRowid);
 }
 
 export function insertImportJobRows(jobId, rows) {
-  const insert = db.prepare(
-    "INSERT INTO import_job_rows(job_id,row_number,status,raw_json,normalized_json,errors_json) VALUES (?,?,?,?,?,?)"
-  );
-  const run = db.transaction(() => {
-    for (const row of rows) {
-      insert.run(
-        jobId,
-        row.rowNumber,
-        row.status,
-        JSON.stringify(row.raw),
-        row.normalized ? JSON.stringify(row.normalized) : null,
-        JSON.stringify(row.errors || [])
-      );
-    }
-  });
-  run();
+  db.transaction(() => insertRows(jobId, rows))();
+}
+
+export function replaceImportJobValidation(jobId, data, rows) {
+  return db.transaction(() => {
+    const changes = db
+      .prepare(
+        `UPDATE import_jobs
+         SET mapping_json=?,validation_status=?,warning_count=?,
+             total_rows=?,accepted_rows=?,rejected_rows=?,duplicate_rows=?,
+             confirmation_token_hash=?,mapping_updated_at=CURRENT_TIMESTAMP
+         WHERE id=? AND status='preview_ready'`
+      )
+      .run(
+        JSON.stringify(data.mappings || []),
+        data.validationStatus,
+        data.warningCount || 0,
+        data.totalRows,
+        data.acceptedRows,
+        data.rejectedRows,
+        data.duplicateRows,
+        data.confirmationTokenHash,
+        jobId
+      ).changes;
+
+    if (!changes) return 0;
+    db.prepare("DELETE FROM import_job_rows WHERE job_id=?").run(jobId);
+    insertRows(jobId, rows);
+    return changes;
+  })();
 }
 
 export function findImportJobInScope(user, jobId) {
@@ -80,7 +116,7 @@ export function markImportJobConfirmed(jobId, importedRows) {
     .prepare(
       `UPDATE import_jobs
        SET status='confirmed',imported_rows=?,confirmed_at=CURRENT_TIMESTAMP
-       WHERE id=? AND status='preview_ready'`
+       WHERE id=? AND status='preview_ready' AND validation_status='ready'`
     )
     .run(importedRows, jobId).changes;
 }

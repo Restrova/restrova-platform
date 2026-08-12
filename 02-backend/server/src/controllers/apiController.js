@@ -59,6 +59,8 @@ export const previewStagedImport = (req, res) =>
   );
 export const getStagedImportJob = (req, res) =>
   res.json(stagedImportService.getStagedImportJob(req.user, req.params.id));
+export const updateStagedImportMapping = (req, res) =>
+  res.json(stagedImportService.updateStagedImportMapping(req.user, req.params.id, req.body?.mappings));
 export const confirmStagedImport = (req, res) =>
   res.json(stagedImportService.confirmStagedImport(req.user, req.params.id, req.body?.confirmationToken));
 export const cancelStagedImport = (req, res) =>
