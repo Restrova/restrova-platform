@@ -8,6 +8,7 @@ import * as organizationService from "../services/organizationService.js";
 import * as userService from "../services/userService.js";
 import * as healthService from "../services/healthService.js";
 import * as importTemplateService from "../services/importTemplateService.js";
+import * as stagedImportService from "../services/stagedImportService.js";
 
 export const health = (_req, res) => res.json(healthService.getHealth());
 export const ready = (_req, res) => res.json(healthService.getReadiness());
@@ -46,6 +47,22 @@ export const downloadImportTemplate = (req, res) => {
 };
 export const previewImport = (req, res) => res.json(dataService.previewImport(req.body));
 export const confirmImport = (req, res) => res.status(201).json(dataService.confirmImport(req.user, req.body));
+
+export const previewStagedImport = (req, res) =>
+  res.status(201).json(
+    stagedImportService.previewStagedImport(req.user, {
+      templateKey: req.query.templateKey,
+      filename: req.query.filename,
+      contentType: req.headers["content-type"],
+      buffer: req.body
+    })
+  );
+export const getStagedImportJob = (req, res) =>
+  res.json(stagedImportService.getStagedImportJob(req.user, req.params.id));
+export const confirmStagedImport = (req, res) =>
+  res.json(stagedImportService.confirmStagedImport(req.user, req.params.id, req.body?.confirmationToken));
+export const cancelStagedImport = (req, res) =>
+  res.json(stagedImportService.cancelStagedImport(req.user, req.params.id));
 
 export const knowledgeStatus = (req, res) => res.json(knowledgeService.getKnowledgeStatus(req.user));
 export const importKnowledge = (req, res) => res.status(201).json(knowledgeService.importKnowledge(req.user, req.body));
