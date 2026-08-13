@@ -7,6 +7,7 @@ import "./styles/global.css";
 import "./styles/utilities.css";
 import "./styles/components.css";
 import "./styles/shell.css";
+import "./styles/import-wizard.css";
 import "./styles.css";
 import "./decision.css";
 import "./data-panel.css";
