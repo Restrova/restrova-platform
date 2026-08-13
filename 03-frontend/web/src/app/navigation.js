@@ -49,7 +49,7 @@ export const navigationGroups = [
         titleKey: "navigation.imports",
         path: "/app/imports",
         icon: Database,
-        requiredRoles: [ROLE_OWNER, ROLE_BRANCH_MANAGER]
+        requiredRoles: [ROLE_OWNER]
       },
       {
         id: "menuProfitability",

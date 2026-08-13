@@ -4,6 +4,7 @@ import { AppShell } from "../components/layout/AppShell.jsx";
 import { navigationItems } from "./navigation.js";
 import { DesignSystemPage } from "../pages/DesignSystemPage.jsx";
 import { LegacyWorkspacePage } from "../pages/LegacyWorkspacePage.jsx";
+import { ImportWizardPage } from "../pages/ImportWizardPage.jsx";
 import { LoginPage } from "../pages/LoginPage.jsx";
 import { NotFoundPage } from "../pages/NotFoundPage.jsx";
 import { PlaceholderPage } from "../pages/PlaceholderPage.jsx";
@@ -47,8 +48,9 @@ export function AppRoutes() {
         <Route element={<AppShell />}>
           <Route path="/app" element={<Navigate to="/app/workspace" replace />} />
           <Route path="/app/workspace" element={<LegacyWorkspacePage />} />
+          <Route path="/app/imports" element={<ImportWizardPage />} />
           {navigationItems
-            .filter((item) => item.id !== "workspace")
+            .filter((item) => !["workspace", "imports"].includes(item.id))
             .map((item) => (
               <Route
                 key={item.path}
