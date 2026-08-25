@@ -19,8 +19,9 @@ export function logInfo(event, fields = {}) {
   write("info", event, fields);
 }
 
-export function logError(error, status) {
+export function logError(error, status, fields = {}) {
   write("error", "request_error", {
+    ...fields,
     status,
     type: error?.code || error?.name || "unknown_error"
   });

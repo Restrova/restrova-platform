@@ -5,14 +5,15 @@ import { config } from "../config/appConfig.js";
 import { rateLimited } from "../errors/appError.js";
 
 function clientKey(req) {
-  return req.ip || req.socket?.remoteAddress || "unknown";
+  return req.user?.owner_id ? `user:${req.user.owner_id}` : req.ip || req.socket?.remoteAddress || "unknown";
 }
 
 export function createRateLimiter({ windowMs, max, message }) {
   const buckets = new Map();
   return (req, res, next) => {
     const now = Date.now();
-    const key = `${clientKey(req)}:${req.baseUrl || req.path}`;
+    const endpoint = req.route?.path || req.path || req.baseUrl;
+    const key = `${clientKey(req)}:${req.baseUrl || ""}:${endpoint}`;
     const bucket = buckets.get(key);
     if (!bucket || bucket.resetAt <= now) {
       buckets.set(key, { count: 1, resetAt: now + windowMs });
@@ -39,6 +40,18 @@ export const authRateLimit = createRateLimiter({
   windowMs: config.rateLimits.windowMs,
   max: config.rateLimits.authMax,
   message: "Too many authentication attempts. Please try again later."
+});
+
+export const importPreviewRateLimit = createRateLimiter({
+  windowMs: config.rateLimits.windowMs,
+  max: config.rateLimits.importPreviewMax,
+  message: "Too many import previews. Please try again later."
+});
+
+export const importActionRateLimit = createRateLimiter({
+  windowMs: config.rateLimits.windowMs,
+  max: config.rateLimits.importActionMax,
+  message: "Too many import actions. Please try again later."
 });
 
 export function configureSecurity(app) {
@@ -78,7 +91,7 @@ export function configureSecurity(app) {
         return callback(error);
       },
       credentials: false,
-      methods: ["GET", "POST", "PATCH", "OPTIONS"],
+      methods: ["GET", "POST", "PUT", "PATCH", "OPTIONS"],
       allowedHeaders: ["Content-Type", "Authorization"],
       maxAge: 600
     })

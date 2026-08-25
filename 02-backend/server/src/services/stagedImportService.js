@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import { config } from "../config/appConfig.js";
 import { conflict, forbidden, notFound, validationError } from "../errors/appError.js";
 import {
   applyColumnMappings,
@@ -9,6 +10,7 @@ import {
   validateManualMappings
 } from "../import/columnMapping.js";
 import { parseUploadedTable } from "../import/stagedFileParser.js";
+import { logInfo } from "../observability/logger.js";
 import * as stagedImportRepository from "../repositories/stagedImportRepository.js";
 import { getImportTemplate } from "./importTemplateService.js";
 
@@ -36,12 +38,18 @@ function requiredText(row, field, errors, max = 240) {
     return "";
   }
   if (value.length > max) errors.push(rowIssue(field, "too_long", `${field} is too long.`));
+  if (/^[=+\-@]/.test(value)) {
+    errors.push(rowIssue(field, "unsafe_formula", `${field} cannot begin with a spreadsheet formula indicator.`));
+  }
   return value;
 }
 
 function optionalText(row, field, max = 240, errors = []) {
   const value = String(row[field] ?? "").trim();
   if (value.length > max) errors.push(rowIssue(field, "too_long", `${field} is too long.`));
+  if (/^[=+\-@]/.test(value)) {
+    errors.push(rowIssue(field, "unsafe_formula", `${field} cannot begin with a spreadsheet formula indicator.`));
+  }
   return value;
 }
 
@@ -105,9 +113,12 @@ function parseDateTime(value, field, errors) {
     errors.push(rowIssue(field, "required", `${field} is required.`));
     return "";
   }
+  const hasExplicitTimezone = /(?:Z|[+-]\d{2}:\d{2})$/i.test(text);
   const parsed = new Date(text);
-  if (Number.isNaN(parsed.getTime())) {
-    errors.push(rowIssue(field, "invalid_datetime", `${field} must be an ISO-compatible date/time.`));
+  if (!hasExplicitTimezone || Number.isNaN(parsed.getTime())) {
+    errors.push(
+      rowIssue(field, "invalid_datetime", `${field} must be an ISO-compatible date/time with an explicit timezone.`)
+    );
     return "";
   }
   return parsed.toISOString();
@@ -354,6 +365,37 @@ function newConfirmationToken() {
   return crypto.randomBytes(32).toString("base64url");
 }
 
+function confirmationTokenExpiresAt() {
+  return new Date(Date.now() + config.imports.confirmationTokenTtlSeconds * 1000).toISOString();
+}
+
+function requestIdOrFallback(requestId) {
+  return String(requestId || crypto.randomUUID());
+}
+
+function recordAudit(user, job, eventType, requestId, details = {}) {
+  const safeRequestId = requestIdOrFallback(requestId);
+  stagedImportRepository.recordImportAuditEvent({
+    importJobId: job.id,
+    organizationId: user.organization_id,
+    restaurantId: user.restaurant_id,
+    branchId: user.branch_id,
+    userId: user.owner_id,
+    templateKey: job.template_key,
+    eventType,
+    requestId: safeRequestId,
+    details
+  });
+  logInfo("import_event", {
+    requestId: safeRequestId,
+    importJobId: job.id,
+    organizationId: user.organization_id,
+    branchId: user.branch_id || null,
+    templateKey: job.template_key,
+    status: eventType
+  });
+}
+
 function parseStoredRow(row) {
   return {
     rowNumber: row.row_number,
@@ -364,16 +406,19 @@ function parseStoredRow(row) {
   };
 }
 
-function publicJob(job, rows) {
+function publicJob(job, rows, auditRows = []) {
   const parsedRows = rows.map(parseStoredRow);
   const mappings = JSON.parse(job.mapping_json || "[]");
   const sourceHeaders = JSON.parse(job.source_headers_json || "[]");
   const template = getImportTemplate(job.template_key);
   const summary = mappingSummary(template, mappings);
   const validationStatus = job.validation_status || "ready";
-  const workflowStatus = job.status === "preview_ready" ? validationStatus : job.status;
+  let workflowStatus = job.status === "preview_ready" ? validationStatus : job.status;
+  if (job.status === "preview_ready" && auditRows.at(-1)?.event_type === "import_failed") {
+    workflowStatus = "failed";
+  }
 
-  const previewRows = parsedRows.slice(0, 20).map((row) => ({
+  const previewRows = parsedRows.slice(0, config.imports.previewRows).map((row) => ({
     ...row,
     status: validationStatus === "needs_mapping" ? "pending_mapping" : row.status
   }));
@@ -408,7 +453,8 @@ function publicJob(job, rows) {
       type: job.file_type,
       contentType: job.content_type,
       byteSize: job.byte_size,
-      sha256: job.file_sha256
+      sha256: job.file_sha256,
+      uploadedAt: job.created_at
     },
     mapping: {
       sourceHeaders,
@@ -426,13 +472,24 @@ function publicJob(job, rows) {
       accepted: job.accepted_rows,
       rejected: job.rejected_rows,
       duplicates: job.duplicate_rows,
+      skipped: job.duplicate_rows,
       warnings: job.warning_count || 0,
       imported: job.imported_rows
     },
     previewRows,
     rowErrors,
     rowWarnings,
+    auditEvents: auditRows.map((event) => ({
+      id: event.id,
+      eventType: event.event_type,
+      requestId: event.request_id,
+      branchId: event.branch_id,
+      details: JSON.parse(event.details_json || "{}"),
+      createdAt: event.created_at
+    })),
     createdAt: job.created_at,
+    confirmationExpiresAt:
+      job.status === "preview_ready" && !job.confirmation_consumed_at ? job.confirmation_token_expires_at : null,
     mappingUpdatedAt: job.mapping_updated_at,
     confirmedAt: job.confirmed_at,
     cancelledAt: job.cancelled_at
@@ -447,7 +504,8 @@ function getJobOrThrow(user, jobId) {
   return { id, job };
 }
 
-export function previewStagedImport(user, { templateKey, filename, contentType, buffer }) {
+export function previewStagedImport(user, { templateKey, filename, contentType, buffer, requestId }) {
+  const safeRequestId = requestIdOrFallback(requestId);
   const template = getImportTemplate(templateKey);
   const originalFilename = cleanFilename(filename);
   const parsed = parseUploadedTable({ buffer, filename: originalFilename, contentType });
@@ -474,12 +532,45 @@ export function previewStagedImport(user, { templateKey, filename, contentType, 
     sourceHeaders: parsed.headers,
     mappings,
     validationStatus: validation.validationStatus,
-    warningCount: validation.warningCount
+    warningCount: validation.warningCount,
+    confirmationTokenExpiresAt: confirmationTokenExpiresAt(),
+    requestId: safeRequestId
   });
 
   stagedImportRepository.insertImportJobRows(jobId, validation.rows);
   const job = stagedImportRepository.findImportJobInScope(user, jobId);
-  const result = publicJob(job, stagedImportRepository.listImportJobRows(jobId));
+  recordAudit(user, job, "import_job_created", safeRequestId);
+  recordAudit(user, job, "file_uploaded", safeRequestId, {
+    filename: originalFilename,
+    fileType: parsed.fileType,
+    byteSize: buffer.length,
+    sha256: job.file_sha256
+  });
+  recordAudit(user, job, "validation_started", safeRequestId);
+  recordAudit(user, job, "validation_completed", safeRequestId, {
+    totalRows: validation.counts.total,
+    validRows: validation.counts.accepted,
+    invalidRows: validation.counts.rejected,
+    duplicateRows: validation.counts.duplicates,
+    warningCount: validation.warningCount
+  });
+  if (validation.validationStatus === "validation_failed") {
+    recordAudit(user, job, "validation_failed", safeRequestId, {
+      errorCategory: "row_validation",
+      invalidRows: validation.counts.rejected
+    });
+  } else if (validation.validationStatus === "needs_mapping") {
+    recordAudit(user, job, "mapping_required", safeRequestId, {
+      missingRequiredMappings: validation.summary.missingRequiredMappings
+    });
+  } else {
+    recordAudit(user, job, "import_ready", safeRequestId);
+  }
+  const result = publicJob(
+    job,
+    stagedImportRepository.listImportJobRows(jobId),
+    stagedImportRepository.listImportAuditEvents(jobId)
+  );
 
   return {
     ...result,
@@ -487,7 +578,8 @@ export function previewStagedImport(user, { templateKey, filename, contentType, 
   };
 }
 
-export function updateStagedImportMapping(user, jobId, mappings) {
+export function updateStagedImportMapping(user, jobId, mappings, requestId) {
+  const safeRequestId = requestIdOrFallback(requestId);
   const { id, job } = getJobOrThrow(user, jobId);
   if (job.status !== "preview_ready") throw conflict(`Import job is already ${job.status}.`);
 
@@ -513,7 +605,9 @@ export function updateStagedImportMapping(user, jobId, mappings) {
       acceptedRows: validation.counts.accepted,
       rejectedRows: validation.counts.rejected,
       duplicateRows: validation.counts.duplicates,
-      confirmationTokenHash: hash(confirmationToken)
+      confirmationTokenHash: hash(confirmationToken),
+      confirmationTokenExpiresAt: confirmationTokenExpiresAt(),
+      requestId: safeRequestId
     },
     validation.rows
   );
@@ -521,7 +615,28 @@ export function updateStagedImportMapping(user, jobId, mappings) {
   if (!changed) throw conflict("Import job is no longer available to update.");
 
   const updated = stagedImportRepository.findImportJobInScope(user, id);
-  const result = publicJob(updated, stagedImportRepository.listImportJobRows(id));
+  recordAudit(user, updated, "mapping_changed", safeRequestId, {
+    mappedColumns: validation.summary.mappedCount,
+    missingRequiredMappings: validation.summary.missingRequiredMappings
+  });
+  recordAudit(user, updated, "validation_completed", safeRequestId, {
+    totalRows: validation.counts.total,
+    validRows: validation.counts.accepted,
+    invalidRows: validation.counts.rejected,
+    duplicateRows: validation.counts.duplicates,
+    warningCount: validation.warningCount
+  });
+  recordAudit(
+    user,
+    updated,
+    validation.validationStatus === "ready" ? "import_ready" : validation.validationStatus,
+    safeRequestId
+  );
+  const result = publicJob(
+    updated,
+    stagedImportRepository.listImportJobRows(id),
+    stagedImportRepository.listImportAuditEvents(id)
+  );
   return {
     ...result,
     confirmationToken: validation.validationStatus === "ready" ? confirmationToken : null
@@ -530,10 +645,77 @@ export function updateStagedImportMapping(user, jobId, mappings) {
 
 export function getStagedImportJob(user, jobId) {
   const { id, job } = getJobOrThrow(user, jobId);
-  return publicJob(job, stagedImportRepository.listImportJobRows(id));
+  return publicJob(job, stagedImportRepository.listImportJobRows(id), stagedImportRepository.listImportAuditEvents(id));
+}
+
+export function listStagedImportJobs(user, filters = {}) {
+  const allowedStatuses = new Set([
+    "preview_ready",
+    "needs_mapping",
+    "validation_failed",
+    "ready",
+    "failed",
+    "confirmed",
+    "completed",
+    "cancelled"
+  ]);
+  const normalized = {};
+  if (filters.status) {
+    normalized.status = String(filters.status);
+    if (!allowedStatuses.has(normalized.status)) throw validationError("Invalid import status filter.");
+  }
+  if (filters.template) {
+    normalized.templateKey = getImportTemplate(String(filters.template)).key;
+  }
+  if (filters.branch) {
+    normalized.branchId = Number(filters.branch);
+    if (!Number.isInteger(normalized.branchId) || normalized.branchId <= 0) {
+      throw validationError("Invalid branch filter.");
+    }
+    if (!stagedImportRepository.findBranchById(user, normalized.branchId)) {
+      throw notFound("Branch not found");
+    }
+  }
+  for (const key of ["from", "to"]) {
+    if (!filters[key]) continue;
+    const parsed = new Date(String(filters[key]));
+    if (Number.isNaN(parsed.getTime())) throw validationError(`Invalid ${key} date filter.`);
+    normalized[key] = parsed.toISOString();
+  }
+  if (normalized.from && normalized.to && normalized.from > normalized.to) {
+    throw validationError("The from date must be before the to date.");
+  }
+
+  const jobs = stagedImportRepository
+    .listImportJobsInScope(user, normalized)
+    .map((job) =>
+      publicJob(job, [], normalized.status === "failed" ? stagedImportRepository.listImportAuditEvents(job.id) : [])
+    );
+  return { count: jobs.length, jobs };
+}
+
+export function getStagedImportMetrics(user) {
+  const row = stagedImportRepository.getImportMetricsInScope(user);
+  return {
+    importsStarted: Number(row.imports_started || 0),
+    importsCompleted: Number(row.imports_completed || 0),
+    importsFailed: Number(row.imports_failed || 0),
+    validationFailures: Number(row.validation_failures || 0),
+    duplicateRows: Number(row.duplicate_rows || 0),
+    rowsImported: Number(row.rows_imported || 0),
+    averageImportDurationMs:
+      row.average_import_duration_ms == null ? null : Number(Number(row.average_import_duration_ms).toFixed(2))
+  };
 }
 
 function assertConfirmationToken(job, confirmationToken) {
+  if (
+    job.confirmation_consumed_at ||
+    !job.confirmation_token_expires_at ||
+    Date.parse(job.confirmation_token_expires_at) <= Date.now()
+  ) {
+    throw forbidden("Confirmation token has expired or was already used");
+  }
   if (!confirmationToken || typeof confirmationToken !== "string") {
     throw forbidden("Invalid confirmation token");
   }
@@ -544,14 +726,23 @@ function assertConfirmationToken(job, confirmationToken) {
   }
 }
 
-export function confirmStagedImport(user, jobId, confirmationToken) {
+export function confirmStagedImport(user, jobId, confirmationToken, requestId) {
+  const safeRequestId = requestIdOrFallback(requestId);
   const { id, job } = getJobOrThrow(user, jobId);
   if (job.status !== "preview_ready") throw conflict(`Import job is already ${job.status}.`);
   if ((job.validation_status || "ready") !== "ready" || job.rejected_rows > 0) {
     throw conflict("Import job has blocking validation errors and cannot be confirmed.");
   }
 
-  assertConfirmationToken(job, confirmationToken);
+  try {
+    assertConfirmationToken(job, confirmationToken);
+  } catch (error) {
+    recordAudit(user, job, "import_failed", safeRequestId, {
+      failureStage: "confirmation",
+      errorCategory: error.code || "invalid_confirmation"
+    });
+    throw error;
+  }
   const rows = stagedImportRepository.listImportJobRows(id).map(parseStoredRow);
   const accepted = rows.filter((row) => row.status === "accepted");
   let importedRows = 0;
@@ -577,19 +768,28 @@ export function confirmStagedImport(user, jobId, confirmationToken) {
       }
     }
 
-    if (!stagedImportRepository.markImportJobConfirmed(id, importedRows)) {
+    if (!stagedImportRepository.markImportJobConfirmed(id, importedRows, safeRequestId)) {
       throw conflict("Import job is no longer available to confirm.");
     }
+    const confirmed = stagedImportRepository.findImportJobInScope(user, id);
+    recordAudit(user, confirmed, "import_confirmed", safeRequestId, { importedRows });
+    recordAudit(user, confirmed, "import_completed", safeRequestId, {
+      importedRows,
+      skippedRows: confirmed.duplicate_rows
+    });
   });
 
   return getStagedImportJob(user, id);
 }
 
-export function cancelStagedImport(user, jobId) {
+export function cancelStagedImport(user, jobId, requestId) {
+  const safeRequestId = requestIdOrFallback(requestId);
   const { id, job } = getJobOrThrow(user, jobId);
   if (job.status !== "preview_ready") throw conflict(`Import job is already ${job.status}.`);
-  if (!stagedImportRepository.cancelImportJob(id)) {
+  if (!stagedImportRepository.cancelImportJob(id, safeRequestId)) {
     throw conflict("Import job is no longer available to cancel.");
   }
+  const cancelled = stagedImportRepository.findImportJobInScope(user, id);
+  recordAudit(user, cancelled, "import_cancelled", safeRequestId);
   return getStagedImportJob(user, id);
 }

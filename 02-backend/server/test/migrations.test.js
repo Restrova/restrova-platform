@@ -14,8 +14,17 @@ test("database migrations apply and are idempotent", () => {
     { version: "0001_migration_foundation.sql" },
     { version: "0002_import_templates.sql" },
     { version: "0003_staged_imports.sql" },
-    { version: "0004_import_mapping_validation.sql" }
+    { version: "0004_import_mapping_validation.sql" },
+    { version: "0005_import_audit_security.sql" }
   ]);
+
+  assert.ok(
+    db
+      .prepare("PRAGMA table_info(import_jobs)")
+      .all()
+      .some((column) => column.name === "confirmation_token_expires_at")
+  );
+  assert.ok(db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='import_audit_events'").get());
 
   migrate(db);
 

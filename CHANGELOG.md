@@ -4,6 +4,15 @@ All notable project changes should be documented here.
 
 This project follows a simple date-based changelog until a formal release process is introduced.
 
+## 2026-08-25
+
+- Completed Task 2 safe import release readiness across validation, integration coverage, audit history, security limits, and documentation.
+- Added scoped import history and operational metrics APIs plus request-correlated lifecycle audit events without logging tokens or uploaded datasets.
+- Added configurable upload, row, column, cell, preview, token-lifetime, and import rate limits; strict extension/MIME/content validation; fatal UTF-8 checks; formula protection; and explicit-timezone validation.
+- Added expiring, rotating, one-use confirmation tokens and replay/cancellation hardening.
+- Expanded backend and frontend flow coverage for history, metrics, access isolation, malformed files, resource limits, expiration, confirmation, cancellation, and row-error UX.
+- Added complete import/API/template/runbook/release documentation and safe Arabic/Chinese/English sample CSV files.
+
 ## 2026-08-13
 
 - Added Task 2.3 automatic column alias mapping and manual mapping correction for staged imports.

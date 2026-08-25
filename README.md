@@ -47,7 +47,7 @@ Before adding the next database or UI feature, start with these docs:
 - [`05-devops-qa/docs/mvp-scope.md`](05-devops-qa/docs/mvp-scope.md): frozen MVP scope for a Yemeni restaurant in China.
 - [`05-devops-qa/docs/acceptance-tests.md`](05-devops-qa/docs/acceptance-tests.md): task-by-task acceptance tests and readiness format.
 
-Task 1 and Task 2 are implemented on the backend. Task 2 provides versioned templates plus safe CSV/XLSX staged import jobs with typed validation, first-20-row preview, confirmation tokens, cancellation, audit metadata, and duplicate-safe sales lines. The next backend implementation step is Task 3: the deterministic financial calculation engine.
+Task 1 and Task 2 are implemented. Task 2 provides versioned templates plus safe CSV/XLSX staged import jobs with automatic/manual mapping, typed validation, bounded preview, expiring one-use confirmation tokens, cancellation, audit history, operational metrics, abuse controls, and duplicate-safe sales lines. See the [complete import guide](docs/imports/README.md), [API reference](docs/imports/api.md), and [safe example files](docs/imports/examples/). The next milestone is **Task 3: the deterministic financial calculation engine**.
 
 ## API
 
@@ -63,7 +63,10 @@ Task 1 and Task 2 are implemented on the backend. Task 2 provides versioned temp
 - `POST /api/data/import/preview`
 - `POST /api/data/import`
 - `POST /api/data/import-jobs/preview?templateKey=<key>&filename=<file>`
+- `GET /api/data/import-jobs`
+- `GET /api/data/import-jobs/metrics`
 - `GET /api/data/import-jobs/:id`
+- `PUT /api/data/import-jobs/:id/mapping`
 - `POST /api/data/import-jobs/:id/confirm`
 - `POST /api/data/import-jobs/:id/cancel`
 - `POST /api/actions/:hash/confirm`
@@ -74,7 +77,7 @@ Task 1 and Task 2 are implemented on the backend. Task 2 provides versioned temp
 
 New integrations should use the Task 2 contracts for `branches`, `menu`, `costs`, and `sales`. Upload the raw CSV or XLSX file body to `POST /api/data/import-jobs/preview`, passing `templateKey` and `filename` as query parameters. The response stores a server-side import job and returns the first 20 rows, row errors, statistics, and a one-time confirmation token. No final business tables are written during preview. Confirm the exact staged job with `POST /api/data/import-jobs/:id/confirm` and `{ "confirmationToken": "..." }`, or cancel it before confirmation.
 
-The staged importer preserves UTF-8 Arabic/Chinese text, accepts ISO-compatible timestamps including `+08:00`, stores file name/type/size/SHA-256 metadata, validates references, and prevents duplicate sales lines by branch + external order + external line identifiers. Financial money fields are normalized to integer minor units for Task 3.
+The staged importer preserves UTF-8 Arabic/Chinese text, requires ISO-compatible timestamps with explicit timezones such as `+08:00`, stores safe file name/type/size/SHA-256 metadata, validates references, and prevents duplicate sales lines by branch + external order + external line identifiers. Financial money fields are normalized to integer minor units for Task 3. Backend-configured file/row/column/cell limits, strict type checks, formula protection, import-specific rate limits, scoped history, and request-correlated audit events are documented in the [import operations guide](docs/imports/README.md).
 
 ## Legacy restaurant data import
 

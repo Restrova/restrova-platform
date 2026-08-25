@@ -1,8 +1,7 @@
 import path from "node:path";
 import { inflateRawSync } from "node:zlib";
+import { config } from "../config/appConfig.js";
 import { validationError } from "../errors/appError.js";
-
-const MAX_ROWS = 10_000;
 
 function cleanHeader(value) {
   return String(value ?? "")
@@ -13,7 +12,7 @@ function cleanHeader(value) {
 function normalizedHeader(value) {
   return cleanHeader(value).toLowerCase();
 }
-function rowsToObjects(matrix) {
+function rowsToObjects(matrix, limits) {
   if (!matrix.length) throw validationError("The uploaded file is empty.");
 
   const headers = matrix[0].map(cleanHeader);
@@ -27,25 +26,48 @@ function rowsToObjects(matrix) {
   if (new Set(normalizedHeaders).size !== normalizedHeaders.length) {
     throw validationError("Column names must be unique.");
   }
+  if (headers.length > limits.maxColumns) {
+    throw validationError(`A single import cannot exceed ${limits.maxColumns.toLocaleString()} columns.`);
+  }
+  for (const header of headers) {
+    if (header.length > limits.maxCellLength) {
+      throw validationError(`A column name cannot exceed ${limits.maxCellLength.toLocaleString()} characters.`);
+    }
+  }
 
   const rows = matrix
     .slice(1)
     .filter((cells) => cells.some((value) => String(value ?? "").trim() !== ""))
     .map((cells, index) => {
       if (cells.length > headers.length) throw validationError(`Row ${index + 2} has more values than the header row.`);
+      for (const cell of cells) {
+        if (String(cell ?? "").length > limits.maxCellLength) {
+          throw validationError(
+            `Row ${index + 2} contains a value longer than ${limits.maxCellLength.toLocaleString()} characters.`
+          );
+        }
+      }
 
       return Object.fromEntries(headers.map((header, column) => [header, String(cells[column] ?? "").trim()]));
     });
 
   if (!rows.length) throw validationError("The uploaded file must contain at least one data row.");
 
-  if (rows.length > MAX_ROWS) throw validationError(`A single import cannot exceed ${MAX_ROWS.toLocaleString()} rows.`);
+  if (rows.length > limits.maxRows) {
+    throw validationError(`A single import cannot exceed ${limits.maxRows.toLocaleString()} rows.`);
+  }
 
   return { headers, rows };
 }
 
-export function parseCsvBuffer(buffer) {
-  const text = buffer.toString("utf8").replace(/^\uFEFF/, "");
+export function parseCsvBuffer(buffer, limits = config.imports) {
+  let text;
+  try {
+    text = new TextDecoder("utf-8", { fatal: true }).decode(buffer).replace(/^\uFEFF/, "");
+  } catch {
+    throw validationError("The CSV must use valid UTF-8 encoding.");
+  }
+  if (text.includes("\0")) throw validationError("The CSV contains unexpected binary content.");
   const matrix = [];
   let row = [];
   let value = "";
@@ -83,7 +105,7 @@ export function parseCsvBuffer(buffer) {
     row.push(value);
     matrix.push(row);
   }
-  return rowsToObjects(matrix);
+  return rowsToObjects(matrix, limits);
 }
 
 function findEndOfCentralDirectory(buffer) {
@@ -206,32 +228,58 @@ function worksheetMatrix(xml, sharedStrings) {
   return matrix;
 }
 
-export function parseXlsxBuffer(buffer) {
+function decodeWorkbookXml(buffer) {
+  if (!buffer) return "";
+  try {
+    return new TextDecoder("utf-8", { fatal: true }).decode(buffer);
+  } catch {
+    throw validationError("The XLSX contains invalid text encoding.");
+  }
+}
+
+export function parseXlsxBuffer(buffer, limits = config.imports) {
   try {
     const zip = readZipEntries(buffer);
     const worksheetName = zip.names
       .filter((name) => /^xl\/worksheets\/sheet\d+\.xml$/i.test(name))
       .sort((left, right) => left.localeCompare(right, undefined, { numeric: true }))[0];
     if (!worksheetName) throw validationError("The XLSX file does not contain a worksheet.");
-    const worksheet = zip.readEntry(worksheetName)?.toString("utf8");
-    const sharedStrings = sharedStringsFromXml(zip.readEntry("xl/sharedStrings.xml")?.toString("utf8"));
-    return rowsToObjects(worksheetMatrix(worksheet, sharedStrings));
+    const worksheet = decodeWorkbookXml(zip.readEntry(worksheetName));
+    const sharedStrings = sharedStringsFromXml(decodeWorkbookXml(zip.readEntry("xl/sharedStrings.xml")));
+    return rowsToObjects(worksheetMatrix(worksheet, sharedStrings), limits);
   } catch (error) {
     if (error?.code === "VALIDATION_ERROR") throw error;
     throw validationError("The XLSX file is invalid.");
   }
 }
 
-export function parseUploadedTable({ buffer, filename, contentType }) {
+export function parseUploadedTable({ buffer, filename, contentType, limits = config.imports }) {
   if (!Buffer.isBuffer(buffer) || buffer.length === 0) throw validationError("The uploaded file is empty.");
+  if (buffer.length > limits.maxFileSizeBytes) {
+    throw validationError("File exceeds the maximum allowed upload size.");
+  }
   const extension = path.extname(filename || "").toLowerCase();
   const type = String(contentType || "")
     .split(";")[0]
     .trim()
     .toLowerCase();
-  const isXlsx = extension === ".xlsx" || type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-  const isCsv = extension === ".csv" || ["text/csv", "application/csv", "text/plain"].includes(type);
-  if (isXlsx) return { fileType: "xlsx", ...parseXlsxBuffer(buffer) };
-  if (isCsv) return { fileType: "csv", ...parseCsvBuffer(buffer) };
-  throw validationError("Only CSV and XLSX files are supported.");
+  const csvTypes = new Set(["text/csv", "application/csv", "text/plain", "application/octet-stream", ""]);
+  const xlsxTypes = new Set([
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "application/octet-stream",
+    ""
+  ]);
+  if (![".csv", ".xlsx"].includes(extension)) throw validationError("Only CSV and XLSX files are supported.");
+
+  if (extension === ".xlsx") {
+    if (!xlsxTypes.has(type)) throw validationError("The file type does not match its XLSX filename.");
+    if (buffer.length < 4 || buffer.readUInt16LE(0) !== 0x4b50) throw validationError("The XLSX file is invalid.");
+    return { fileType: "xlsx", ...parseXlsxBuffer(buffer, limits) };
+  }
+
+  if (!csvTypes.has(type)) throw validationError("The file type does not match its CSV filename.");
+  if (buffer.length >= 2 && buffer.readUInt16LE(0) === 0x4b50) {
+    throw validationError("The file contents do not match its CSV filename.");
+  }
+  return { fileType: "csv", ...parseCsvBuffer(buffer, limits) };
 }
