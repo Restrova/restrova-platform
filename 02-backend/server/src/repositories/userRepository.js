@@ -35,8 +35,14 @@ export function listUsers(organizationId) {
 
 export function findMembership(organizationId, ownerId) {
   return db
-    .prepare("SELECT id FROM organization_users WHERE organization_id=? AND owner_id=?")
+    .prepare("SELECT id,owner_id,role,branch_id FROM organization_users WHERE organization_id=? AND owner_id=?")
     .get(organizationId, ownerId);
+}
+
+export function countOrganizationOwners(organizationId) {
+  return db
+    .prepare("SELECT COUNT(*) count FROM organization_users WHERE organization_id=? AND role='owner'")
+    .get(organizationId).count;
 }
 
 export function updateMembershipRole(membershipId, role, branchId) {

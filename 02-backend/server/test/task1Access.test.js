@@ -159,3 +159,114 @@ test("owners cannot edit branches in another organization", async (t) => {
 
   assert.equal(blocked.status, 404);
 });
+
+test("an organization always keeps at least one owner", async (t) => {
+  const server = app.listen(0);
+  t.after(() => server.close());
+  const stamp = `${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+
+  const registered = await request(server, "/api/auth/register", {
+    method: "POST",
+    body: {
+      name: "Only Owner",
+      email: `only-owner-${stamp}@example.test`,
+      password: "demo12345",
+      organizationName: `Owner Guard ${stamp}`,
+      restaurantName: `Owner Guard Restaurant ${stamp}`,
+      branchName: "Main"
+    }
+  });
+
+  const blocked = await request(server, `/api/users/${registered.payload.user.id}/role`, {
+    token: registered.payload.token,
+    method: "PATCH",
+    body: { role: "viewer" }
+  });
+
+  assert.equal(blocked.status, 400);
+  assert.match(blocked.payload.error, /at least one owner/i);
+
+  const users = await request(server, "/api/users", { token: registered.payload.token });
+  assert.equal(users.payload.find((user) => user.id === registered.payload.user.id).role, "owner");
+});
+
+test("inviting an existing identity does not issue an unusable temporary password", async (t) => {
+  const server = app.listen(0);
+  t.after(() => server.close());
+  const stamp = `${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+  const existingEmail = `existing-${stamp}@example.test`;
+
+  const existing = await request(server, "/api/auth/register", {
+    method: "POST",
+    body: {
+      name: "Existing Owner",
+      email: existingEmail,
+      password: "original123",
+      organizationName: `Existing Org ${stamp}`,
+      restaurantName: `Existing Restaurant ${stamp}`,
+      branchName: "Existing Main"
+    }
+  });
+  const inviter = await request(server, "/api/auth/register", {
+    method: "POST",
+    body: {
+      name: "Inviting Owner",
+      email: `inviter-${stamp}@example.test`,
+      password: "inviter123",
+      organizationName: `Inviting Org ${stamp}`,
+      restaurantName: `Inviting Restaurant ${stamp}`,
+      branchName: "Inviting Main"
+    }
+  });
+
+  assert.equal(existing.status, 201);
+  assert.equal(inviter.status, 201);
+
+  const invited = await request(server, "/api/users/invite", {
+    token: inviter.payload.token,
+    method: "POST",
+    body: { email: existingEmail, role: "viewer" }
+  });
+
+  assert.equal(invited.status, 201);
+  assert.equal(invited.payload.existingAccount, true);
+  assert.equal(invited.payload.temporaryPassword, null);
+});
+
+test("owners can change a member role and branch scope", async (t) => {
+  const server = app.listen(0);
+  t.after(() => server.close());
+  const stamp = `${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+
+  const registered = await request(server, "/api/auth/register", {
+    method: "POST",
+    body: {
+      name: "Role Owner",
+      email: `role-owner-${stamp}@example.test`,
+      password: "demo12345",
+      organizationName: `Role Org ${stamp}`,
+      restaurantName: `Role Restaurant ${stamp}`,
+      branchName: "Role Main"
+    }
+  });
+  const invited = await request(server, "/api/users/invite", {
+    token: registered.payload.token,
+    method: "POST",
+    body: { email: `role-member-${stamp}@example.test`, role: "viewer" }
+  });
+
+  const updated = await request(server, `/api/users/${invited.payload.id}/role`, {
+    token: registered.payload.token,
+    method: "PATCH",
+    body: { role: "branch_manager", branchId: registered.payload.branches[0].id }
+  });
+
+  assert.equal(updated.status, 200);
+  assert.equal(updated.payload.role, "branch_manager");
+  assert.equal(updated.payload.branch_id, registered.payload.branches[0].id);
+
+  const users = await request(server, "/api/users", { token: registered.payload.token });
+  const member = users.payload.find((user) => user.id === invited.payload.id);
+  assert.equal(member.role, "branch_manager");
+  assert.equal(member.branch_id, registered.payload.branches[0].id);
+});
