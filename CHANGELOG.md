@@ -6,6 +6,10 @@ This project follows a simple date-based changelog until a formal release proces
 
 ## 2026-08-25
 
+- Completed Task 1.2 with a guided owner, organization, restaurant, and first-branch onboarding flow.
+- Added owner-only branch setup, team invitations, one-time temporary credential handling, and explicit role/branch management in Arabic, Chinese, and English.
+- Hardened team access by preserving at least one organization owner and avoiding invalid temporary credentials for existing accounts.
+- Added frontend onboarding/management coverage and backend role, tenant, and invitation edge-case coverage.
 - Completed Task 2 safe import release readiness across validation, integration coverage, audit history, security limits, and documentation.
 - Added scoped import history and operational metrics APIs plus request-correlated lifecycle audit events without logging tokens or uploaded datasets.
 - Added configurable upload, row, column, cell, preview, token-lifetime, and import rate limits; strict extension/MIME/content validation; fatal UTF-8 checks; formula protection; and explicit-timezone validation.

@@ -1,0 +1,403 @@
+.auth-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.login select {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  padding: 15px;
+  border: 1px solid #d8dad4;
+  border-radius: 10px;
+  background: white;
+  color: inherit;
+  font: inherit;
+}
+
+.login--onboarding > section {
+  padding: 32px clamp(32px, 6vw, 108px);
+}
+
+.login--onboarding h1 {
+  margin: 34px 0 12px;
+  font-size: clamp(42px, 4vw, 62px);
+}
+
+.login--onboarding form {
+  width: min(720px, 100%);
+  margin-top: 22px;
+}
+
+.auth-tabs {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.auth-tabs a {
+  color: #665348;
+  text-underline-offset: 4px;
+}
+
+.auth-tabs a.active {
+  color: #175c49;
+  font-weight: 700;
+}
+
+.onboarding-stepper {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  margin: 22px 0;
+  padding: 0;
+  list-style: none;
+}
+
+.onboarding-stepper li {
+  display: grid;
+  justify-items: center;
+  gap: 5px;
+  color: #8a918e;
+  text-align: center;
+}
+
+.onboarding-stepper li > span {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid #d8dad4;
+  border-radius: 999px;
+  background: white;
+}
+
+.onboarding-stepper li.is-active,
+.onboarding-stepper li.is-complete {
+  color: #175c49;
+  font-weight: 700;
+}
+
+.onboarding-stepper li.is-active > span,
+.onboarding-stepper li.is-complete > span {
+  border-color: #75aa99;
+  background: #e8f3ef;
+}
+
+.onboarding-fieldset {
+  min-height: 300px;
+  margin: 0;
+  padding: 8px 0 0;
+  border: 0;
+}
+
+.onboarding-fieldset legend {
+  margin-bottom: 6px;
+  color: #18201d;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.onboarding-fieldset > p {
+  margin: 0 0 18px;
+  font-size: 15px;
+}
+
+.onboarding-three-columns {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.onboarding-info {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 14px;
+  border-radius: 10px;
+  background: #e9f2ef;
+  color: #315b4e;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.onboarding-review {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.onboarding-review div {
+  padding: 13px;
+  border: 1px solid #e1e3de;
+  border-radius: 10px;
+  background: white;
+}
+
+.onboarding-review dt {
+  color: #69736f;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.onboarding-review dd {
+  margin: 5px 0 0;
+  overflow-wrap: anywhere;
+  font-weight: 600;
+}
+
+.login form .quiet-note {
+  color: #66706c;
+}
+
+.login form .auth-error {
+  display: block;
+  margin-top: 12px;
+  color: #a33;
+}
+
+.onboarding-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.login form .onboarding-actions button {
+  display: inline-flex;
+  width: auto;
+  min-width: 180px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+
+.login form .onboarding-actions button.secondary {
+  min-width: 110px;
+  border: 1px solid #cfd4cf;
+  background: white;
+  color: #315b4e;
+}
+
+.management-page {
+  display: grid;
+  gap: var(--space-6);
+  width: min(1280px, 100%);
+  margin: 0 auto;
+  padding: clamp(24px, 4vw, 56px);
+}
+
+.management-page__header,
+.management-page__header > div,
+.management-list-item__body,
+.team-member__identity > div {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.management-page__header {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+}
+
+.management-page__header h1,
+.management-page__header p {
+  margin: 0;
+}
+
+.management-page__header p {
+  max-width: 720px;
+  color: var(--color-text-secondary);
+}
+
+.management-alert {
+  padding: 12px 15px;
+  border: 1px solid;
+  border-radius: var(--radius-md);
+}
+
+.management-alert--danger {
+  border-color: #e8b5b0;
+  background: #fff0ee;
+  color: #8a2921;
+}
+
+.management-alert--success {
+  border-color: #add7c5;
+  background: #edf9f3;
+  color: #175c49;
+}
+
+.management-layout {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: var(--space-6);
+  align-items: start;
+}
+
+.management-layout--team {
+  grid-template-columns: minmax(300px, 0.75fr) minmax(520px, 1.25fr);
+}
+
+.management-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.management-form-stack,
+.management-list,
+.team-list {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.management-select {
+  width: 100%;
+  min-height: 42px;
+  padding: 9px 11px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font: inherit;
+}
+
+.management-list-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: var(--space-3);
+  align-items: center;
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.management-list-item:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.management-list-item__icon,
+.team-member__avatar {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-md);
+  background: var(--color-primary-soft);
+  color: var(--color-primary-hover);
+}
+
+.management-list-item__title,
+.management-list-item__body > span,
+.management-actions,
+.credential-card__content,
+.team-member__identity {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.management-list-item__title {
+  justify-content: space-between;
+}
+
+.management-list-item__body > span {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.management-actions {
+  justify-content: flex-end;
+}
+
+.management-edit-card .ui-card__header {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.credential-card {
+  border-color: #dba96f;
+}
+
+.credential-card__content {
+  flex-wrap: wrap;
+}
+
+.credential-card__content > div {
+  display: grid;
+  flex: 1;
+  gap: 4px;
+}
+
+.credential-card code {
+  width: fit-content;
+  padding: 7px 10px;
+  border-radius: 6px;
+  background: #18201d;
+  color: white;
+}
+
+.team-member {
+  display: grid;
+  grid-template-columns: minmax(190px, 1fr) minmax(140px, 0.7fr) minmax(160px, 0.8fr) auto;
+  gap: var(--space-3);
+  align-items: center;
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.team-member:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.team-member__identity small {
+  color: var(--color-text-secondary);
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 1050px) {
+  .management-layout,
+  .management-layout--team {
+    grid-template-columns: 1fr;
+  }
+
+  .team-member {
+    grid-template-columns: minmax(180px, 1fr) minmax(130px, 0.6fr) minmax(150px, 0.7fr) auto;
+  }
+}
+
+@media (max-width: 900px) {
+  .login {
+    grid-template-columns: 1fr;
+  }
+
+  .login > aside {
+    display: none;
+  }
+
+  .login--onboarding > section {
+    padding: 28px clamp(20px, 6vw, 64px);
+  }
+}
+
+@media (max-width: 700px) {
+  .onboarding-three-columns,
+  .onboarding-review,
+  .management-form-grid,
+  .management-page__header,
+  .team-member {
+    grid-template-columns: 1fr;
+  }
+
+  .onboarding-stepper small {
+    display: none;
+  }
+
+  .team-member > .ui-button {
+    justify-self: start;
+  }
+}

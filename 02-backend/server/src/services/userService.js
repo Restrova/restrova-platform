@@ -12,8 +12,10 @@ export function inviteUser(user, body) {
   if (parsed.branchId && !assertBranchAccess(user, parsed.branchId)) throw notFound("Branch not found");
 
   let invited = userRepository.findOwnerIdentityByEmail(parsed.email);
-  const temporaryPassword = generateTemporaryPassword();
+  const existingAccount = Boolean(invited);
+  let temporaryPassword = null;
   if (!invited) {
+    temporaryPassword = generateTemporaryPassword();
     invited = userRepository.createOwnerIdentity(
       parsed.email,
       bcrypt.hashSync(temporaryPassword, config.bcryptCost),
@@ -27,7 +29,8 @@ export function inviteUser(user, body) {
     name: invited.name,
     role: parsed.role,
     branch_id: parsed.branchId || null,
-    temporaryPassword
+    temporaryPassword,
+    existingAccount
   };
 }
 
@@ -41,6 +44,13 @@ export function updateUserRole(user, ownerId, body) {
   if (parsed.branchId && !assertBranchAccess(user, parsed.branchId)) throw notFound("Branch not found");
   const membership = userRepository.findMembership(user.organization_id, ownerId);
   if (!membership) throw notFound("User not found");
+  if (
+    membership.role === "owner" &&
+    parsed.role !== "owner" &&
+    userRepository.countOrganizationOwners(user.organization_id) <= 1
+  ) {
+    throw validationError("Organization must keep at least one owner.");
+  }
   userRepository.updateMembershipRole(membership.id, parsed.role, parsed.branchId);
-  return { updated: true };
+  return { updated: true, role: parsed.role, branch_id: parsed.role === "branch_manager" ? parsed.branchId : null };
 }

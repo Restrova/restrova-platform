@@ -39,7 +39,7 @@ describe("AppShell", () => {
         </LocaleProvider>
       </QueryClientProvider>
     );
-    expect(await screen.findByRole("button", { name: "Open decision center" })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "فتح مركز القرار" })).toBeInTheDocument();
     expect(screen.queryByRole("navigation", { name: "التنقل الرئيسي" })).not.toBeInTheDocument();
   });
 
