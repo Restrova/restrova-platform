@@ -6,6 +6,8 @@ This project follows a simple date-based changelog until a formal release proces
 
 ## 2026-08-25
 
+- Completed Task 1.3 QA with full-stack onboarding, organization isolation, branch isolation, and role-boundary coverage.
+- Added a Task 1.3 QA matrix documenting the verified scopes, evidence, and release gate.
 - Completed Task 1.2 with a guided owner, organization, restaurant, and first-branch onboarding flow.
 - Added owner-only branch setup, team invitations, one-time temporary credential handling, and explicit role/branch management in Arabic, Chinese, and English.
 - Hardened team access by preserving at least one organization owner and avoiding invalid temporary credentials for existing accounts.
