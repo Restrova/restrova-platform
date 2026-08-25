@@ -110,4 +110,80 @@ describe("ImportWizardPage", () => {
     await waitFor(() => expect(importsApi.updateImportMapping).toHaveBeenCalled());
     expect(await screen.findByText("Ready to confirm")).toBeInTheDocument();
   });
+
+  it("confirms a ready import and shows the completion state", async () => {
+    const user = userEvent.setup();
+    importsApi.previewImportFile.mockResolvedValue(readyJob);
+    importsApi.confirmImportJob.mockResolvedValue({
+      ...readyJob,
+      status: "confirmed",
+      confirmationToken: null,
+      statistics: { ...readyJob.statistics, imported: 1 }
+    });
+
+    render(<ImportWizardPage />);
+    await user.click(await screen.findByRole("button", { name: "Choose" }));
+    const file = new File(["Branch Code,Name,City\nMAIN,Main,Riyadh\n"], "branches.csv", { type: "text/csv" });
+    await user.upload(screen.getByLabelText("CSV or XLSX file"), file);
+    await user.click(screen.getByRole("button", { name: "Validate file" }));
+    await user.click(await screen.findByRole("button", { name: "Confirm import" }));
+
+    expect(await screen.findByRole("heading", { name: "Import completed" })).toBeInTheDocument();
+    expect(screen.getByText("1 rows were imported successfully.")).toBeInTheDocument();
+    expect(importsApi.confirmImportJob).toHaveBeenCalledWith(12, "confirm-me");
+  });
+
+  it("blocks confirmation and explains row-level validation errors", async () => {
+    const user = userEvent.setup();
+    importsApi.previewImportFile.mockResolvedValue({
+      ...readyJob,
+      validationStatus: "validation_failed",
+      confirmationToken: null,
+      statistics: { ...readyJob.statistics, accepted: 0, rejected: 1 },
+      rowErrors: [
+        {
+          rowNumber: 2,
+          errors: [
+            {
+              field: "city",
+              sourceColumn: "City",
+              value: "",
+              message: "city is required."
+            }
+          ]
+        }
+      ]
+    });
+
+    render(<ImportWizardPage />);
+    await user.click(await screen.findByRole("button", { name: "Choose" }));
+    const file = new File(["Branch Code,Name,City\nMAIN,Main,\n"], "branches.csv", { type: "text/csv" });
+    await user.upload(screen.getByLabelText("CSV or XLSX file"), file);
+    await user.click(screen.getByRole("button", { name: "Validate file" }));
+
+    expect(await screen.findByText("Action required")).toBeInTheDocument();
+    expect(screen.getByText("city is required.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Confirm import" })).toBeDisabled();
+  });
+
+  it("cancels a staged import without confirming it", async () => {
+    const user = userEvent.setup();
+    importsApi.previewImportFile.mockResolvedValue(readyJob);
+    importsApi.cancelImportJob.mockResolvedValue({
+      ...readyJob,
+      status: "cancelled",
+      confirmationToken: null
+    });
+
+    render(<ImportWizardPage />);
+    await user.click(await screen.findByRole("button", { name: "Choose" }));
+    const file = new File(["Branch Code,Name,City\nMAIN,Main,Riyadh\n"], "branches.csv", { type: "text/csv" });
+    await user.upload(screen.getByLabelText("CSV or XLSX file"), file);
+    await user.click(screen.getByRole("button", { name: "Validate file" }));
+    await user.click(await screen.findByRole("button", { name: "Cancel import" }));
+
+    expect(await screen.findByRole("heading", { name: "Import cancelled" })).toBeInTheDocument();
+    expect(importsApi.cancelImportJob).toHaveBeenCalledWith(12);
+    expect(importsApi.confirmImportJob).not.toHaveBeenCalled();
+  });
 });

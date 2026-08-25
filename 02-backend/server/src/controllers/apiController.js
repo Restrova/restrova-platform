@@ -54,17 +54,23 @@ export const previewStagedImport = (req, res) =>
       templateKey: req.query.templateKey,
       filename: req.query.filename,
       contentType: req.headers["content-type"],
-      buffer: req.body
+      buffer: req.body,
+      requestId: req.requestId
     })
   );
+export const listStagedImportJobs = (req, res) =>
+  res.json(stagedImportService.listStagedImportJobs(req.user, req.query));
+export const getStagedImportMetrics = (req, res) => res.json(stagedImportService.getStagedImportMetrics(req.user));
 export const getStagedImportJob = (req, res) =>
   res.json(stagedImportService.getStagedImportJob(req.user, req.params.id));
 export const updateStagedImportMapping = (req, res) =>
-  res.json(stagedImportService.updateStagedImportMapping(req.user, req.params.id, req.body?.mappings));
+  res.json(stagedImportService.updateStagedImportMapping(req.user, req.params.id, req.body?.mappings, req.requestId));
 export const confirmStagedImport = (req, res) =>
-  res.json(stagedImportService.confirmStagedImport(req.user, req.params.id, req.body?.confirmationToken));
+  res.json(
+    stagedImportService.confirmStagedImport(req.user, req.params.id, req.body?.confirmationToken, req.requestId)
+  );
 export const cancelStagedImport = (req, res) =>
-  res.json(stagedImportService.cancelStagedImport(req.user, req.params.id));
+  res.json(stagedImportService.cancelStagedImport(req.user, req.params.id, req.requestId));
 
 export const knowledgeStatus = (req, res) => res.json(knowledgeService.getKnowledgeStatus(req.user));
 export const importKnowledge = (req, res) => res.status(201).json(knowledgeService.importKnowledge(req.user, req.body));

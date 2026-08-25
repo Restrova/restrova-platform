@@ -24,8 +24,8 @@ export function createImportJob(data) {
         organization_id,restaurant_id,created_by,template_key,template_version,
         original_filename,content_type,file_type,byte_size,file_sha256,confirmation_token_hash,
         total_rows,accepted_rows,rejected_rows,duplicate_rows,source_headers_json,mapping_json,
-        validation_status,warning_count
-      ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+        validation_status,warning_count,confirmation_token_expires_at,last_request_id
+      ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
     )
     .run(
       data.organizationId,
@@ -46,7 +46,9 @@ export function createImportJob(data) {
       JSON.stringify(data.sourceHeaders || []),
       JSON.stringify(data.mappings || []),
       data.validationStatus || "ready",
-      data.warningCount || 0
+      data.warningCount || 0,
+      data.confirmationTokenExpiresAt,
+      data.requestId
     );
   return Number(result.lastInsertRowid);
 }
@@ -62,7 +64,8 @@ export function replaceImportJobValidation(jobId, data, rows) {
         `UPDATE import_jobs
          SET mapping_json=?,validation_status=?,warning_count=?,
              total_rows=?,accepted_rows=?,rejected_rows=?,duplicate_rows=?,
-             confirmation_token_hash=?,mapping_updated_at=CURRENT_TIMESTAMP
+             confirmation_token_hash=?,confirmation_token_expires_at=?,confirmation_consumed_at=NULL,
+             last_request_id=?,mapping_updated_at=CURRENT_TIMESTAMP
          WHERE id=? AND status='preview_ready'`
       )
       .run(
@@ -74,6 +77,8 @@ export function replaceImportJobValidation(jobId, data, rows) {
         data.rejectedRows,
         data.duplicateRows,
         data.confirmationTokenHash,
+        data.confirmationTokenExpiresAt,
+        data.requestId,
         jobId
       ).changes;
 
@@ -93,6 +98,67 @@ export function findImportJobInScope(user, jobId) {
     .get(jobId, user.organization_id, user.restaurant_id);
 }
 
+export function listImportJobsInScope(user, filters = {}) {
+  const clauses = ["job.organization_id=?", "job.restaurant_id=?"];
+  const values = [user.organization_id, user.restaurant_id];
+
+  if (filters.status) {
+    if (filters.status === "failed") {
+      clauses.push(
+        "EXISTS (SELECT 1 FROM import_audit_events event WHERE event.import_job_id=job.id AND event.event_type='import_failed')"
+      );
+    } else if (["needs_mapping", "validation_failed", "ready"].includes(filters.status)) {
+      clauses.push("job.status='preview_ready'", "job.validation_status=?");
+      values.push(filters.status);
+    } else {
+      clauses.push("job.status=?");
+      values.push(filters.status === "completed" ? "confirmed" : filters.status);
+    }
+  }
+  if (filters.templateKey) {
+    clauses.push("job.template_key=?");
+    values.push(filters.templateKey);
+  }
+  if (filters.branchId) {
+    clauses.push(
+      "EXISTS (SELECT 1 FROM import_job_rows row WHERE row.job_id=job.id AND json_extract(row.normalized_json,'$.branch_id')=?)"
+    );
+    values.push(filters.branchId);
+  }
+  if (filters.from) {
+    clauses.push("job.created_at>=?");
+    values.push(filters.from);
+  }
+  if (filters.to) {
+    clauses.push("job.created_at<=?");
+    values.push(filters.to);
+  }
+
+  return db
+    .prepare(`SELECT job.* FROM import_jobs job WHERE ${clauses.join(" AND ")} ORDER BY job.id DESC LIMIT 100`)
+    .all(...values);
+}
+
+export function getImportMetricsInScope(user) {
+  return db
+    .prepare(
+      `SELECT
+         count(*) imports_started,
+         sum(CASE WHEN status='confirmed' THEN 1 ELSE 0 END) imports_completed,
+         sum(CASE WHEN EXISTS (
+           SELECT 1 FROM import_audit_events event
+           WHERE event.import_job_id=import_jobs.id AND event.event_type='import_failed'
+         ) THEN 1 ELSE 0 END) imports_failed,
+         sum(CASE WHEN validation_status='validation_failed' THEN 1 ELSE 0 END) validation_failures,
+         sum(duplicate_rows) duplicate_rows,
+         sum(imported_rows) rows_imported,
+         avg(CASE WHEN confirmed_at IS NOT NULL
+           THEN (julianday(confirmed_at)-julianday(created_at))*86400000 END) average_import_duration_ms
+       FROM import_jobs WHERE organization_id=? AND restaurant_id=?`
+    )
+    .get(user.organization_id, user.restaurant_id);
+}
+
 export function listImportJobRows(jobId) {
   return db
     .prepare(
@@ -102,23 +168,58 @@ export function listImportJobRows(jobId) {
     .all(jobId);
 }
 
-export function cancelImportJob(jobId) {
-  return db
-    .prepare(
-      `UPDATE import_jobs SET status='cancelled',cancelled_at=CURRENT_TIMESTAMP
-       WHERE id=? AND status='preview_ready'`
-    )
-    .run(jobId).changes;
-}
-
-export function markImportJobConfirmed(jobId, importedRows) {
+export function cancelImportJob(jobId, requestId) {
   return db
     .prepare(
       `UPDATE import_jobs
-       SET status='confirmed',imported_rows=?,confirmed_at=CURRENT_TIMESTAMP
+       SET status='cancelled',cancelled_at=CURRENT_TIMESTAMP,
+           confirmation_consumed_at=CURRENT_TIMESTAMP,confirmation_token_hash='',last_request_id=?
+       WHERE id=? AND status='preview_ready'`
+    )
+    .run(requestId, jobId).changes;
+}
+
+export function markImportJobConfirmed(jobId, importedRows, requestId) {
+  return db
+    .prepare(
+      `UPDATE import_jobs
+       SET status='confirmed',imported_rows=?,confirmed_at=CURRENT_TIMESTAMP,
+           confirmation_consumed_at=CURRENT_TIMESTAMP,confirmation_token_hash='',last_request_id=?
        WHERE id=? AND status='preview_ready' AND validation_status='ready'`
     )
-    .run(importedRows, jobId).changes;
+    .run(importedRows, requestId, jobId).changes;
+}
+
+export function recordImportAuditEvent(data) {
+  return Number(
+    db
+      .prepare(
+        `INSERT INTO import_audit_events(
+          import_job_id,organization_id,restaurant_id,branch_id,user_id,template_key,
+          event_type,request_id,details_json
+        ) VALUES (?,?,?,?,?,?,?,?,?)`
+      )
+      .run(
+        data.importJobId,
+        data.organizationId,
+        data.restaurantId,
+        data.branchId || null,
+        data.userId,
+        data.templateKey,
+        data.eventType,
+        data.requestId,
+        JSON.stringify(data.details || {})
+      ).lastInsertRowid
+  );
+}
+
+export function listImportAuditEvents(jobId) {
+  return db
+    .prepare(
+      `SELECT id,event_type,request_id,branch_id,details_json,created_at
+       FROM import_audit_events WHERE import_job_id=? ORDER BY id`
+    )
+    .all(jobId);
 }
 
 export function transaction(fn) {
@@ -132,6 +233,15 @@ export function findBranchByCode(user, code) {
        WHERE organization_id=? AND restaurant_id=? AND lower(code)=lower(?)`
     )
     .get(user.organization_id, user.restaurant_id, code);
+}
+
+export function findBranchById(user, branchId) {
+  return db
+    .prepare(
+      `SELECT * FROM branches
+       WHERE id=? AND organization_id=? AND restaurant_id=?`
+    )
+    .get(branchId, user.organization_id, user.restaurant_id);
 }
 
 export function findCatalogItemByCode(user, itemCode) {

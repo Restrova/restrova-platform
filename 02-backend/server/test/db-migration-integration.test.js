@@ -28,7 +28,8 @@ test("application database bootstrap records applied migrations", async () => {
       { version: "0001_migration_foundation.sql" },
       { version: "0002_import_templates.sql" },
       { version: "0003_staged_imports.sql" },
-      { version: "0004_import_mapping_validation.sql" }
+      { version: "0004_import_mapping_validation.sql" },
+      { version: "0005_import_audit_security.sql" }
     ]);
   } finally {
     if (db?.open) db.close();

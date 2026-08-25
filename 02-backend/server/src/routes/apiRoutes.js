@@ -1,13 +1,13 @@
 import express, { Router } from "express";
 import * as controller from "../controllers/apiController.js";
 import { auth, requireOwner, requireRole } from "../middleware/auth.js";
-import { authRateLimit } from "../middleware/security.js";
+import { authRateLimit, importActionRateLimit, importPreviewRateLimit } from "../middleware/security.js";
 import { config } from "../config/appConfig.js";
 
 const router = Router();
 const asyncHandler = (handler) => (req, res, next) => Promise.resolve(handler(req, res, next)).catch(next);
 const stagedImportBody = express.raw({
-  limit: config.requestBodyLimit,
+  limit: config.imports.maxFileSizeBytes,
   type: [
     "text/csv",
     "application/csv",
@@ -50,13 +50,34 @@ router.post(
   "/data/import-jobs/preview",
   auth,
   requireOwner,
+  importPreviewRateLimit,
   stagedImportBody,
   asyncHandler(controller.previewStagedImport)
 );
+router.get("/data/import-jobs", auth, requireOwner, asyncHandler(controller.listStagedImportJobs));
+router.get("/data/import-jobs/metrics", auth, requireOwner, asyncHandler(controller.getStagedImportMetrics));
 router.get("/data/import-jobs/:id", auth, requireOwner, asyncHandler(controller.getStagedImportJob));
-router.put("/data/import-jobs/:id/mapping", auth, requireOwner, asyncHandler(controller.updateStagedImportMapping));
-router.post("/data/import-jobs/:id/confirm", auth, requireOwner, asyncHandler(controller.confirmStagedImport));
-router.post("/data/import-jobs/:id/cancel", auth, requireOwner, asyncHandler(controller.cancelStagedImport));
+router.put(
+  "/data/import-jobs/:id/mapping",
+  auth,
+  requireOwner,
+  importActionRateLimit,
+  asyncHandler(controller.updateStagedImportMapping)
+);
+router.post(
+  "/data/import-jobs/:id/confirm",
+  auth,
+  requireOwner,
+  importActionRateLimit,
+  asyncHandler(controller.confirmStagedImport)
+);
+router.post(
+  "/data/import-jobs/:id/cancel",
+  auth,
+  requireOwner,
+  importActionRateLimit,
+  asyncHandler(controller.cancelStagedImport)
+);
 
 router.get("/knowledge/status", auth, controller.knowledgeStatus);
 router.post("/knowledge/import", auth, requireOwner, asyncHandler(controller.importKnowledge));

@@ -1,0 +1,3 @@
+external_order_id,external_line_id,branch_code,created_at,channel,item_code,quantity,gross_sales,discount,refund_amount,delivery_commission
+DEMO-1001,1,SANA-01,2026-08-25T12:30:00+08:00,dine_in,MANDI-CHICKEN,2,97.00,0,0,0
+DEMO-1002,1,GZ-01,2026-08-25T13:10:00+08:00,takeaway,TEA-001,1,18.00,0,0,0
