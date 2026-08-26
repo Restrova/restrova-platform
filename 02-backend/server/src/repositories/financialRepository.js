@@ -102,10 +102,74 @@ export function listEntriesForCalculation(user, filters) {
 
   return db
     .prepare(
-      `SELECT category,amount_minor,source_type,source_reference
+      `SELECT organization_id,restaurant_id,branch_id,category,amount_minor,source_type,source_reference
        FROM financial_ledger_entries
        WHERE ${clauses.join(" AND ")}
        ORDER BY occurred_at,id`
+    )
+    .all(...parameters);
+}
+
+export function listReportingRestaurants(organizationId) {
+  return db.prepare("SELECT id,name FROM restaurants WHERE organization_id=? ORDER BY id").all(organizationId);
+}
+
+export function findReportingRestaurant(organizationId, restaurantId) {
+  return db
+    .prepare("SELECT id,name FROM restaurants WHERE organization_id=? AND id=?")
+    .get(organizationId, restaurantId);
+}
+
+export function listReportingBranches(organizationId, restaurantId) {
+  return db
+    .prepare(
+      `SELECT id,restaurant_id,name,code,city
+       FROM branches
+       WHERE organization_id=? AND restaurant_id=?
+       ORDER BY code,id`
+    )
+    .all(organizationId, restaurantId);
+}
+
+export function findReportingBranch(organizationId, branchId) {
+  return db
+    .prepare(
+      `SELECT id,restaurant_id,name,code,city
+       FROM branches
+       WHERE organization_id=? AND id=?`
+    )
+    .get(organizationId, branchId);
+}
+
+export function listEntriesForReport(organizationId, filters) {
+  const clauses = ["organization_id=?"];
+  const parameters = [organizationId];
+
+  if (filters.restaurantId) {
+    clauses.push("restaurant_id=?");
+    parameters.push(filters.restaurantId);
+  }
+  if (filters.branchId) {
+    clauses.push("branch_id=?");
+    parameters.push(filters.branchId);
+  } else if (filters.unallocatedOnly) {
+    clauses.push("branch_id IS NULL");
+  }
+  if (filters.from) {
+    clauses.push("datetime(occurred_at)>=datetime(?)");
+    parameters.push(filters.from);
+  }
+  if (filters.to) {
+    clauses.push("datetime(occurred_at)<=datetime(?)");
+    parameters.push(filters.to);
+  }
+
+  return db
+    .prepare(
+      `SELECT organization_id,restaurant_id,branch_id,category,amount_minor,source_type,source_reference
+       FROM financial_ledger_entries
+       WHERE ${clauses.join(" AND ")}
+       ORDER BY restaurant_id,branch_id,occurred_at,id`
     )
     .all(...parameters);
 }

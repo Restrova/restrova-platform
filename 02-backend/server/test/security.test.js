@@ -10,6 +10,7 @@ process.env.CLIENT_ORIGIN = "http://allowed.test";
 process.env.REQUEST_BODY_LIMIT = "2kb";
 
 const { app } = await import("../src/index.js");
+const { isCorsOriginAllowed } = await import("../src/middleware/security.js");
 
 async function request(server, path, { token, method = "GET", body, rawBody, headers = {} } = {}) {
   const address = server.address();
@@ -213,4 +214,16 @@ test("security headers and restrictive CORS are active", async (t) => {
   const denied = await request(server, "/api/health", { headers: { Origin: "https://evil.example" } });
   assert.equal(denied.status, 403);
   assert.equal(denied.payload.error, "Origin not allowed");
+});
+
+test("development CORS accepts changing loopback ports without weakening configured origins", () => {
+  const development = { allowedOrigins: new Set(["http://localhost:5173"]), allowLoopbackOrigins: true };
+  const strict = { allowedOrigins: new Set(["https://app.example"]), allowLoopbackOrigins: false };
+
+  assert.equal(isCorsOriginAllowed("http://localhost:5180", development), true);
+  assert.equal(isCorsOriginAllowed("http://127.0.0.1:5174", development), true);
+  assert.equal(isCorsOriginAllowed("http://192.168.1.10:5173", development), false);
+  assert.equal(isCorsOriginAllowed("https://evil.example", development), false);
+  assert.equal(isCorsOriginAllowed("http://localhost:5180", strict), false);
+  assert.equal(isCorsOriginAllowed("https://app.example", strict), true);
 });

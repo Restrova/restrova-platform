@@ -11,7 +11,7 @@ pnpm install
 pnpm dev
 ```
 
-Open `http://localhost:5173`, choose **Create restaurant**, and create your own owner account, organization, restaurant, and first branch.
+Open the `Local` URL printed by Vite (normally `http://localhost:5173`), choose **Create restaurant**, and create your own owner account, organization, restaurant, and first branch. If that port is busy, Vite selects another local port automatically and the development API accepts it.
 
 The app uses its built-in prefinal restaurant assistant mode by default. It answers supported restaurant operations questions with deterministic business logic, restaurant-scoped tools, and data-readiness checks. No OpenAI API key or external model is required.
 
@@ -154,7 +154,9 @@ Set a strong `JWT_SECRET`, use TLS, move SQLite to a durable volume (or swap to 
 
 ## Deploy publicly
 
-The repository includes a Render Blueprint that builds the React frontend, serves it from Express, creates a generated JWT secret, and mounts SQLite on `/var/data`. Keep that disk enabled or switch to PostgreSQL before storing real restaurant data.
+The default `render.yaml` is a working free preview deployment: it builds the React frontend, serves it from Express, creates a generated JWT secret, and auto-deploys only after GitHub checks pass. Register a new owner account after the deployment opens.
+
+Render free web services cannot attach persistent disks, so preview accounts and data can disappear after a restart or redeploy. Do not store real restaurant data in the free preview. For durable SQLite, create a Blueprint using `render.persistent.yaml`; it selects a paid Starter service and mounts `/var/data`. A managed database is preferable before production scale.
 
 [Deploy to Render](https://render.com/deploy?repo=https://github.com/Restrova/restrova-platform)
 

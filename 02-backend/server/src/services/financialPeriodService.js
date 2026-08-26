@@ -182,7 +182,7 @@ function comparisonRange(parsed, current, timezone) {
   return inclusiveRange(localToInstant(comparisonStart, timezone), localToInstant(comparisonNext, timezone));
 }
 
-function metricChanges(current, comparison) {
+export function financialMetricChanges(current, comparison) {
   if (!comparison) return null;
   return Object.fromEntries(
     Object.entries(current.metrics).map(([key, value]) => [
@@ -192,7 +192,7 @@ function metricChanges(current, comparison) {
   );
 }
 
-export function calculateFinancialPeriod(user, query) {
+export function resolveFinancialPeriodRanges(query, timezone) {
   const parsed = validate(financialPeriodQuerySchema, query);
   if (parsed.period === "custom" && (!parsed.from || !parsed.to)) {
     throw validationError("Custom financial periods require both from and to.");
@@ -207,32 +207,48 @@ export function calculateFinancialPeriod(user, query) {
     throw validationError("Same-weekday comparison requires today or yesterday.");
   }
 
-  const timezone = user.timezone;
   const anchor = parsed.anchor ? new Date(parsed.anchor) : new Date();
   localParts(anchor, timezone);
-  const current =
+  const resolvedCurrent =
     parsed.period === "custom"
       ? { from: new Date(parsed.from).toISOString(), to: new Date(parsed.to).toISOString() }
       : presetRange(parsed.period, anchor, timezone);
-  const comparison = comparisonRange(parsed, current, timezone);
-  const calculationScope = { branchId: parsed.branchId };
-  const currentCalculation = calculateFinancialMetrics(user, {
-    ...calculationScope,
-    from: current.from,
-    to: current.to
-  });
-  const comparisonCalculation = comparison
-    ? calculateFinancialMetrics(user, { ...calculationScope, from: comparison.from, to: comparison.to })
-    : null;
-
+  const comparison = comparisonRange(parsed, resolvedCurrent, timezone);
   return {
-    periodVersion: "3.3-v1",
     preset: parsed.period,
     comparisonKind: parsed.comparison,
     timezone,
     anchor: anchor.toISOString(),
+    current: { from: resolvedCurrent.from, to: resolvedCurrent.to },
+    comparison
+  };
+}
+
+export function calculateFinancialPeriod(user, query) {
+  const timezone = user.timezone;
+  const ranges = resolveFinancialPeriodRanges(query, timezone);
+  const calculationScope = { branchId: query.branchId };
+  const currentCalculation = calculateFinancialMetrics(user, {
+    ...calculationScope,
+    from: ranges.current.from,
+    to: ranges.current.to
+  });
+  const comparisonCalculation = ranges.comparison
+    ? calculateFinancialMetrics(user, {
+        ...calculationScope,
+        from: ranges.comparison.from,
+        to: ranges.comparison.to
+      })
+    : null;
+
+  return {
+    periodVersion: "3.3-v1",
+    preset: ranges.preset,
+    comparisonKind: ranges.comparisonKind,
+    timezone: ranges.timezone,
+    anchor: ranges.anchor,
     current: currentCalculation,
     comparison: comparisonCalculation,
-    changes: metricChanges(currentCalculation, comparisonCalculation)
+    changes: financialMetricChanges(currentCalculation, comparisonCalculation)
   };
 }
