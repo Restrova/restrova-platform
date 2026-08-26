@@ -83,6 +83,7 @@ router.get("/financial/model", auth, controller.getFinancialModel);
 router.get("/financial/entries", auth, asyncHandler(controller.listFinancialEntries));
 router.post("/financial/entries", auth, requireOwner, asyncHandler(controller.createFinancialEntry));
 router.get("/financial/calculate", auth, asyncHandler(controller.calculateFinancialMetrics));
+router.get("/financial/period", auth, asyncHandler(controller.calculateFinancialPeriod));
 
 router.get("/knowledge/status", auth, controller.knowledgeStatus);
 router.post("/knowledge/import", auth, requireOwner, asyncHandler(controller.importKnowledge));

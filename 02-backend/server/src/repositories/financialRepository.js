@@ -59,11 +59,11 @@ export function listEntries(user, filters) {
     parameters.push(filters.category);
   }
   if (filters.from) {
-    clauses.push("occurred_at>=?");
+    clauses.push("datetime(occurred_at)>=datetime(?)");
     parameters.push(filters.from);
   }
   if (filters.to) {
-    clauses.push("occurred_at<=?");
+    clauses.push("datetime(occurred_at)<=datetime(?)");
     parameters.push(filters.to);
   }
 
@@ -92,11 +92,11 @@ export function listEntriesForCalculation(user, filters) {
     parameters.push(filters.branchId);
   }
   if (filters.from) {
-    clauses.push("occurred_at>=?");
+    clauses.push("datetime(occurred_at)>=datetime(?)");
     parameters.push(filters.from);
   }
   if (filters.to) {
-    clauses.push("occurred_at<=?");
+    clauses.push("datetime(occurred_at)<=datetime(?)");
     parameters.push(filters.to);
   }
 
