@@ -6,6 +6,8 @@ This project follows a simple date-based changelog until a formal release proces
 
 ## 2026-08-26
 
+- Completed Task 3.3 with timezone-aware today, yesterday, week, month, quarter, year, and custom financial periods.
+- Added previous-period, same-weekday, and previous-year comparisons with deterministic boundaries, metric deltas, DST coverage, lineage, and branch isolation.
 - Completed Task 3.2 with deterministic revenue, COGS, profit, margin, AOV, and cost-per-order calculations over the scoped financial ledger.
 - Added basis-point and minor-unit rounding rules, completeness signals, category-level lineage, calculation assumptions, period filters, and tenant/branch isolation coverage.
 

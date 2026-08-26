@@ -10,6 +10,7 @@ import * as healthService from "../services/healthService.js";
 import * as importTemplateService from "../services/importTemplateService.js";
 import * as stagedImportService from "../services/stagedImportService.js";
 import * as financialService from "../services/financialService.js";
+import * as financialPeriodService from "../services/financialPeriodService.js";
 
 export const health = (_req, res) => res.json(healthService.getHealth());
 export const ready = (_req, res) => res.json(healthService.getReadiness());
@@ -79,6 +80,8 @@ export const createFinancialEntry = (req, res) =>
 export const listFinancialEntries = (req, res) => res.json(financialService.listFinancialEntries(req.user, req.query));
 export const calculateFinancialMetrics = (req, res) =>
   res.json(financialService.calculateFinancialMetrics(req.user, req.query));
+export const calculateFinancialPeriod = (req, res) =>
+  res.json(financialPeriodService.calculateFinancialPeriod(req.user, req.query));
 
 export const knowledgeStatus = (req, res) => res.json(knowledgeService.getKnowledgeStatus(req.user));
 export const importKnowledge = (req, res) => res.status(201).json(knowledgeService.importKnowledge(req.user, req.body));

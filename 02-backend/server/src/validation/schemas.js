@@ -137,6 +137,15 @@ export const financialCalculationQuerySchema = z.object({
   to: financialTimestampSchema.optional()
 });
 
+export const financialPeriodQuerySchema = z.object({
+  period: z.enum(["today", "yesterday", "week", "month", "quarter", "year", "custom"]).default("today"),
+  comparison: z.enum(["none", "previous_period", "same_weekday", "previous_year"]).default("previous_period"),
+  branchId: z.coerce.number().int().positive().optional(),
+  anchor: financialTimestampSchema.optional(),
+  from: financialTimestampSchema.optional(),
+  to: financialTimestampSchema.optional()
+});
+
 export const knowledgeImportSchema = z.object({
   title: z.string().trim().min(1).max(200),
   source: z.string().trim().max(500).optional(),
