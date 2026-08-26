@@ -77,6 +77,8 @@ export const getFinancialModel = (_req, res) => res.json(financialService.getFin
 export const createFinancialEntry = (req, res) =>
   res.status(201).json(financialService.createFinancialEntry(req.user, req.body));
 export const listFinancialEntries = (req, res) => res.json(financialService.listFinancialEntries(req.user, req.query));
+export const calculateFinancialMetrics = (req, res) =>
+  res.json(financialService.calculateFinancialMetrics(req.user, req.query));
 
 export const knowledgeStatus = (req, res) => res.json(knowledgeService.getKnowledgeStatus(req.user));
 export const importKnowledge = (req, res) => res.status(201).json(knowledgeService.importKnowledge(req.user, req.body));

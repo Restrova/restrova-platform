@@ -4,6 +4,11 @@ All notable project changes should be documented here.
 
 This project follows a simple date-based changelog until a formal release process is introduced.
 
+## 2026-08-26
+
+- Completed Task 3.2 with deterministic revenue, COGS, profit, margin, AOV, and cost-per-order calculations over the scoped financial ledger.
+- Added basis-point and minor-unit rounding rules, completeness signals, category-level lineage, calculation assumptions, period filters, and tenant/branch isolation coverage.
+
 ## 2026-08-25
 
 - Completed Task 3.1 with an organization-, restaurant-, and branch-scoped financial ledger covering all revenue, deduction, variable-cost, and operating-expense inputs in integer minor units.
