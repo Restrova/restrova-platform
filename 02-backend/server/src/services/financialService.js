@@ -60,17 +60,22 @@ function categoryTotals(entries) {
   return totals;
 }
 
-function buildLineage(entries) {
+function buildLineage(entries, includeScope = false) {
   const references = Object.fromEntries(financialCategories.map(({ key }) => [key, []]));
   const seen = Object.fromEntries(financialCategories.map(({ key }) => [key, new Set()]));
   for (const entry of entries) {
-    const sourceKey = `${entry.source_type}:${entry.source_reference}`;
+    const sourceKey = `${entry.restaurant_id || "restaurant"}:${entry.branch_id || "unallocated"}:${entry.source_type}:${entry.source_reference}`;
     if (seen[entry.category].has(sourceKey)) continue;
     seen[entry.category].add(sourceKey);
-    references[entry.category].push({
+    const reference = {
       sourceType: entry.source_type,
       sourceReference: entry.source_reference
-    });
+    };
+    if (includeScope) {
+      reference.restaurantId = entry.restaurant_id;
+      reference.branchId = entry.branch_id;
+    }
+    references[entry.category].push(reference);
   }
   return references;
 }
@@ -103,6 +108,17 @@ export function calculateFinancialMetrics(user, query) {
   assertRequestedBranch(user, parsed.branchId);
   assertQueryPeriod(parsed);
   const entries = financialRepository.listEntriesForCalculation(user, parsed);
+  return calculateFinancialMetricsFromEntries(entries, {
+    organizationId: user.organization_id,
+    restaurantId: user.restaurant_id,
+    branchId: user.role === "branch_manager" ? user.branch_id : parsed.branchId || null,
+    currencyCode: user.currency.toUpperCase(),
+    from: parsed.from || null,
+    to: parsed.to || null
+  });
+}
+
+export function calculateFinancialMetricsFromEntries(entries, scope, { includeScopeLineage = false } = {}) {
   const totals = categoryTotals(entries);
 
   const grossSales = totals.sales;
@@ -116,7 +132,12 @@ export function calculateFinancialMetrics(user, query) {
   const netProfit = operatingProfit;
   const totalCosts = cogs + totals.packaging + totals.delivery_commissions + operatingExpenses;
   const orderCount = new Set(
-    entries.filter((entry) => entry.category === "sales").map((entry) => entry.source_reference)
+    entries
+      .filter((entry) => entry.category === "sales")
+      .map(
+        (entry) =>
+          `${entry.restaurant_id || scope.restaurantId}:${entry.branch_id || "unallocated"}:${entry.source_reference}`
+      )
   ).size;
   const recordedCategories = new Set(entries.map((entry) => entry.category));
   const presentCategories = financialCategories.map(({ key }) => key).filter((key) => recordedCategories.has(key));
@@ -125,12 +146,12 @@ export function calculateFinancialMetrics(user, query) {
   return {
     formulaVersion: "3.2-v1",
     scope: {
-      organizationId: user.organization_id,
-      restaurantId: user.restaurant_id,
-      branchId: user.role === "branch_manager" ? user.branch_id : parsed.branchId || null,
-      currencyCode: user.currency.toUpperCase()
+      organizationId: scope.organizationId,
+      restaurantId: scope.restaurantId ?? null,
+      branchId: scope.branchId ?? null,
+      currencyCode: scope.currencyCode
     },
-    period: { from: parsed.from || null, to: parsed.to || null },
+    period: { from: scope.from || null, to: scope.to || null },
     metrics: {
       grossSalesMinor: toSafeInteger(grossSales, "Gross sales"),
       discountsMinor: toSafeInteger(totals.discounts, "Discounts"),
@@ -156,7 +177,7 @@ export function calculateFinancialMetrics(user, query) {
       presentCategories,
       missingCategories
     },
-    lineage: buildLineage(entries),
+    lineage: buildLineage(entries, includeScopeLineage),
     assumptions: [
       "COGS includes direct food costs only.",
       "Packaging and delivery commissions are contribution costs.",

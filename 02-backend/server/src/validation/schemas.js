@@ -146,6 +146,11 @@ export const financialPeriodQuerySchema = z.object({
   to: financialTimestampSchema.optional()
 });
 
+export const financialReportQuerySchema = financialPeriodQuerySchema.extend({
+  scope: z.enum(["organization", "restaurant", "branch"]).optional(),
+  restaurantId: z.coerce.number().int().positive().optional()
+});
+
 export const knowledgeImportSchema = z.object({
   title: z.string().trim().min(1).max(200),
   source: z.string().trim().max(500).optional(),

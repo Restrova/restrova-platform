@@ -4,6 +4,14 @@ import helmet from "helmet";
 import { config } from "../config/appConfig.js";
 import { rateLimited } from "../errors/appError.js";
 
+const loopbackOriginPattern = /^http:\/\/(localhost|127\.0\.0\.1)(:\d{1,5})?$/;
+
+export function isCorsOriginAllowed(origin, corsConfig = config.cors) {
+  if (!origin) return true;
+  if (corsConfig.allowedOrigins.has(origin)) return true;
+  return Boolean(corsConfig.allowLoopbackOrigins && loopbackOriginPattern.test(origin));
+}
+
 function clientKey(req) {
   return req.user?.owner_id ? `user:${req.user.owner_id}` : req.ip || req.socket?.remoteAddress || "unknown";
 }
@@ -83,8 +91,7 @@ export function configureSecurity(app) {
   app.use(
     cors({
       origin(origin, callback) {
-        if (!origin) return callback(null, true);
-        if (config.cors.allowedOrigins.has(origin)) return callback(null, true);
+        if (isCorsOriginAllowed(origin)) return callback(null, true);
         const error = new Error("Origin not allowed");
         error.status = 403;
         error.code = "FORBIDDEN";

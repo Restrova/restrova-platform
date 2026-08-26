@@ -26,11 +26,21 @@ const importMaxColumns = integerEnv("IMPORT_MAX_COLUMNS", 100);
 const importMaxCellLength = integerEnv("IMPORT_MAX_CELL_LENGTH", 10_000);
 const importPreviewRows = integerEnv("IMPORT_PREVIEW_ROWS", 20);
 const importConfirmationTokenTtlSeconds = integerEnv("IMPORT_CONFIRMATION_TOKEN_TTL_SECONDS", 30 * 60);
+function platformOrigin(hostname) {
+  if (!hostname || !/^[a-z0-9.-]+$/i.test(hostname)) return null;
+  return `https://${hostname}`;
+}
+
+const configuredOrigins = (process.env.CLIENT_ORIGIN || (isProduction ? "" : "http://localhost:5173"))
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
 const allowedOrigins = new Set(
-  (process.env.CLIENT_ORIGIN || (isProduction ? "" : "http://localhost:5173"))
-    .split(",")
-    .map((origin) => origin.trim())
-    .filter(Boolean)
+  [
+    ...configuredOrigins,
+    platformOrigin(process.env.RENDER_EXTERNAL_HOSTNAME),
+    platformOrigin(process.env.RAILWAY_PUBLIC_DOMAIN)
+  ].filter(Boolean)
 );
 
 if (bcryptCost < 4 || bcryptCost > 15) failStartup("BCRYPT_COST must be an integer between 4 and 15.");
@@ -72,7 +82,8 @@ export const config = {
   },
   bcryptCost,
   cors: {
-    allowedOrigins
+    allowedOrigins,
+    allowLoopbackOrigins: !isProduction && !isTest
   },
   rateLimits: {
     windowMs: rateLimitWindowMs,

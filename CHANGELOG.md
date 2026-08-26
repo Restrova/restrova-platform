@@ -6,6 +6,10 @@ This project follows a simple date-based changelog until a formal release proces
 
 ## 2026-08-26
 
+- Completed Task 3.4 with independent branch economics, restaurant and organization consolidation, explicit unallocated costs, and reconciliation checks.
+- Added role-safe hierarchical financial reporting with period comparisons, scoped lineage, multilingual names, and tenant isolation coverage.
+- Fixed local Vite port CORS handling and corrected GitHub-to-Render deployment blueprints for free preview and persistent production use.
+
 - Completed Task 3.3 with timezone-aware today, yesterday, week, month, quarter, year, and custom financial periods.
 - Added previous-period, same-weekday, and previous-year comparisons with deterministic boundaries, metric deltas, DST coverage, lineage, and branch isolation.
 - Completed Task 3.2 with deterministic revenue, COGS, profit, margin, AOV, and cost-per-order calculations over the scoped financial ledger.
