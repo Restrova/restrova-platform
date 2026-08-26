@@ -68,3 +68,5 @@ jobs:
 
       - name: Production build
         run: pnpm build
+
+# Validates pull requests and branch pushes.
