@@ -6,6 +6,8 @@ This project follows a simple date-based changelog until a formal release proces
 
 ## 2026-08-25
 
+- Completed Task 3.1 with an organization-, restaurant-, and branch-scoped financial ledger covering all revenue, deduction, variable-cost, and operating-expense inputs in integer minor units.
+- Added required source lineage, idempotent financial references, owner-only writes, branch-manager read isolation, API coverage, and financial data-model documentation.
 - Completed Task 1.3 QA with full-stack onboarding, organization isolation, branch isolation, and role-boundary coverage.
 - Added a Task 1.3 QA matrix documenting the verified scopes, evidence, and release gate.
 - Completed Task 1.2 with a guided owner, organization, restaurant, and first-branch onboarding flow.

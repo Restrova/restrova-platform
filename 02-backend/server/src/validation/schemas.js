@@ -90,6 +90,47 @@ export const importConfirmSchema = importPreviewSchema.extend({
   confirm: z.literal(true)
 });
 
+export const financialCategorySchema = z.enum([
+  "sales",
+  "discounts",
+  "refunds",
+  "food_costs",
+  "packaging",
+  "delivery_commissions",
+  "labor",
+  "rent",
+  "utilities",
+  "marketing",
+  "miscellaneous_operating_expenses"
+]);
+
+const financialTimestampSchema = z.iso.datetime({ offset: true });
+
+export const financialEntryCreateSchema = z
+  .object({
+    category: financialCategorySchema,
+    amountMinor: z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER),
+    branchId: z.number().int().positive().nullable().optional(),
+    occurredAt: financialTimestampSchema,
+    periodStart: financialTimestampSchema.optional(),
+    periodEnd: financialTimestampSchema.optional(),
+    sourceType: z.enum(["manual", "import", "system"]).default("manual"),
+    sourceReference: z.string().trim().min(1).max(200),
+    description: z.string().trim().max(500).optional(),
+    evidence: z.record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.null()])).default({})
+  })
+  .refine((entry) => Boolean(entry.periodStart) === Boolean(entry.periodEnd), {
+    message: "Financial periods require both start and end."
+  });
+
+export const financialEntryQuerySchema = z.object({
+  category: financialCategorySchema.optional(),
+  branchId: z.coerce.number().int().positive().optional(),
+  from: financialTimestampSchema.optional(),
+  to: financialTimestampSchema.optional(),
+  limit: z.coerce.number().int().min(1).max(500).default(100)
+});
+
 export const knowledgeImportSchema = z.object({
   title: z.string().trim().min(1).max(200),
   source: z.string().trim().max(500).optional(),

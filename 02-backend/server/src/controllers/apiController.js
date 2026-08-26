@@ -9,6 +9,7 @@ import * as userService from "../services/userService.js";
 import * as healthService from "../services/healthService.js";
 import * as importTemplateService from "../services/importTemplateService.js";
 import * as stagedImportService from "../services/stagedImportService.js";
+import * as financialService from "../services/financialService.js";
 
 export const health = (_req, res) => res.json(healthService.getHealth());
 export const ready = (_req, res) => res.json(healthService.getReadiness());
@@ -71,6 +72,11 @@ export const confirmStagedImport = (req, res) =>
   );
 export const cancelStagedImport = (req, res) =>
   res.json(stagedImportService.cancelStagedImport(req.user, req.params.id, req.requestId));
+
+export const getFinancialModel = (_req, res) => res.json(financialService.getFinancialModel());
+export const createFinancialEntry = (req, res) =>
+  res.status(201).json(financialService.createFinancialEntry(req.user, req.body));
+export const listFinancialEntries = (req, res) => res.json(financialService.listFinancialEntries(req.user, req.query));
 
 export const knowledgeStatus = (req, res) => res.json(knowledgeService.getKnowledgeStatus(req.user));
 export const importKnowledge = (req, res) => res.status(201).json(knowledgeService.importKnowledge(req.user, req.body));
