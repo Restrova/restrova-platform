@@ -79,3 +79,33 @@ export function listEntries(user, filters) {
     .all(...parameters)
     .map(serialize);
 }
+
+export function listEntriesForCalculation(user, filters) {
+  const clauses = ["organization_id=?", "restaurant_id=?"];
+  const parameters = [user.organization_id, user.restaurant_id];
+
+  if (user.role === "branch_manager") {
+    clauses.push("branch_id=?");
+    parameters.push(user.branch_id);
+  } else if (filters.branchId) {
+    clauses.push("branch_id=?");
+    parameters.push(filters.branchId);
+  }
+  if (filters.from) {
+    clauses.push("occurred_at>=?");
+    parameters.push(filters.from);
+  }
+  if (filters.to) {
+    clauses.push("occurred_at<=?");
+    parameters.push(filters.to);
+  }
+
+  return db
+    .prepare(
+      `SELECT category,amount_minor,source_type,source_reference
+       FROM financial_ledger_entries
+       WHERE ${clauses.join(" AND ")}
+       ORDER BY occurred_at,id`
+    )
+    .all(...parameters);
+}
