@@ -59,11 +59,11 @@ export function listEntries(user, filters) {
     parameters.push(filters.category);
   }
   if (filters.from) {
-    clauses.push("datetime(occurred_at)>=datetime(?)");
+    clauses.push("julianday(occurred_at)>=julianday(?)");
     parameters.push(filters.from);
   }
   if (filters.to) {
-    clauses.push("datetime(occurred_at)<=datetime(?)");
+    clauses.push("julianday(occurred_at)<=julianday(?)");
     parameters.push(filters.to);
   }
 
@@ -92,11 +92,11 @@ export function listEntriesForCalculation(user, filters) {
     parameters.push(filters.branchId);
   }
   if (filters.from) {
-    clauses.push("datetime(occurred_at)>=datetime(?)");
+    clauses.push("julianday(occurred_at)>=julianday(?)");
     parameters.push(filters.from);
   }
   if (filters.to) {
-    clauses.push("datetime(occurred_at)<=datetime(?)");
+    clauses.push("julianday(occurred_at)<=julianday(?)");
     parameters.push(filters.to);
   }
 
@@ -156,11 +156,11 @@ export function listEntriesForReport(organizationId, filters) {
     clauses.push("branch_id IS NULL");
   }
   if (filters.from) {
-    clauses.push("datetime(occurred_at)>=datetime(?)");
+    clauses.push("julianday(occurred_at)>=julianday(?)");
     parameters.push(filters.from);
   }
   if (filters.to) {
-    clauses.push("datetime(occurred_at)<=datetime(?)");
+    clauses.push("julianday(occurred_at)<=julianday(?)");
     parameters.push(filters.to);
   }
 

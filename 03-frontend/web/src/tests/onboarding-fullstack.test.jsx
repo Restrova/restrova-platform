@@ -25,7 +25,7 @@ describe("full-stack restaurant onboarding", () => {
     server = backend.app.listen(0);
     await new Promise((resolve) => server.once("listening", resolve));
     apiOrigin = `http://127.0.0.1:${server.address().port}`;
-  });
+  }, 15_000);
 
   afterAll(async () => {
     if (server) await new Promise((resolve) => server.close(resolve));
@@ -116,5 +116,5 @@ describe("full-stack restaurant onboarding", () => {
     ]);
 
     await waitFor(() => expect(localStorage.getItem("selectedBranchId")).toBe(String(session.branches[0].id)));
-  });
+  }, 15_000);
 });

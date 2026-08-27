@@ -70,8 +70,12 @@ export function FinancialTrendChart({ points, currencyCode, labels, formatCurren
           {points.map((point) => (
             <tr key={point.from}>
               <th>{point.label}</th>
-              <td>{formatCurrency(minorToMajor(point.metrics.revenueMinor), { currency: currencyCode })}</td>
-              <td>{formatCurrency(minorToMajor(point.metrics.netProfitMinor), { currency: currencyCode })}</td>
+              <td>
+                {formatCurrency(minorToMajor(point.metrics.revenueMinor, currencyCode), { currency: currencyCode })}
+              </td>
+              <td>
+                {formatCurrency(minorToMajor(point.metrics.netProfitMinor, currencyCode), { currency: currencyCode })}
+              </td>
             </tr>
           ))}
         </tbody>

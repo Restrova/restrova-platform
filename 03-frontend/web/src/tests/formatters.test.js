@@ -8,6 +8,11 @@ describe("locale-aware formatters", () => {
     expect(formatCurrency(561, { locale: "zh-CN" })).toContain("¥");
   });
 
+  it("uses each currency's ISO minor-unit precision", () => {
+    expect(formatCurrency(12345, { locale: "en", currency: "JPY" })).toMatch(/12,345/);
+    expect(formatCurrency(12.345, { locale: "en", currency: "BHD" })).toMatch(/12\.345/);
+  });
+
   it("uses the 0.25 means 25 percent convention", () => {
     expect(formatPercent(0.25, { locale: "en" })).toContain("25");
   });

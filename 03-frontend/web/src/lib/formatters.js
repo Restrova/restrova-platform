@@ -38,7 +38,6 @@ export function formatCurrency(
     new Intl.NumberFormat(normalizeLocale(locale), {
       style: "currency",
       currency,
-      maximumFractionDigits: 2,
       ...options
     }).format(number)
   );
