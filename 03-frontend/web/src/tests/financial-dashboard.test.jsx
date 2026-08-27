@@ -3,7 +3,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { LocaleProvider } from "../contexts/LocaleContext.jsx";
-import { buildFinancialDashboardQuery, minorToMajor, ratioBps } from "../lib/financial.js";
+import { buildFinancialDashboardQuery, currencyMinorUnitDigits, minorToMajor, ratioBps } from "../lib/financial.js";
 import * as financial from "../lib/financial.js";
 import { FinancialDashboardPage } from "../pages/FinancialDashboardPage.jsx";
 
@@ -234,10 +234,16 @@ describe("financial dashboard", () => {
 describe("financial dashboard helpers", () => {
   it("converts safe integer minor units and rounds ratios deterministically", () => {
     expect(minorToMajor(12345)).toBe(123.45);
+    expect(minorToMajor(12345, "JPY")).toBe(12345);
+    expect(minorToMajor(12345, "BHD")).toBe(12.345);
+    expect(currencyMinorUnitDigits("CNY")).toBe(2);
+    expect(currencyMinorUnitDigits("JPY")).toBe(0);
+    expect(currencyMinorUnitDigits("BHD")).toBe(3);
     expect(minorToMajor(1.5)).toBeNull();
     expect(ratioBps(1, 6)).toBe(1667);
     expect(ratioBps(-1, 6)).toBe(-1667);
     expect(ratioBps(1, 0)).toBeNull();
+    expect(ratioBps(1, -1)).toBeNull();
   });
 
   it("includes only identifiers permitted by the selected scope", () => {

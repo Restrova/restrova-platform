@@ -1,6 +1,6 @@
 # Financial period engine
 
-Task 3.3 adds timezone-aware calendar periods and comparable financial results on top of calculation formula version `3.2-v1`.
+Task 3.3 adds timezone-aware calendar periods and comparable financial results on top of the current versioned financial calculation formula.
 
 ## Period rules
 

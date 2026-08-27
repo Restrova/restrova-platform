@@ -85,7 +85,7 @@ test("Task 3.2 calculates every core financial metric with deterministic integer
   });
 
   assert.equal(result.status, 200);
-  assert.equal(result.payload.formulaVersion, "3.2-v1");
+  assert.equal(result.payload.formulaVersion, "3.7-v1");
   assert.deepEqual(result.payload.scope, {
     organizationId: owner.organization.id,
     restaurantId: owner.restaurant.id,

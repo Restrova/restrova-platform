@@ -22,6 +22,13 @@ export const financialCategories = [
   { key: "miscellaneous_operating_expenses", group: "operating_expense" }
 ];
 
+export const taxTreatmentPolicy = Object.freeze({
+  status: "not_modeled",
+  ledgerCategory: "unsupported",
+  netProfitPolicy: "equals_operating_profit",
+  description: "Tax is not deducted or estimated until a versioned tax category and policy are modeled."
+});
+
 function assertPeriodOrder(entry) {
   if (entry.periodStart && new Date(entry.periodStart) > new Date(entry.periodEnd)) {
     throw validationError("Financial period start must not be after its end.");
@@ -85,6 +92,7 @@ export function getFinancialModel() {
     version: 1,
     amountStorage: "integer_minor_units",
     currencySource: "authenticated_organization",
+    taxTreatment: taxTreatmentPolicy,
     categories: financialCategories
   };
 }
@@ -131,6 +139,7 @@ export function calculateFinancialMetricsFromEntries(entries, scope, { includeSc
   const operatingProfit = contributionProfit - operatingExpenses;
   const netProfit = operatingProfit;
   const totalCosts = cogs + totals.packaging + totals.delivery_commissions + operatingExpenses;
+  const marginBps = (profit) => (revenue > 0n ? roundRatio(profit, revenue, 10000n) : null);
   const orderCount = new Set(
     entries
       .filter((entry) => entry.category === "sales")
@@ -144,7 +153,8 @@ export function calculateFinancialMetricsFromEntries(entries, scope, { includeSc
   const missingCategories = financialCategories.map(({ key }) => key).filter((key) => !recordedCategories.has(key));
 
   return {
-    formulaVersion: "3.2-v1",
+    formulaVersion: "3.7-v1",
+    taxTreatment: taxTreatmentPolicy,
     scope: {
       organizationId: scope.organizationId,
       restaurantId: scope.restaurantId ?? null,
@@ -159,13 +169,13 @@ export function calculateFinancialMetricsFromEntries(entries, scope, { includeSc
       revenueMinor: toSafeInteger(revenue, "Revenue"),
       cogsMinor: toSafeInteger(cogs, "COGS"),
       grossProfitMinor: toSafeInteger(grossProfit, "Gross profit"),
-      grossMarginBps: roundRatio(grossProfit, revenue, 10000n),
+      grossMarginBps: marginBps(grossProfit),
       contributionProfitMinor: toSafeInteger(contributionProfit, "Contribution profit"),
-      contributionMarginBps: roundRatio(contributionProfit, revenue, 10000n),
+      contributionMarginBps: marginBps(contributionProfit),
       operatingExpensesMinor: toSafeInteger(operatingExpenses, "Operating expenses"),
       operatingProfitMinor: toSafeInteger(operatingProfit, "Operating profit"),
       netProfitMinor: toSafeInteger(netProfit, "Net profit"),
-      netMarginBps: roundRatio(netProfit, revenue, 10000n),
+      netMarginBps: marginBps(netProfit),
       orderCount,
       averageOrderValueMinor: orderCount ? roundRatio(revenue, BigInt(orderCount)) : null,
       totalCostsMinor: toSafeInteger(totalCosts, "Total costs"),

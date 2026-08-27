@@ -136,7 +136,7 @@ export function FinancialDashboardPage() {
 
   const dashboard = dashboardQuery.data;
   const currencyCode = dashboard?.currencyCode || auth.organization?.currency || "CNY";
-  const money = (minor) => formatCurrency(minorToMajor(minor), { currency: currencyCode });
+  const money = (minor) => formatCurrency(minorToMajor(minor, currencyCode), { currency: currencyCode });
   const percentage = (bps) => formatPercent(bps === null ? null : bps / 10000);
 
   const comparisonOptions = [
