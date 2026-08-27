@@ -53,6 +53,8 @@ Task 1 and Task 2 are implemented. Task 2 provides versioned templates plus safe
 
 - `POST /api/auth/login`
 - `GET /api/dashboard`
+- `GET /api/financial/dashboard`
+- `GET /api/financial/report`
 - `GET /api/chat/sessions`
 - `GET /api/chat/sessions/:id/messages`
 - `POST /api/chat`

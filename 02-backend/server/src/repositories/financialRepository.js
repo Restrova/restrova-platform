@@ -166,7 +166,7 @@ export function listEntriesForReport(organizationId, filters) {
 
   return db
     .prepare(
-      `SELECT organization_id,restaurant_id,branch_id,category,amount_minor,source_type,source_reference
+      `SELECT organization_id,restaurant_id,branch_id,category,amount_minor,occurred_at,source_type,source_reference
        FROM financial_ledger_entries
        WHERE ${clauses.join(" AND ")}
        ORDER BY restaurant_id,branch_id,occurred_at,id`
