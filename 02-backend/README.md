@@ -32,6 +32,8 @@ The versioned financial ledger, calculation, period, hierarchy, and dashboard AP
 
 `GET /api/menu/costs` returns versioned per-item selling price, effective food and packaging cost, observed delivery commission, contribution profit, completeness, and source lineage. Calculations use integer minor units and basis points, apply branch-cost precedence, and never replace missing evidence with estimates. See the [menu cost engine contract](../docs/menu/menu-cost-engine.md).
 
+`GET /api/menu/margins` analyzes actual item revenue, quantity, historical costs, gross and contribution profit, food-cost percentage, popularity, refunds, and discounts. It publishes profitability only with complete effective-cost coverage. See the [menu margin analysis contract](../docs/menu/menu-margin-analysis.md).
+
 ## Task 2.1 — import template API
 
 Authenticated users can inspect and download the platform CSV templates used by the staged-import flow:

@@ -6,6 +6,8 @@ This project follows a simple date-based changelog until a formal release proces
 
 ## 2026-08-28
 
+- Completed Task 4.2 with historical item revenue, quantity, gross profit, contribution margin, food-cost percentage, popularity, refund-rate, and discount-rate analysis.
+- Added sale-time cost selection, quantity-micro allocation, explicit cost coverage, incomplete-profit suppression, scoped evidence lineage, and multilingual acceptance tests.
 - Completed Task 4.1 with a deterministic menu cost engine for selling price, effective food cost, packaging, observed delivery commission, and contribution profit.
 - Added branch-over-restaurant cost precedence, explicit missing-evidence behavior, integer rounding, pagination, tenant/role isolation, and audit lineage.
 - Added the canonical menu intelligence documentation and multilingual menu-cost acceptance coverage.

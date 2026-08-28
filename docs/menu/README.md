@@ -4,11 +4,12 @@ This directory is the canonical reference for Restrova's menu economics and reco
 
 ## Current contracts
 
-| Capability       | Version  | Reference                                  |
-| ---------------- | -------- | ------------------------------------------ |
-| Menu cost engine | `4.1-v1` | [Menu cost engine](menu-cost-engine.md)    |
-| Source imports   | Task 2   | [Import guide](../imports/README.md)       |
-| Financial rules  | `3.7-v1` | [Financial engine](../financial/README.md) |
+| Capability       | Version  | Reference                                       |
+| ---------------- | -------- | ----------------------------------------------- |
+| Menu cost engine | `4.1-v1` | [Menu cost engine](menu-cost-engine.md)         |
+| Margin analysis  | `4.2-v1` | [Menu margin analysis](menu-margin-analysis.md) |
+| Source imports   | Task 2   | [Import guide](../imports/README.md)            |
+| Financial rules  | `3.7-v1` | [Financial engine](../financial/README.md)      |
 
 ## Trust rules
 
@@ -19,4 +20,4 @@ This directory is the canonical reference for Restrova's menu economics and reco
 5. Organization, restaurant, role, and branch scope come from the authenticated session.
 6. Arabic, Chinese, and English item names remain unchanged.
 
-The first API is `GET /api/menu/costs`. All menu intelligence endpoints require authentication.
+The current APIs are `GET /api/menu/costs` and `GET /api/menu/margins`. All menu intelligence endpoints require authentication.

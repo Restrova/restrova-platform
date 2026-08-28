@@ -14,6 +14,7 @@ import * as financialPeriodService from "../services/financialPeriodService.js";
 import * as financialReportService from "../services/financialReportService.js";
 import * as financialDashboardService from "../services/financialDashboardService.js";
 import * as menuCostService from "../services/menuCostService.js";
+import * as menuMarginService from "../services/menuMarginService.js";
 
 export const health = (_req, res) => res.json(healthService.getHealth());
 export const ready = (_req, res) => res.json(healthService.getReadiness());
@@ -90,6 +91,7 @@ export const getFinancialReport = (req, res) =>
 export const getFinancialDashboard = (req, res) =>
   res.json(financialDashboardService.getFinancialDashboard(req.user, req.query));
 export const getMenuCosts = (req, res) => res.json(menuCostService.getMenuCosts(req.user, req.query));
+export const getMenuMargins = (req, res) => res.json(menuMarginService.getMenuMargins(req.user, req.query));
 
 export const knowledgeStatus = (req, res) => res.json(knowledgeService.getKnowledgeStatus(req.user));
 export const importKnowledge = (req, res) => res.status(201).json(knowledgeService.importKnowledge(req.user, req.body));
