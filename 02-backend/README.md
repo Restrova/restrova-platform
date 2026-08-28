@@ -24,6 +24,10 @@ pnpm --filter server test
 pnpm --filter server eval
 ```
 
+## Financial engine
+
+The versioned financial ledger, calculation, period, hierarchy, and dashboard APIs are documented in the [canonical financial engine guide](../docs/financial/README.md). Start with the [metric reference](../docs/financial/metric-reference.md) for formulas and units, and the [lineage contract](../docs/financial/lineage-and-audit.md) for audit and scope behavior.
+
 ## Task 2.1 — import template API
 
 Authenticated users can inspect and download the platform CSV templates used by the staged-import flow:

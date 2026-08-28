@@ -17,7 +17,7 @@ Food and labor percentages are display-only ratios calculated with signed half-u
 
 `ratio basis points = round(cost minor units × 10,000 / revenue minor units)`
 
-When revenue is zero or the API returns a missing metric, the UI displays an em dash. The empty state explicitly says that no values are inferred.
+When revenue is zero or negative, or the API returns a missing metric, the UI displays an em dash for ratios. The empty state explicitly says that no values are inferred.
 
 ## Visuals and evidence
 

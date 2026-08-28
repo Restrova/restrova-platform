@@ -29,6 +29,13 @@ export const taxTreatmentPolicy = Object.freeze({
   description: "Tax is not deducted or estimated until a versioned tax category and policy are modeled."
 });
 
+export const financialAssumptions = Object.freeze([
+  "COGS includes direct food costs only.",
+  "Packaging and delivery commissions are contribution costs.",
+  "Net profit equals operating profit until tax, interest, depreciation, and amortization categories are modeled.",
+  "Order count is the number of distinct sales source references."
+]);
+
 function assertPeriodOrder(entry) {
   if (entry.periodStart && new Date(entry.periodStart) > new Date(entry.periodEnd)) {
     throw validationError("Financial period start must not be after its end.");
@@ -188,11 +195,6 @@ export function calculateFinancialMetricsFromEntries(entries, scope, { includeSc
       missingCategories
     },
     lineage: buildLineage(entries, includeScopeLineage),
-    assumptions: [
-      "COGS includes direct food costs only.",
-      "Packaging and delivery commissions are contribution costs.",
-      "Net profit equals operating profit until tax, interest, depreciation, and amortization categories are modeled.",
-      "Order count is the number of distinct sales source references."
-    ]
+    assumptions: financialAssumptions
   };
 }

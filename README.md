@@ -47,12 +47,16 @@ Before adding the next database or UI feature, start with these docs:
 - [`05-devops-qa/docs/mvp-scope.md`](05-devops-qa/docs/mvp-scope.md): frozen MVP scope for a Yemeni restaurant in China.
 - [`05-devops-qa/docs/acceptance-tests.md`](05-devops-qa/docs/acceptance-tests.md): task-by-task acceptance tests and readiness format.
 
-Task 1 and Task 2 are implemented. Task 2 provides versioned templates plus safe CSV/XLSX staged import jobs with automatic/manual mapping, typed validation, bounded preview, expiring one-use confirmation tokens, cancellation, audit history, operational metrics, abuse controls, and duplicate-safe sales lines. See the [complete import guide](docs/imports/README.md), [API reference](docs/imports/api.md), and [safe example files](docs/imports/examples/). The next milestone is **Task 3: the deterministic financial calculation engine**.
+Tasks 1, 2, and 3 are implemented. Task 2 provides versioned templates plus safe CSV/XLSX staged imports. Task 3 provides an organization-, restaurant-, and branch-scoped financial ledger, deterministic calculations, timezone-aware periods, reconciled hierarchy, dashboard API/UI, and golden accuracy coverage. See the [complete import guide](docs/imports/README.md) and the [canonical financial engine documentation](docs/financial/README.md).
 
 ## API
 
 - `POST /api/auth/login`
 - `GET /api/dashboard`
+- `GET /api/financial/model`
+- `GET|POST /api/financial/entries`
+- `GET /api/financial/calculate`
+- `GET /api/financial/period`
 - `GET /api/financial/dashboard`
 - `GET /api/financial/report`
 - `GET /api/chat/sessions`
