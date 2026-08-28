@@ -6,6 +6,8 @@ This project follows a simple date-based changelog until a formal release proces
 
 ## 2026-08-28
 
+- Completed Task 4.3 with deterministic STAR, PLOWHORSE, PUZZLE, and DOG menu engineering classifications.
+- Added scope-wide thresholds, explicit incomplete-item exclusions, evidence lineage, tenant/branch isolation, and multilingual coverage.
 - Fixed authenticated users being returned to the legacy registration screen when workspace data temporarily fails to load.
 - Added full-stack login and session regression coverage for protected workspace routes.
 - Completed Task 4.2 with historical item revenue, quantity, gross profit, contribution margin, food-cost percentage, popularity, refund-rate, and discount-rate analysis.

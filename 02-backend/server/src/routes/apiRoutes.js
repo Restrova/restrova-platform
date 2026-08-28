@@ -88,6 +88,7 @@ router.get("/financial/report", auth, asyncHandler(controller.getFinancialReport
 router.get("/financial/dashboard", auth, asyncHandler(controller.getFinancialDashboard));
 router.get("/menu/costs", auth, asyncHandler(controller.getMenuCosts));
 router.get("/menu/margins", auth, asyncHandler(controller.getMenuMargins));
+router.get("/menu/engineering-matrix", auth, asyncHandler(controller.getMenuEngineeringMatrix));
 
 router.get("/knowledge/status", auth, controller.knowledgeStatus);
 router.post("/knowledge/import", auth, requireOwner, asyncHandler(controller.importKnowledge));

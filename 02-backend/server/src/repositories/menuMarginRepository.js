@@ -22,7 +22,7 @@ export function countCatalogItems(user, filters) {
   );
 }
 
-export function listCatalogItems(user, filters) {
+export function listCatalogItems(user, filters, { paginate = true } = {}) {
   const { clauses, values } = catalogClauses(user, filters);
   return db
     .prepare(
@@ -30,9 +30,9 @@ export function listCatalogItems(user, filters) {
        FROM catalog_items
        WHERE ${clauses.join(" AND ")}
        ORDER BY lower(name),id
-       LIMIT ? OFFSET ?`
+       ${paginate ? "LIMIT ? OFFSET ?" : ""}`
     )
-    .all(...values, filters.limit, filters.offset);
+    .all(...values, ...(paginate ? [filters.limit, filters.offset] : []));
 }
 
 function salesScope(user, filters) {
