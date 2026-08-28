@@ -47,7 +47,7 @@ Before adding the next database or UI feature, start with these docs:
 - [`05-devops-qa/docs/mvp-scope.md`](05-devops-qa/docs/mvp-scope.md): frozen MVP scope for a Yemeni restaurant in China.
 - [`05-devops-qa/docs/acceptance-tests.md`](05-devops-qa/docs/acceptance-tests.md): task-by-task acceptance tests and readiness format.
 
-Tasks 1, 2, and 3 are implemented. Task 2 provides versioned templates plus safe CSV/XLSX staged imports. Task 3 provides an organization-, restaurant-, and branch-scoped financial ledger, deterministic calculations, timezone-aware periods, reconciled hierarchy, dashboard API/UI, and golden accuracy coverage. See the [complete import guide](docs/imports/README.md) and the [canonical financial engine documentation](docs/financial/README.md).
+Tasks 1, 2, and 3 are implemented, and Task 4 has started with the deterministic menu cost engine. Task 2 provides versioned templates plus safe CSV/XLSX staged imports. Task 3 provides an organization-, restaurant-, and branch-scoped financial ledger, deterministic calculations, timezone-aware periods, reconciled hierarchy, dashboard API/UI, and golden accuracy coverage. See the [complete import guide](docs/imports/README.md), the [canonical financial engine documentation](docs/financial/README.md), and the [menu intelligence documentation](docs/menu/README.md).
 
 ## API
 
@@ -59,6 +59,7 @@ Tasks 1, 2, and 3 are implemented. Task 2 provides versioned templates plus safe
 - `GET /api/financial/period`
 - `GET /api/financial/dashboard`
 - `GET /api/financial/report`
+- `GET /api/menu/costs`
 - `GET /api/chat/sessions`
 - `GET /api/chat/sessions/:id/messages`
 - `POST /api/chat`
