@@ -1,11 +1,13 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
-import os from "node:os";
 import path from "node:path";
 
 test("application database bootstrap records applied migrations", async () => {
-  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "restrova-migration-"));
+  // The production bootstrap guard rejects temporary directories such as
+  // os.tmpdir(), so this integration test uses a durable-looking path inside
+  // the project (created and removed by the test itself).
+  const tempDir = fs.mkdtempSync(path.join(process.cwd(), "restrova-migration-"));
   const databasePath = path.join(tempDir, "restaurant.db");
 
   const previousDatabasePath = process.env.DATABASE_PATH;

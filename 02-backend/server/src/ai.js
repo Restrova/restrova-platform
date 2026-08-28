@@ -1,4 +1,4 @@
-import { executeTool } from "./tools.js";
+import { executeTool, resolveMenuItem, localDay } from "./tools.js";
 import { dataConnectionStatus } from "./dataImport.js";
 
 export const SYSTEM_PROMPT = `You are Restrova Decision AI, an expert AI restaurant manager assistant inside Restrova Platform. Your job is to answer like ChatGPT, but specialized for restaurants.
@@ -46,10 +46,20 @@ Safety rules:
 - Confirm the result of operational changes.
 - Never imply that a recommendation has been executed when it has not.`;
 
-const money = (value) =>
-  new Intl.NumberFormat(undefined, { style: "currency", currency: "CNY", maximumFractionDigits: 2 }).format(
-    Number(value) || 0
-  );
+const money = (value, currency) => {
+  const code = String(currency || "CNY").toUpperCase();
+  const amount = Number(value) || 0;
+  try {
+    return new Intl.NumberFormat(undefined, {
+      style: "currency",
+      currency: code,
+      maximumFractionDigits: 2
+    }).format(amount);
+  } catch {
+    // Unknown ISO currency code: still label the amount instead of crashing.
+    return `${code} ${amount.toFixed(2)}`;
+  }
+};
 const isArabic = (text) => /[\u0600-\u06FF]/.test(text);
 const normalizeScope = (scope) => (typeof scope === "object" ? scope : { restaurantId: scope });
 const DEFAULT_OPENAI_MODEL = "gpt-5.6";
@@ -201,63 +211,6 @@ function formatGeneralManagerAdvice(q) {
   return responses[topic];
 }
 
-function formatRestaurantLogicReasoning(q) {
-  if (/120 chicken portions.*35.*lunch.*48.*dinner.*ten portions.*damaged|120.*chicken.*35.*48.*10/i.test(q)) {
-    return "Direct answer:\n27 usable chicken portions remain.\n\nCalculation:\n120 starting portions − 35 lunch portions − 48 dinner portions − 10 damaged portions = 27.\n\nManager note:\nDo not plan service from the original 120. Use 27 as the available usable stock unless more chicken is prepped or delivered.";
-  }
-  if (/30 tables.*twenty tables.*four.*ten tables.*two|20.*tables.*4.*10.*tables.*2/i.test(q)) {
-    return "Direct answer:\nMaximum seating capacity is 100 customers.\n\nCalculation:\n20 tables × 4 seats = 80 seats\n10 tables × 2 seats = 20 seats\nTotal = 100 seats.\n\nManager note:\nThis is the physical maximum, not necessarily the safe operating capacity if staffing or kitchen throughput is lower.";
-  }
-  if (/five waiters.*75 customers|5 waiters.*75 customers/i.test(q)) {
-    return "Direct answer:\nEach waiter should serve 15 customers per hour.\n\nCalculation:\n75 customers ÷ 5 waiters = 15 customers per waiter.\n\nManager note:\nThat is only reasonable if service stations, kitchen speed, and table turnover are balanced.";
-  }
-  if (/waiter is absent.*busiest period.*close five tables.*redistribute/i.test(q)) {
-    return "Direct answer:\nDo not choose blindly. First compare the remaining staff capacity with expected guests and service standard.\n\nReasoning:\nIf the remaining waiters can absorb the extra tables without long waits or missed service steps, redistribute tables temporarily. If redistributing would overload them and damage service quality, closing or pausing five tables is safer.\n\nRecommended decision rule:\n1. Count available waiters.\n2. Estimate guests per waiter during peak.\n3. Check kitchen and cashier bottlenecks.\n4. If wait time will rise beyond the acceptable limit, close or stagger seating.\n\nPractical recommendation:\nTry redistribution only if the remaining team stays within a safe workload. Otherwise close five tables temporarily and communicate the wait clearly.";
-  }
-  if (/20 kg of rice.*45 kg.*supplier needs two days|45 kg.*rice.*two days/i.test(q)) {
-    return "Direct answer:\nYes, order today.\n\nCalculation:\nDaily rice use = 20 kg\nSupplier lead time = 2 days\nNeeded during lead time = 20 × 2 = 40 kg\nCurrent stock = 45 kg\nSafety stock left after two days = 5 kg.\n\nManager recommendation:\nOrder now because 5 kg is too little safety stock if sales are higher than normal, delivery is late, or prep waste occurs.";
-  }
-  if (/costs?\s*\$?8.*sold for\s*\$?12|prepare.*\$8.*\$12/i.test(q)) {
-    return "Direct answer:\nProfit per dish is $4, and profit margin based on selling price is 33.3%.\n\nCalculation:\nProfit = Selling price − Cost = $12 − $8 = $4\nProfit margin = $4 ÷ $12 × 100 = 33.3%.\n\nManager note:\nA 33.3% margin may be acceptable or weak depending on the restaurant type, labor, rent, and target food-cost percentage.";
-  }
-  if (/severe peanut allergy.*peanut sauce|peanut allergy/i.test(q)) {
-    return "Direct answer:\nDo not serve that meal.\n\nWhy:\nA severe peanut allergy is a safety issue, not a preference. If the meal contains peanut sauce, serving it creates unacceptable health risk.\n\nManager recommendation:\n1. Warn the customer clearly that the selected item contains peanut sauce.\n2. Offer a verified peanut-free alternative.\n3. Confirm ingredients with the kitchen.\n4. Prevent cross-contamination with clean utensils, surfaces, pans, and gloves.\n5. If you cannot guarantee safety, say so honestly and do not serve the item.";
-  }
-  if (/order a.*two dishes.*15 minutes.*order b.*eight dishes.*five minutes|two orders arrive together/i.test(q)) {
-    return "Direct answer:\nStart Order A immediately, while beginning the longest-prep components of Order B in parallel if kitchen capacity allows.\n\nReasoning:\nOrder A has waited longer and is smaller, so it can likely be completed quickly and reduce guest waiting time. Order B is larger, so ignoring it completely may create a later bottleneck.\n\nPractical kitchen decision:\n1. Put Order A into active preparation now.\n2. Start any long-cook items from Order B if a station is free.\n3. Do not let the large order block the smaller overdue order.\n4. Expedite both based on actual prep times and station capacity.";
-  }
-  if (/friday sales.*4,?000.*saturday.*6,?000.*sunday.*5,?000|4,?000.*6,?000.*5,?000.*average/i.test(q)) {
-    return "Direct answer:\nAverage daily sales were $5,000.\n\nCalculation:\n($4,000 + $6,000 + $5,000) ÷ 3 = $15,000 ÷ 3 = $5,000.\n\nManager note:\nUse the average as a planning baseline, but still staff differently by day because Saturday was clearly stronger than Friday.";
-  }
-  if (/sales increased by 20%.*food waste increased by 50%|20%.*sales.*50%.*waste/i.test(q)) {
-    return "Direct answer:\nNot necessarily. Performance is not definitely improving.\n\nWhy:\nHigher sales are positive, but a 50% increase in food waste can reduce or even erase the profit gain. Revenue alone does not prove the restaurant is healthier.\n\nMissing information needed:\n1. Food cost before and after the increase.\n2. Waste value in dollars.\n3. Gross profit and net profit.\n4. Whether the waste came from over-prep, spoilage, returns, or portion control.\n\nManager recommendation:\nCelebrate the sales increase, but investigate waste immediately before calling the result a real improvement.";
-  }
-  if (/100 reservations.*80 available seats|reservations for 80 available seats/i.test(q)) {
-    return "Direct answer:\nDo not seat 100 guests at the same time if only 80 seats are available.\n\nPractical solution:\n1. Confirm which reservations are still coming.\n2. Check cancellations and no-show history.\n3. Stagger arrival times into waves.\n4. Offer waiting-list positions or later time slots.\n5. Communicate delays before guests arrive.\n6. Protect kitchen and service capacity so the dining room does not collapse.\n\nManager note:\nThe goal is to maximize covers without damaging safety, service quality, or guest trust.";
-  }
-  if (/reduce staff.*lower labo[u]?r costs.*zero waiting time|zero waiting time/i.test(q)) {
-    return "Direct answer:\nNo, that instruction is not automatically logically consistent.\n\nWhy:\nReducing staff lowers labor cost, but it can also increase waiting time if demand stays the same. Guaranteeing zero waiting time usually requires enough capacity to absorb peak demand.\n\nMissing information needed:\n1. Expected customer count by hour.\n2. Current staff productivity.\n3. Average order and service time.\n4. Kitchen capacity.\n5. Acceptable labor-cost target.\n\nManager recommendation:\nChoose a realistic service target, then calculate the minimum staffing level needed to hit it. Do not promise zero waiting time while cutting capacity unless demand is also lower or productivity improves.";
-  }
-  if (/yesterday was unusually busy.*exactly how many cooks.*tomorrow/i.test(q)) {
-    return "Direct answer:\nI cannot give an exact number of cooks from that information alone.\n\nWhy:\n“Yesterday was unusually busy” is a signal, but it is not enough to calculate tomorrow’s kitchen staffing safely.\n\nInformation needed:\n1. Expected customers tomorrow by hour.\n2. Opening hours and peak period.\n3. Menu complexity and prep load.\n4. Average preparation time per order.\n5. Available equipment and stations.\n6. Current cooks’ productivity.\n7. Delivery/takeaway volume.\n\nManager recommendation:\nUse yesterday as a warning, then forecast tomorrow’s covers. If the forecast is close to yesterday’s peak, schedule an extra cook or on-call support rather than guessing an exact number.";
-  }
-  if (
-    /180 customers.*one waiter.*20 customers.*seven waiters.*temporary waiters.*\$60|180.*20.*seven waiters/i.test(q)
-  ) {
-    return "Direct answer:\nYou need 2 more waiters, and hiring both temporary waiters is reasonable if serving the expected demand generates more than $120 in contribution.\n\nCalculation:\nRequired waiters = 180 customers ÷ 20 customers per waiter = 9 waiters\nAvailable waiters = 7\nShortage = 9 − 7 = 2 waiters\nTemporary labor cost = 2 × $60 = $120.\n\nManager recommendation:\nHire both if the expected extra sales and service protection are worth more than $120. If margin is tight, first confirm the 180-customer forecast and the main service period length.";
-  }
-  if (/reducing food waste important.*profitability/i.test(q)) {
-    return "Direct answer:\nYes, reducing food waste is important for profitability.\n\nWhy:\nWaste turns purchased ingredients and labor into no revenue. Lower waste usually improves food cost percentage, gross margin, and cash flow.\n\nManager recommendation:\nTrack waste by item and reason, then reduce the largest repeat waste source first.";
-  }
-  if (/throw away 30% of prepared food.*continue preparing the same amount|30% of prepared food/i.test(q)) {
-    return "Direct answer:\nNo, you should not continue preparing the same amount without adjustment.\n\nWhy:\nThrowing away 30% of prepared food is a serious waste signal. It suggests over-prep, weak forecasting, poor storage, or menu demand mismatch.\n\nManager recommendation:\nReduce prep levels carefully, track sales by daypart, keep safety stock for peak periods, and review the result after several services. Do not cut so aggressively that you create stockouts.";
-  }
-  if (/earlier you said reducing waste was important.*consistent|recommendations are consistent/i.test(q)) {
-    return "Direct answer:\nYes, the recommendations are consistent.\n\nWhy:\nIf reducing waste improves profitability, then continuing to prepare the same amount while throwing away 30% would contradict that goal. The logical recommendation is to reduce or rebalance prep while protecting service availability.\n\nManager recommendation:\nKeep the principle consistent: reduce waste, but do it with sales forecasts and par levels so you do not create shortages.";
-  }
-  return null;
-}
-
 function formatDaily(data) {
   if (!data.orders)
     return `There are no recorded orders for ${data.date}.\n\nRecommendation: Import or enter sales data before making an operating decision.`;
@@ -370,7 +323,7 @@ Example:
 Ask: “Give me today’s business summary and tell me the first action I should take.”${formatConnectionHint(readiness)}`;
 }
 
-function formatDailyPrefinal(data) {
+function formatDailyPrefinal(data, currency) {
   if (!data.orders)
     return `Direct answer:
 I do not have recorded orders for ${data.date}, so I cannot judge today’s performance yet.
@@ -384,9 +337,9 @@ Next action:
 Import today’s orders from Connect real data, then ask for the daily summary again.`;
   return `Today’s decision brief
 
-Sales: ${money(data.revenue)}
+Sales: ${money(data.revenue, currency)}
 Orders: ${data.orders}
-Estimated profit: ${money(data.profit)}
+Estimated profit: ${money(data.profit, currency)}
 Margin: ${data.margin_percent}%
 Peak hour: ${data.peak_hour || "Not available"}
 
@@ -397,7 +350,7 @@ Next action:
 Ask “What needs attention?” to compare sales, menu profit, and stock risks together.`;
 }
 
-function formatProfitPrefinal(data) {
+function formatProfitPrefinal(data, currency) {
   if (!data.orders)
     return `Direct answer:
 I cannot calculate a useful ${data.range} profit summary because there are no recorded orders in that range.
@@ -411,9 +364,9 @@ Next action:
 Import POS orders and item costs first. Then I can calculate revenue, gross profit, margin, and the dishes causing profit leakage.`;
   return `${data.range[0].toUpperCase()}${data.range.slice(1)} profit brief
 
-Revenue: ${money(data.revenue)}
-Recorded costs: ${money(data.cost)}
-Estimated gross profit: ${money(data.profit)}
+Revenue: ${money(data.revenue, currency)}
+Recorded costs: ${money(data.cost, currency)}
+Estimated gross profit: ${money(data.profit, currency)}
 Gross margin: ${data.margin_percent}%
 Orders: ${data.orders}
 
@@ -442,14 +395,14 @@ Import an inventory CSV from Connect real data, then ask “What inventory needs
   return `Inventory needs attention\n\n${low.map((item) => `• ${item.item_name}: ${item.quantity} remaining (reorder at ${item.threshold})`).join("\n")}\n\nRecommendation: Reorder ${low.map((item) => item.item_name).join(" and ")} before the next busy service.`;
 }
 
-function formatTopDishesPrefinal(items) {
+function formatTopDishesPrefinal(items, currency) {
   if (!items.length)
     return "Direct answer:\nI cannot rank dishes yet because item-level order data is missing.\n\nWhat is missing:\n- Menu item names\n- Quantity sold\n- Revenue and cost per item\n\nNext action:\nImport orders and menu costs, then ask “Which dishes are selling best?”";
   return `Top dishes this month\n\n${items
     .slice(0, 5)
     .map(
       (item, index) =>
-        `${index + 1}. ${item.name} — ${item.units} sold, ${money(item.revenue)} revenue, ${item.margin_percent}% margin`
+        `${index + 1}. ${item.name} — ${item.units} sold, ${money(item.revenue, currency)} revenue, ${item.margin_percent}% margin`
     )
     .join(
       "\n"
@@ -473,22 +426,23 @@ Import recent orders and staff shifts, then ask “Do we need more staff tonight
 
 function formatRefundsPrefinal(data, scope) {
   const readiness = getDataReadiness(scope);
+  const currency = normalizeScope(scope).currency;
   if (!data.refunds)
     return `No refunds are recorded for this ${data.range}.
 
 Recommendation:
 Verify that POS refund imports are current before concluding there were truly no refunds.${formatConnectionHint(readiness)}`;
-  return `Refund review\n\nRefunds: ${data.refunds}\nRefunded value: ${money(data.refunded_amount)}\nTop reasons: ${data.top_reasons.map((item) => `${item.reason} (${item.count})`).join(", ") || "Not specified"}\n\nRecommendation: Investigate the most common reason first and compare it with the affected menu items or shifts.`;
+  return `Refund review\n\nRefunds: ${data.refunds}\nRefunded value: ${money(data.refunded_amount, currency)}\nTop reasons: ${data.top_reasons.map((item) => `${item.reason} (${item.count})`).join(", ") || "Not specified"}\n\nRecommendation: Investigate the most common reason first and compare it with the affected menu items or shifts.`;
 }
 
-function formatLowPerformancePrefinal(items) {
+function formatLowPerformancePrefinal(items, currency) {
   if (!items.length)
     return "Direct answer:\nI do not see a low-performance dish from the connected item data.\n\nImportant:\nThis does not prove every dish is profitable. It only means no item crossed the current low-performance threshold in the available data.\n\nNext action:\nKeep monitoring contribution margin, unit sales, refunds, and ingredient cost each week.";
   return `Menu profit risks\n\n${items
     .slice(0, 4)
     .map(
       (item, index) =>
-        `${index + 1}. ${item.name}: ${item.margin_percent}% margin, ${item.units} sold, ${money(item.profit)} contribution`
+        `${index + 1}. ${item.name}: ${item.margin_percent}% margin, ${item.units} sold, ${money(item.profit, currency)} contribution`
     )
     .join(
       "\n"
@@ -497,7 +451,8 @@ function formatLowPerformancePrefinal(items) {
 
 function formatAttentionPrefinal(scope) {
   const readiness = getDataReadiness(scope);
-  const daily = executeTool("get_daily_sales", { date: new Date().toISOString().slice(0, 10) }, scope);
+  const currency = normalizeScope(scope).currency;
+  const daily = executeTool("get_daily_sales", { date: localDay(scope) }, scope);
   const inventory = executeTool("get_inventory_status", {}, scope);
   const weak = executeTool("get_low_performance_items", {}, scope);
   const topRisk = weak[0];
@@ -514,16 +469,22 @@ function formatAttentionPrefinal(scope) {
 
 1. Inventory: ${readiness.hasInventory ? `${inventory.low_stock_count} item${inventory.low_stock_count === 1 ? "" : "s"} below threshold${lowNames.length ? ` — ${lowNames.join(", ")}` : ""}` : "inventory data is not connected"}.
 2. Menu profit: ${readiness.hasMenu && readiness.hasOrders ? (topRisk ? `${topRisk.name} has the weakest margin at ${topRisk.margin_percent}%` : "no item is currently below the performance threshold") : "menu and order data are not complete enough for a strong conclusion"}.
-3. Today: ${readiness.hasOrders ? `${money(daily.revenue)} sales from ${daily.orders} orders, with ${money(daily.profit)} estimated gross profit` : "no orders connected for this operating day"}.
+3. Today: ${readiness.hasOrders ? `${money(daily.revenue, currency)} sales from ${daily.orders} orders, with ${money(daily.profit, currency)} estimated gross profit` : "no orders connected for this operating day"}.
 
 Priority:
 ${priorities[0]}${formatConnectionHint(readiness)}`;
 }
 
 function demoReplyArabic(text, restaurantId) {
+  const scope = normalizeScope(restaurantId);
+  const currency = scope.currency;
   const q = text.trim();
-  if (/(أوقف|عطّل|احذف|فعّل).*(طبق|عنصر)|أنشئ.*تقرير/.test(q))
-    return "هذا الإجراء سيغيّر بيانات المطعم. يرجى تأكيد الإجراء المحدد بوضوح قبل التنفيذ.";
+  if (/(أوقف|عطّل|احذف|فعّل).*(طبق|عنصر)|أنشئ.*تقرير|إنشئ.*تقرير|اصنع.*تقرير|أعدّ.*تقرير|اعمل.*تقرير/.test(q)) {
+    const action = detectActionRequest(text, scope);
+    return action
+      ? action.confirmationText
+      : "هذا الإجراء سيغيّر بيانات المطعم. يرجى تأكيد الإجراء المحدد بوضوح قبل التنفيذ.";
+  }
   if (/(كتاب|دليل|سياسة|وصفة|تدريب|إجراء|معيار|منطقي|بشري|محادثة|حوار|تفكير|استيضاح)/.test(q))
     return formatKnowledgeResults(text, restaurantId, true);
   if (/(استرداد|مرتجع|مرتجعات|إرجاع)/.test(q)) {
@@ -531,7 +492,7 @@ function demoReplyArabic(text, restaurantId) {
     const data = executeTool("get_refund_summary", { range }, restaurantId);
     if (!data.refunds)
       return "لا توجد عمليات استرداد مسجلة لهذه الفترة.\n\nالتوصية: تأكد من تحديث بيانات الاسترداد المستوردة من نظام نقاط البيع.";
-    return `مراجعة الاستردادات\n\nعدد العمليات: ${data.refunds}\nالقيمة المستردة: ${money(data.refunded_amount)}\nأهم الأسباب: ${data.top_reasons.map((item) => `${item.reason} (${item.count})`).join("، ") || "غير محدد"}\n\nالتوصية: ابدأ بالتحقيق في السبب الأكثر تكراراً وقارنه بالأطباق أو الورديات المتأثرة.`;
+    return `مراجعة الاستردادات\n\nعدد العمليات: ${data.refunds}\nالقيمة المستردة: ${money(data.refunded_amount, currency)}\nأهم الأسباب: ${data.top_reasons.map((item) => `${item.reason} (${item.count})`).join("، ") || "غير محدد"}\n\nالتوصية: ابدأ بالتحقيق في السبب الأكثر تكراراً وقارنه بالأطباق أو الورديات المتأثرة.`;
   }
   if (/(مرحبا|مرحباً|السلام عليكم|اهلا|أهلا)/.test(q))
     return "مرحباً، أنا جاهز. اسألني عن مبيعات اليوم، أرباح الأسبوع، أداء الأطباق، المخزون، أو احتياج الموظفين.";
@@ -539,7 +500,7 @@ function demoReplyArabic(text, restaurantId) {
   if (/(ماذا تستطيع|ماذا يمكنك|ساعدني|مساعدة)/.test(q))
     return "أستطيع مساعدتك في خمسة قرارات:\n\n• تلخيص مبيعات وأرباح اليوم\n• تحديد أفضل وأضعف الأطباق\n• كشف نقص المخزون\n• اقتراح عدد الموظفين حسب الطلب\n• إنشاء تقرير تشغيلي بعد موافقتك\n\nجرّب: «ما الذي يحتاج إلى انتباهي اليوم؟»";
   if (/(انتباه|الأولوية|الاولويه|المشاكل|مشكلة|مهم اليوم)/.test(q) && !/(مخزون|ناقص|ينفد|مكونات)/.test(q)) {
-    const daily = executeTool("get_daily_sales", { date: new Date().toISOString().slice(0, 10) }, restaurantId);
+    const daily = executeTool("get_daily_sales", { date: localDay(scope) }, restaurantId);
     const inventory = executeTool("get_inventory_status", {}, restaurantId);
     const weak = executeTool("get_low_performance_items", {}, restaurantId);
     const risk = weak[0];
@@ -547,7 +508,7 @@ function demoReplyArabic(text, restaurantId) {
       .filter((item) => item.status === "low")
       .map((item) => item.item_name)
       .join("، ");
-    return `ما يحتاج إلى انتباهك\n\n1. المخزون: ${inventory.low_stock_count} عناصر تحت حد إعادة الطلب${lowNames ? ` — ${lowNames}` : ""}.\n2. ربحية القائمة: ${risk ? `${risk.name} لديه أضعف هامش ربح بنسبة ${risk.margin_percent}%` : "لا يوجد طبق تحت حد الأداء حالياً"}.\n3. اليوم: المبيعات ${money(daily.revenue)} من ${daily.orders} طلباً، والربح التقديري ${money(daily.profit)}.\n\nالأولوية: ${inventory.low_stock_count ? "أعد طلب المكونات الناقصة قبل الخدمة القادمة." : risk ? `راجع تكلفة وسعر ${risk.name}.` : "لا توجد مشكلة عاجلة؛ ركّز على جودة الخدمة."}`;
+    return `ما يحتاج إلى انتباهك\n\n1. المخزون: ${inventory.low_stock_count} عناصر تحت حد إعادة الطلب${lowNames ? ` — ${lowNames}` : ""}.\n2. ربحية القائمة: ${risk ? `${risk.name} لديه أضعف هامش ربح بنسبة ${risk.margin_percent}%` : "لا يوجد طبق تحت حد الأداء حالياً"}.\n3. اليوم: المبيعات ${money(daily.revenue, currency)} من ${daily.orders} طلباً، والربح التقديري ${money(daily.profit, currency)}.\n\nالأولوية: ${inventory.low_stock_count ? "أعد طلب المكونات الناقصة قبل الخدمة القادمة." : risk ? `راجع تكلفة وسعر ${risk.name}.` : "لا توجد مشكلة عاجلة؛ ركّز على جودة الخدمة."}`;
   }
   if (/(مخزون|ناقص|ينفد|مكونات|إعادة الطلب)/.test(q)) {
     const data = executeTool("get_inventory_status", {}, restaurantId);
@@ -564,18 +525,18 @@ function demoReplyArabic(text, restaurantId) {
       .slice(0, 4)
       .map(
         (item, index) =>
-          `${index + 1}. ${item.name}: هامش ${item.margin_percent}%، بيع ${item.units}، مساهمة ${money(item.profit)}`
+          `${index + 1}. ${item.name}: هامش ${item.margin_percent}%، بيع ${item.units}، مساهمة ${money(item.profit, currency)}`
       )
       .join("\n")}\n\nالتوصية: راجع ${items[0].name} أولاً، وتحقق من تكلفة الحصة والسعر قبل التفكير في إيقافه.`;
   }
   if (/(أفضل|افضل|الأكثر مبيع|طبق|الأطباق)/.test(q)) {
     const items = executeTool("get_top_dishes", {}, restaurantId);
-    return `أفضل الأطباق هذا الشهر\n\n${items.map((item, index) => `${index + 1}. ${item.name}: بيع ${item.units}، إيراد ${money(item.revenue)}، هامش ${item.margin_percent}%`).join("\n")}\n\nالتوصية: حافظ على ظهور الأطباق الرائدة وقارن هوامشها قبل تقديم أي خصم.`;
+    return `أفضل الأطباق هذا الشهر\n\n${items.map((item, index) => `${index + 1}. ${item.name}: بيع ${item.units}، إيراد ${money(item.revenue, currency)}، هامش ${item.margin_percent}%`).join("\n")}\n\nالتوصية: حافظ على ظهور الأطباق الرائدة وقارن هوامشها قبل تقديم أي خصم.`;
   }
   if (/(ربح|أرباح|هامش|إيراد|تكلفة|أسبوع|شهر)/.test(q)) {
     const range = q.includes("شهر") ? "month" : q.includes("اليوم") ? "today" : "week";
     const data = executeTool("get_profit_summary", { range }, restaurantId);
-    return `ملخص الربح\n\nالإيرادات: ${money(data.revenue)}\nالتكاليف: ${money(data.cost)}\nالربح: ${money(data.profit)}\nهامش الربح: ${data.margin_percent}%\nالطلبات: ${data.orders}\n\nالتوصية: ابدأ بمراجعة الأطباق منخفضة الهامش لأن تحسين السعر أو تكلفة المكونات سيؤثر سريعاً في الربح.`;
+    return `ملخص الربح\n\nالإيرادات: ${money(data.revenue, currency)}\nالتكاليف: ${money(data.cost, currency)}\nالربح: ${money(data.profit, currency)}\nهامش الربح: ${data.margin_percent}%\nالطلبات: ${data.orders}\n\nالتوصية: ابدأ بمراجعة الأطباق منخفضة الهامش لأن تحسين السعر أو تكلفة المكونات سيؤثر سريعاً في الربح.`;
   }
   if (/(موظف|موظفين|عمال|نادل|طباخ|وردية|ازدحام|الليلة)/.test(q)) {
     const data = executeTool(
@@ -583,17 +544,115 @@ function demoReplyArabic(text, restaurantId) {
       { level: q.includes("ازدحام") ? "busy" : "auto", date_time: new Date().toISOString() },
       restaurantId
     );
-    return `توقع الاحتياج للموظفين\n\nالطلبات المتوقعة: ${data.expected_orders}\nالقرار: ${data.expected_orders >= 40 ? "أضف نادلاً وطباخ خط إضافياً خلال الذروة." : data.expected_orders >= 25 ? "أضف نادلاً مرناً خلال ساعة الذروة." : "عدد الموظفين المعتاد كافٍ."}\n\nالتوصية: أكّد توفر الفريق مع مسؤول الوردية قبل تعديل الجدول.`;
+    return `توقع الاحتياج للموظفين\n\nالطلبات المتوقعة: ${data.expected_orders}\nالقرار: ${data.level === "high" ? "أضف نادلاً وطباخ خط إضافياً خلال الذروة." : data.level === "medium" ? "أضف نادلاً مرناً خلال ساعة الذروة." : "عدد الموظفين المعتاد كافٍ."}\n\nالتوصية: أكّد توفر الفريق مع مسؤول الوردية قبل تعديل الجدول.`;
   }
   if (/(اليوم|المبيعات|الطلبات|الأداء|ملخص|كيف.*المطعم)/.test(q)) {
-    const data = executeTool("get_daily_sales", { date: new Date().toISOString().slice(0, 10) }, restaurantId);
-    return `أداء اليوم\n\nالمبيعات: ${money(data.revenue)}\nالطلبات: ${data.orders}\nالربح: ${money(data.profit)}\nهامش الربح: ${data.margin_percent}%\nساعة الذروة: ${data.peak_hour || "غير متوفرة"}\n\nالتوصية: حافظ على جودة الخدمة خلال الذروة وراجع عناصر المخزون المنخفض قبل الوردية القادمة.`;
+    const data = executeTool("get_daily_sales", { date: localDay(scope) }, restaurantId);
+    return `أداء اليوم\n\nالمبيعات: ${money(data.revenue, currency)}\nالطلبات: ${data.orders}\nالربح: ${money(data.profit, currency)}\nهامش الربح: ${data.margin_percent}%\nساعة الذروة: ${data.peak_hour || "غير متوفرة"}\n\nالتوصية: حافظ على جودة الخدمة خلال الذروة وراجع عناصر المخزون المنخفض قبل الوردية القادمة.`;
   }
   return "أريد أن أجيبك اعتماداً على بيانات المطعم، لكن القرار غير واضح. هل تريد تحليل أداء اليوم، ربحية القائمة، المخزون، أم احتياج الموظفين؟";
 }
 
+// Tools that change data and therefore require explicit owner confirmation (C1).
+export const ACTION_TOOLS = ["flag_menu_item", "create_report"];
+
+// Extract the dish name from an activate/deactivate request.
+function extractItemName(text) {
+  return String(text || "")
+    .replace(
+      /(deactivate|disable|delete|activate|أوقف|عطّل|احذف|فعّل|تفعيل|نشّط|إيقاف|تعطيل|dish|item|طبق|عنصر|the|ضع|من|القائمة)/gi,
+      " "
+    )
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/^(of|from|please|رجاءً|أرجو|من|الى|إلى)\s+/i, "")
+    .split(" ")
+    .map((word) => word.replace(/^ال(?=\S)/, ""))
+    .filter(Boolean)
+    .join(" ")
+    .trim();
+}
+
+// Detect an executive action request (flag_menu_item / create_report).
+// Returns { tool, args, description, confirmationText } or null.
+// Never executes anything: execution only happens through the
+// pending_ai_actions confirm endpoint after the owner approves.
+export function detectActionRequest(question, scope) {
+  const context = normalizeScope(scope);
+  const text = String(question || "").trim();
+  if (!text) return null;
+  const arabic = isArabic(text);
+  const flagKeyword = /(dish|item|طبق|عنصر)/i.test(text);
+  const flagVerb = /\b(deactivate|disable|delete|activate)\b|أوقف|عطّل|احذف|فعّل|تفعيل|نشّط|إيقاف|تعطيل/i.test(text);
+  // Treat it as a flag request only when the message names a dish/item keyword,
+  // or when the text after the verb resolves to exactly one existing menu item.
+  const wantsFlag = flagVerb && (flagKeyword || resolveMenuItem(context, extractItemName(text)).status === "ok");
+  const wantsReport =
+    /(create|make|generate|save).*(report)|إنشئ.*تقرير|أنشئ.*تقرير|اصنع.*تقرير|أعدّ.*تقرير|اعمل.*تقرير/i.test(text);
+
+  if (wantsFlag) {
+    const action = /\b(deactivate|disable|delete)\b|أوقف|عطّل|احذف|إيقاف|تعطيل/i.test(text) ? "deactivate" : "activate";
+    const nameQuery = extractItemName(text);
+    const resolved = resolveMenuItem(context, nameQuery);
+    if (resolved.status === "ok") {
+      const item = resolved.item;
+      const args = { item_id: item.id, action };
+      return {
+        tool: "flag_menu_item",
+        args,
+        description: arabic
+          ? `${action === "activate" ? "تفعيل" : "إيقاف"} الطبق «${item.name}» (#${item.id})`
+          : `${action === "activate" ? "Activate" : "Deactivate"} menu item "${item.name}" (#${item.id})`,
+        confirmationText: arabic
+          ? `هذا إجراء تنفيذي يغيّر بيانات المطعم:\n\nالإجراء: ${action === "activate" ? "تفعيل" : "إيقاف"} الطبق «${item.name}» (رقم ${item.id}).\n\nلن أنفّذه إلا بعد موافقتك الصريحة من بطاقة التأكيد.`
+          : `This is an executive action that changes restaurant data:\n\nAction: ${action === "activate" ? "Activate" : "Deactivate"} menu item "${item.name}" (#${item.id}).\n\nI will not execute it until you approve it from the confirmation card.`
+      };
+    }
+    if (resolved.status === "ambiguous")
+      return {
+        tool: null,
+        confirmationText: arabic
+          ? `الاسم مطابق لأكثر من طبق. حدّد الاسم بدقة: ${resolved.items.map((i) => i.name).join("، ")}. لن أنفّذ أي تغيير إلا بعد تأكيدك.`
+          : `That name matches more than one menu item. Please be specific: ${resolved.items.map((i) => i.name).join(", ")}. I will only execute the change after your confirmation.`
+      };
+    if (resolved.status === "not_found")
+      return {
+        tool: null,
+        confirmationText: arabic
+          ? "لم أجد طبقاً بهذا الاسم في قائمة مطعمك. أعطني اسم الطبق كما هو مسجل في القائمة وسأجهّز الإجراء ليتم تنفيذه فقط بعد تأكيدك."
+          : "I could not find a menu item with that name. Give me the exact dish name stored in your menu and I will prepare the action so it runs only after your confirmation."
+      };
+    return {
+      tool: null,
+      confirmationText: arabic
+        ? "حدّد اسم الطبق الذي تريد إيقافه أو تفعيله، ولن أنفّذ أي تغيير إلا بعد تأكيدك الصريح."
+        : "Tell me the exact dish name you want to activate or deactivate; I will only execute the change after your explicit confirmation."
+    };
+  }
+
+  if (wantsReport) {
+    const range = /(month|شهر|شهري)/i.test(text) ? "month" : /(week|أسبوع|أسبوعي)/i.test(text) ? "week" : "today";
+    const type = /(week|أسبوع|أسبوعي)/i.test(text) ? "weekly" : /(month|شهر|شهري)/i.test(text) ? "monthly" : "daily";
+    const args = { type, date_range: range };
+    return {
+      tool: "create_report",
+      args,
+      description: arabic
+        ? `إنشاء تقرير ${type === "weekly" ? "أسبوعي" : type === "monthly" ? "شهري" : "يومي"} (${range}) وحفظه`
+        : `Create and save a ${type} operations report (${range})`,
+      confirmationText: arabic
+        ? `هذا إجراء تنفيذي:\n\nالإجراء: إنشاء تقرير ${type === "weekly" ? "أسبوعي" : type === "monthly" ? "شهري" : "يومي"} للفترة (${range}) وحفظه في تقارير المطعم.\n\nلن أنفّذه إلا بعد موافقتك الصريحة من بطاقة التأكيد.`
+        : `This is an executive action:\n\nAction: create and save a ${type} operations report for the ${range} range.\n\nI will not execute it until you approve it from the confirmation card.`
+    };
+  }
+
+  return null;
+}
+
 export function demoReply(text, restaurantId) {
   if (isArabic(text)) return demoReplyArabic(text, restaurantId);
+  const context = normalizeScope(restaurantId);
+  const currency = context.currency;
   const q = text.toLowerCase().trim();
   if (
     /(another|other|different).*(restaurant|branch|organization|tenant).*(private|sales|inventory|orders|profit)|private.*(restaurant|branch|organization|tenant).*(sales|inventory|orders|profit)/.test(
@@ -609,12 +668,14 @@ export function demoReply(text, restaurantId) {
   ) {
     return "I cannot calculate exact profit without restaurant data.\n\nWhat is missing:\n1. Order revenue after discounts and refunds.\n2. Menu item costs or ingredient costs.\n3. Labor costs for the period.\n4. Delivery commissions, payment fees, rent allocation, and other operating costs if you want true net profit.\n\nNext action: import orders, refunds, menu costs, and staff/labor data, then ask for the profit range again.";
   }
-  const logicReasoning = formatRestaurantLogicReasoning(q);
-  if (logicReasoning) return logicReasoning;
   if (/(customer satisfaction|restaurant next door|weather|competitor)/.test(q))
     return "I do not have the required data to answer that reliably. Connect the relevant customer, competitor, or weather data first.";
-  if (/(deactivate|disable|delete|activate).*(dish|item)|create.*report/.test(q))
-    return "This action changes restaurant data. Please confirm the exact action before I execute it.";
+  if (/(deactivate|disable|delete|activate).*(dish|item)|create.*report/.test(q)) {
+    const action = detectActionRequest(text, context);
+    return action
+      ? action.confirmationText
+      : "This action changes restaurant data. Please confirm the exact action before I execute it.";
+  }
   if (
     /(book|manual|policy|sop|recipe|training|procedure|service standard|operating standard|logical|human|conversation|reasoning|answer quality|dialogue|intent|clarifying question)/.test(
       q
@@ -649,7 +710,7 @@ export function demoReply(text, restaurantId) {
   )
     return formatAttentionPrefinal(restaurantId);
   let name = "get_daily_sales",
-    args = { date: new Date().toISOString().slice(0, 10) };
+    args = { date: localDay(context) };
   if (/(refund|refunded|return|chargeback)/.test(q)) {
     name = "get_refund_summary";
     args = { range: q.includes("month") ? "month" : q.includes("today") ? "today" : "week" };
@@ -670,13 +731,13 @@ export function demoReply(text, restaurantId) {
     args = { level: q.includes("busy") ? "busy" : "auto", date_time: new Date().toISOString() };
   } else if (!/(today|sales|orders|doing|performance|summary)/.test(q))
     return formatGeneralRestaurantHelpPrefinal(restaurantId);
-  const data = executeTool(name, args, restaurantId);
-  if (name === "get_daily_sales") return formatDailyPrefinal(data);
-  if (name === "get_profit_summary") return formatProfitPrefinal(data);
+  const data = executeTool(name, args, context);
+  if (name === "get_daily_sales") return formatDailyPrefinal(data, currency);
+  if (name === "get_profit_summary") return formatProfitPrefinal(data, currency);
   if (name === "get_inventory_status") return formatInventoryPrefinal(data);
-  if (name === "get_refund_summary") return formatRefundsPrefinal(data, restaurantId);
-  if (name === "get_top_dishes") return formatTopDishesPrefinal(data);
-  if (name === "get_low_performance_items") return formatLowPerformancePrefinal(data);
+  if (name === "get_refund_summary") return formatRefundsPrefinal(data, context);
+  if (name === "get_top_dishes") return formatTopDishesPrefinal(data, currency);
+  if (name === "get_low_performance_items") return formatLowPerformancePrefinal(data, currency);
   return formatStaffingPrefinal(data);
 }
 
@@ -694,7 +755,6 @@ export function inferTools(text) {
     )
   )
     return [];
-  if (formatRestaurantLogicReasoning(q)) return [];
   if (
     /(book|manual|policy|sop|recipe|training|procedure|service standard|operating standard|logical|human|conversation|reasoning|answer quality|dialogue|intent|clarifying question|كتاب|دليل|سياسة|وصفة|تدريب|إجراء|معيار|منطقي|بشري|محادثة|حوار|تفكير|استيضاح)/.test(
       q
@@ -814,8 +874,22 @@ export async function getAssistantReply(messages, scope) {
   const context = normalizeScope(scope);
   const question = messages.at(-1)?.content || "";
   const toolsUsed = inferTools(question);
-  const toolBackedDraft = demoReply(question, context);
   const runtime = getAiRuntimeStatus();
+
+  // Executive actions never go through the language model: they are detected
+  // deterministically and returned as a pending action for owner approval (C1).
+  const actionRequest = detectActionRequest(question, context);
+  if (actionRequest) {
+    return {
+      content: actionRequest.confirmationText,
+      toolsUsed: actionRequest.tool ? [actionRequest.tool] : [],
+      aiMode: runtime.aiConfigured ? "openai" : "demo",
+      model: runtime.model,
+      actionRequest: actionRequest.tool ? actionRequest : null
+    };
+  }
+
+  const toolBackedDraft = demoReply(question, context);
   if (!runtime.aiConfigured) {
     logAiEvent("demo_mode_active", { mode: runtime.mode, model: runtime.model, success: true });
     return { content: toolBackedDraft, toolsUsed, aiMode: "demo" };

@@ -21,6 +21,16 @@ export async function registerRequest(payload) {
   return session;
 }
 
+export async function switchRestaurantRequest(restaurantId) {
+  const session = await api("/auth/switch-restaurant", {
+    method: "POST",
+    body: JSON.stringify({ restaurantId: Number(restaurantId) })
+  });
+  setToken(session.token);
+  setStoredSession(session);
+  return session;
+}
+
 export async function restoreSessionRequest() {
   const session = await api("/auth/me");
   setStoredSession(session);

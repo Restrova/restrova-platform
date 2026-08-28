@@ -1,13 +1,28 @@
 import Database from "better-sqlite3";
 import bcrypt from "bcryptjs";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { migrate } from "../db/migrate.js";
 
-const file = path.resolve(process.env.DATABASE_PATH || "./data/restaurant.db");
-if (process.env.NODE_ENV === "production" && !process.env.DATABASE_PATH) {
-  throw new Error("DATABASE_PATH is required in production and must point to durable storage.");
+function assertDurableProductionDatabase(rawPath) {
+  if (process.env.NODE_ENV !== "production") return;
+  if (!rawPath) {
+    throw new Error("DATABASE_PATH is required in production and must point to durable storage.");
+  }
+  const normalized = path.resolve(rawPath);
+  const temporaryRoots = ["/tmp", "/var/tmp", "/temp", path.resolve(os.tmpdir())];
+  const isTemporary = temporaryRoots.some((root) => normalized === root || normalized.startsWith(root + path.sep));
+  if (isTemporary) {
+    throw new Error(
+      `Configuration error: DATABASE_PATH "${rawPath}" points to temporary storage. ` +
+        "Production requires a durable path such as a mounted volume (for example /var/data/restaurant.db)."
+    );
+  }
 }
+
+assertDurableProductionDatabase(process.env.DATABASE_PATH);
+const file = path.resolve(process.env.DATABASE_PATH || "./data/restaurant.db");
 fs.mkdirSync(path.dirname(file), { recursive: true });
 export const db = new Database(file);
 db.pragma("journal_mode = WAL");
@@ -43,6 +58,7 @@ function ensureColumn(table, column, definition) {
 }
 
 ensureColumn("owners", "name", "TEXT");
+ensureColumn("owners", "token_invalid_before", "INTEGER");
 ensureColumn("restaurants", "organization_id", "INTEGER REFERENCES organizations(id)");
 ensureColumn("restaurants", "currency", "TEXT NOT NULL DEFAULT 'CNY'");
 ensureColumn("restaurants", "timezone", "TEXT NOT NULL DEFAULT 'Asia/Shanghai'");
@@ -66,6 +82,16 @@ ensureColumn("knowledge_chunks", "branch_id", "INTEGER REFERENCES branches(id)")
 db.exec(`
 CREATE UNIQUE INDEX IF NOT EXISTS idx_orders_source_key ON orders(restaurant_id,branch_id,source_key) WHERE source_key IS NOT NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS idx_refunds_source_key ON refunds(restaurant_id,branch_id,source_key) WHERE source_key IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_owners_email_lower ON owners(lower(email));
+CREATE INDEX IF NOT EXISTS idx_orders_scope_time ON orders(restaurant_id,branch_id,created_at);
+CREATE INDEX IF NOT EXISTS idx_refunds_scope_time ON refunds(restaurant_id,branch_id,created_at);
+CREATE INDEX IF NOT EXISTS idx_staff_shifts_scope ON staff_shifts(restaurant_id,branch_id,start_at);
+CREATE INDEX IF NOT EXISTS idx_menu_items_restaurant ON menu_items(restaurant_id);
+CREATE INDEX IF NOT EXISTS idx_inventory_scope ON inventory(restaurant_id,branch_id);
+CREATE INDEX IF NOT EXISTS idx_chat_messages_session ON chat_messages(session_id);
+CREATE INDEX IF NOT EXISTS idx_chat_sessions_scope ON chat_sessions(restaurant_id,branch_id);
+CREATE INDEX IF NOT EXISTS idx_branches_scope ON branches(organization_id,restaurant_id);
+CREATE INDEX IF NOT EXISTS idx_reports_restaurant ON reports(restaurant_id);
 `);
 
 function ensureAccessRecords() {
@@ -187,5 +213,8 @@ function seed() {
     }
   }
 }
-if (process.env.NODE_ENV !== "production" || process.env.ENABLE_DEMO_SEED === "true") seed();
+// The demo restaurant (owner@harbor.test / demo1234) is only created when the
+// operator explicitly opts in. It must never appear implicitly in development
+// or production deployments. Test harnesses set ENABLE_DEMO_SEED=true.
+if (process.env.ENABLE_DEMO_SEED === "true") seed();
 ensureAccessRecords();

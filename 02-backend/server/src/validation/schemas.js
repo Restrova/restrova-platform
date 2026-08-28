@@ -32,6 +32,10 @@ export const loginSchema = z.object({
   restaurantId: z.number().int().positive().optional()
 });
 
+export const switchRestaurantSchema = z.object({
+  restaurantId: z.number().int().positive()
+});
+
 export const organizationSchema = z.object({
   name: z.string().trim().min(1).max(160),
   currency: z.string().trim().length(3).default("CNY"),
@@ -41,7 +45,8 @@ export const organizationSchema = z.object({
 
 export const restaurantSchema = z.object({
   name: z.string().trim().min(1).max(160),
-  businessType: z.string().trim().min(1).max(80).default("yemeni")
+  businessType: z.string().trim().min(1).max(80).default("yemeni"),
+  city: z.string().trim().max(120).optional()
 });
 
 export const branchCreateSchema = z.object({
@@ -179,7 +184,8 @@ export const knowledgeImportSchema = z.object({
 
 export const chatSchema = z.object({
   message: z.string().trim().min(1).max(4000),
-  sessionId: z.number().int().positive().optional()
+  sessionId: z.number().int().positive().optional(),
+  branchId: z.number().int().positive().optional()
 });
 
 export const feedbackSchema = z.object({

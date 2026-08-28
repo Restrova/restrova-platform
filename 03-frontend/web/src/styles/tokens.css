@@ -10,6 +10,7 @@
   --slate-100: #f1f5f9;
   --slate-50: #f8fafc;
   --emerald-700: #047857;
+  --emerald-800: #065f46;
   --emerald-600: #059669;
   --emerald-500: #10b981;
   --emerald-100: #d1fae5;
@@ -40,8 +41,10 @@
   --color-text-secondary: var(--slate-600);
   --color-text-muted: var(--slate-500);
   --color-text-inverse: var(--slate-50);
-  --color-primary: var(--emerald-600);
-  --color-primary-hover: var(--emerald-700);
+  /* Primary shifted one step darker (emerald-700) so text on light surfaces
+     and white-on-primary button labels meet WCAG AA (≥ 4.5:1). */
+  --color-primary: var(--emerald-700);
+  --color-primary-hover: var(--emerald-800);
   --color-primary-soft: var(--emerald-50);
   --color-primary-border: var(--emerald-500);
   --color-secondary: var(--slate-700);
@@ -50,7 +53,7 @@
   --color-info-hover: var(--blue-700);
   --color-info-soft: var(--blue-50);
   --color-info-border: var(--blue-100);
-  --color-success: var(--emerald-600);
+  --color-success: var(--emerald-700);
   --color-success-soft: var(--emerald-50);
   --color-success-border: var(--emerald-100);
   --color-warning: var(--amber-600);

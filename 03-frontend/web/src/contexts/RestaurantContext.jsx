@@ -1,6 +1,7 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "./AuthContext.jsx";
+import { api } from "../lib/api.js";
 
 const RESTAURANT_KEY = "selectedRestaurantId";
 const BRANCH_KEY = "selectedBranchId";
@@ -28,9 +29,26 @@ export function RestaurantProvider({ children }) {
   const [selectedBranchId, setSelectedBranchIdState] = useState(() => getStoredId(BRANCH_KEY));
   const session = auth.session;
 
+  // Real restaurant list for the switcher (H4): fetched from the backend for
+  // the current organization, falling back to the session's single restaurant
+  // while loading (or when the list endpoint is unavailable).
+  const { data: organizationRestaurants } = useQuery({
+    queryKey: ["restaurants"],
+    queryFn: async () => {
+      const data = await api("/restaurants");
+      return Array.isArray(data) ? data : [];
+    },
+    enabled: auth.status === "authenticated"
+  });
+
   const restaurants = useMemo(() => {
+    const listed = (organizationRestaurants || []).map((restaurant) => ({
+      ...restaurant,
+      id: normalizeId(restaurant.id)
+    }));
+    if (listed.length) return listed;
     return session?.restaurant ? [{ ...session.restaurant, id: normalizeId(session.restaurant.id) }] : [];
-  }, [session?.restaurant]);
+  }, [organizationRestaurants, session?.restaurant]);
 
   const branches = useMemo(() => {
     return (session?.branches || []).map((branch) => ({ ...branch, id: normalizeId(branch.id) }));
@@ -51,6 +69,38 @@ export function RestaurantProvider({ children }) {
     }
   }, [restaurants, selectedRestaurantId]);
 
+  // Keep the visual selection and the server session pointing at the same
+  // restaurant. A persisted selection that differs from the session's default
+  // triggers one real switch; if it fails we fall back to the session's
+  // restaurant instead of showing a fake selection.
+  const sessionRestaurantId = normalizeId(session?.restaurant?.id);
+  useEffect(() => {
+    if (!restaurants.length || !sessionRestaurantId) return;
+    if (selectedRestaurantId === sessionRestaurantId) {
+      switchTargetRef.current = "";
+      return;
+    }
+    if (switchTargetRef.current === selectedRestaurantId) return; // already switching there
+    const wanted = restaurants.find((restaurant) => restaurant.id === selectedRestaurantId);
+    if (!wanted) {
+      setSelectedRestaurantIdState(sessionRestaurantId);
+      localStorage.setItem(RESTAURANT_KEY, sessionRestaurantId);
+      return;
+    }
+    let cancelled = false;
+    switchTargetRef.current = selectedRestaurantId;
+    auth.switchRestaurant(selectedRestaurantId).catch(() => {
+      if (cancelled) return;
+      switchTargetRef.current = "";
+      setSelectedRestaurantIdState(sessionRestaurantId);
+      localStorage.setItem(RESTAURANT_KEY, sessionRestaurantId);
+    });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [restaurants, selectedRestaurantId, sessionRestaurantId]);
+
   useEffect(() => {
     if (!branches.length) {
       setSelectedBranchIdState("");
@@ -66,21 +116,29 @@ export function RestaurantProvider({ children }) {
     }
   }, [branches, selectedBranchId]);
 
+  // Dedupes switch requests: the optimistic selection in setSelectedRestaurantId
+  // and the session-sync effect below would otherwise both call the endpoint.
+  const switchTargetRef = useRef("");
+
   const setSelectedRestaurantId = useCallback(
     (restaurantId) => {
       const normalized = normalizeId(restaurantId);
       const restaurant = restaurants.find((item) => item.id === normalized);
       if (!restaurant) return false;
+      // Real switch (H4): ask the backend to reissue the session for the
+      // selected restaurant. The optimistic state update below keeps the
+      // select responsive; session refresh cascades through auth-change.
       setSelectedRestaurantIdState(normalized);
       localStorage.setItem(RESTAURANT_KEY, normalized);
-      const nextBranch = branches[0]?.id || "";
-      setSelectedBranchIdState(nextBranch);
-      if (nextBranch) localStorage.setItem(BRANCH_KEY, nextBranch);
-      else localStorage.removeItem(BRANCH_KEY);
-      queryClient.invalidateQueries();
+      setSelectedBranchIdState("");
+      localStorage.removeItem(BRANCH_KEY);
+      switchTargetRef.current = normalized;
+      Promise.resolve(auth.switchRestaurant(normalized))
+        .then(() => queryClient.invalidateQueries())
+        .catch(() => {});
       return true;
     },
-    [branches, queryClient, restaurants]
+    [auth, queryClient, restaurants]
   );
 
   const setSelectedBranchId = useCallback(

@@ -19,7 +19,7 @@
 }
 .feedback-card > small {
   margin: 5px 0 13px;
-  color: #7d8581;
+  color: #66706c;
   font-size: 10px;
 }
 .feedback-card > div {
@@ -30,9 +30,11 @@
   border: 1px solid #dfe3de;
   background: #f8f9f6;
   border-radius: 9px;
-  padding: 9px 12px;
+  padding: 10px 14px;
+  min-height: 40px;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 7px;
   cursor: pointer;
   font-size: 11px;

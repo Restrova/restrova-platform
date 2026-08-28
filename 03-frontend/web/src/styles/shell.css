@@ -357,7 +357,6 @@
   inset-block-end: 0;
   z-index: var(--z-sticky);
   display: none;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
   min-block-size: calc(var(--mobile-navigation-height) + env(safe-area-inset-bottom));
   border-block-start: 1px solid var(--color-border);
   background: var(--color-surface);
@@ -369,6 +368,8 @@
   min-block-size: 44px;
   place-items: center;
   gap: var(--space-1);
+  flex: 1 1 0;
+  min-inline-size: 0;
   border: 0;
   background: transparent;
   color: var(--color-text-secondary);
@@ -403,8 +404,10 @@
     display: block;
   }
 
+  /* flex (not a fixed 5-column grid) so 3-5 priority items always share the
+     bar evenly with no empty trailing column */
   .mobile-bottom-nav {
-    display: grid;
+    display: flex;
   }
 }
 

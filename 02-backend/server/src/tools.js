@@ -1,36 +1,100 @@
 import { db } from "./db.js";
 import { searchKnowledgeBase } from "./knowledge.js";
 
-const isoDay = (value = new Date()) => new Date(value).toISOString().slice(0, 10);
 const normalizeContext = (scope) => (typeof scope === "object" ? scope : { restaurantId: scope });
 const scopedParams = (context) =>
   context.branchId ? [context.restaurantId, context.branchId] : [context.restaurantId];
 const branchClause = (context, alias = "") => (context.branchId ? ` AND ${alias}branch_id=?` : "");
 
-function rangeFor(range = "week") {
+// --- Timezone helpers (H2): compute local dates/hours in the organization's
+// timezone via Intl instead of hard-coding Asia/Shanghai or assuming UTC. ---
+const pad2 = (value) => String(value).padStart(2, "0");
+
+function tzParts(date, timeZone) {
+  try {
+    const formatter = new Intl.DateTimeFormat("en-US", {
+      timeZone,
+      hour12: false,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit"
+    });
+    const parts = {};
+    for (const part of formatter.formatToParts(date)) parts[part.type] = part.value;
+    return {
+      year: Number(parts.year),
+      month: Number(parts.month),
+      day: Number(parts.day),
+      hour: Number(parts.hour) % 24,
+      minute: Number(parts.minute),
+      second: Number(parts.second)
+    };
+  } catch {
+    // Unknown or missing timezone falls back to UTC instead of crashing the tool.
+    const value = new Date(date);
+    return {
+      year: value.getUTCFullYear(),
+      month: value.getUTCMonth() + 1,
+      day: value.getUTCDate(),
+      hour: value.getUTCHours(),
+      minute: value.getUTCMinutes(),
+      second: value.getUTCSeconds()
+    };
+  }
+}
+
+export function isoDayInTz(timeZone = "UTC", date = new Date()) {
+  const parts = tzParts(date, timeZone);
+  return `${parts.year}-${pad2(parts.month)}-${pad2(parts.day)}`;
+}
+
+// The calendar day "now" resolves to inside the restaurant scope's timezone.
+export function localDay(scope) {
+  return isoDayInTz(normalizeContext(scope).timezone || "UTC");
+}
+
+export function hourInTz(isoString, timeZone = "UTC") {
+  return tzParts(new Date(isoString), timeZone).hour;
+}
+
+function tzOffsetMs(date, timeZone) {
+  const parts = tzParts(date, timeZone);
+  return Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute, parts.second) - date.getTime();
+}
+
+// Convert a wall-clock date+time in `timeZone` to an ISO UTC instant.
+function zonedTimeToUtc(dateStr, time, timeZone, plusDay = 0) {
+  const [hour, minute] = time.split(":").map(Number);
+  const base = Date.UTC(
+    Number(dateStr.slice(0, 4)),
+    Number(dateStr.slice(5, 7)) - 1,
+    Number(dateStr.slice(8, 10)) + plusDay,
+    hour,
+    minute,
+    0,
+    0
+  );
+  let utc = base - tzOffsetMs(new Date(base), timeZone);
+  utc = base - tzOffsetMs(new Date(utc), timeZone); // second pass settles DST boundaries
+  return new Date(utc).toISOString();
+}
+
+// Shared "day" definition: range "today" always means the current operating
+// day (timezone + operating hours aware), so get_daily_sales,
+// get_profit_summary and get_refund_summary agree on what "today" is.
+function rangeFor(range = "week", context = { timezone: "UTC" }) {
+  if (range === "today") return operationalBounds(context);
   const end = new Date();
   const start = new Date();
-  const days = range === "today" ? 0 : range === "month" ? 30 : 7;
+  const days = range === "month" ? 30 : 7;
   start.setDate(end.getDate() - days);
-  return [range === "today" ? `${isoDay(start)}T00:00:00.000Z` : start.toISOString(), end.toISOString()];
+  return [start.toISOString(), end.toISOString()];
 }
 
-function shanghaiUtc(date, time, plusDay = 0) {
-  const [hour, minute] = time.split(":").map(Number);
-  return new Date(
-    Date.UTC(
-      Number(date.slice(0, 4)),
-      Number(date.slice(5, 7)) - 1,
-      Number(date.slice(8, 10)) + plusDay,
-      hour - 8,
-      minute,
-      0,
-      0
-    )
-  ).toISOString();
-}
-
-function operationalBounds(context, date = isoDay()) {
+function operationalBounds(context, date = isoDayInTz(context.timezone || "UTC")) {
   const branch = context.branchId
     ? db
         .prepare("SELECT operating_day_start,operating_day_end FROM branches WHERE id=? AND restaurant_id=?")
@@ -39,9 +103,24 @@ function operationalBounds(context, date = isoDay()) {
   const start = branch?.operating_day_start || "00:00";
   const end = branch?.operating_day_end || "23:59";
   const afterMidnight = end <= start;
-  if ((context.timezone || "UTC") === "Asia/Shanghai")
-    return [shanghaiUtc(date, start), shanghaiUtc(date, end, afterMidnight ? 1 : 0)];
-  return [`${date}T${start}:00.000Z`, `${date}T${end}:59.999Z`];
+  const timeZone = context.timezone || "UTC";
+  return [zonedTimeToUtc(date, start, timeZone), zonedTimeToUtc(date, end, timeZone, afterMidnight ? 1 : 0)];
+}
+
+// Resolve a menu item by (partial) name for owner-confirmation flows (C1).
+export function resolveMenuItem(context, nameQuery) {
+  const query = String(nameQuery || "").trim();
+  if (!query) return { status: "missing_name" };
+  const exact = db
+    .prepare("SELECT id,name,active FROM menu_items WHERE restaurant_id=? AND lower(name)=lower(?)")
+    .all(context.restaurantId, query);
+  if (exact.length === 1) return { status: "ok", item: exact[0] };
+  const partial = db
+    .prepare("SELECT id,name,active FROM menu_items WHERE restaurant_id=? AND lower(name) LIKE lower(?)")
+    .all(context.restaurantId, `%${query}%`);
+  if (partial.length === 1) return { status: "ok", item: partial[0] };
+  if (partial.length > 1) return { status: "ambiguous", items: partial };
+  return { status: "not_found" };
 }
 
 export const toolDefinitions = [
@@ -150,7 +229,7 @@ export function executeTool(name, args = {}, scope) {
   if (!context.restaurantId) throw new Error("Restaurant scope is required.");
 
   if (name === "get_daily_sales") {
-    const date = args.date || isoDay();
+    const date = args.date || isoDayInTz(context.timezone || "UTC");
     const [start, end] = operationalBounds(context, date);
     const rows = ordersBetween(context, start, end);
     const result = totals(
@@ -158,8 +237,9 @@ export function executeTool(name, args = {}, scope) {
       refundsBetween(context, start, end),
       laborCost(shiftsBetween(context, start, end), start, end)
     );
+    const timeZone = context.timezone || "UTC";
     const hours = rows.reduce((a, o) => {
-      const h = new Date(o.created_at).getHours();
+      const h = hourInTz(o.created_at, timeZone);
       a[h] = (a[h] || 0) + o.total_price;
       return a;
     }, {});
@@ -170,12 +250,12 @@ export function executeTool(name, args = {}, scope) {
       timezone: context.timezone || "UTC",
       operating_window: { start, end },
       ...result,
-      peak_hour: peak ? `${peak[0]}:00-${+peak[0] + 1}:00` : null
+      peak_hour: peak ? `${pad2(peak[0])}:00-${pad2(+peak[0] + 1)}:00` : null
     };
   }
 
   if (name === "get_profit_summary") {
-    const [start, end] = rangeFor(args.range);
+    const [start, end] = rangeFor(args.range, context);
     return {
       range: args.range,
       branch_id: context.branchId || null,
@@ -188,7 +268,7 @@ export function executeTool(name, args = {}, scope) {
   }
 
   if (name === "get_top_dishes" || name === "get_low_performance_items") {
-    const [start, end] = rangeFor("month");
+    const [start, end] = rangeFor("month", context);
     const map = {};
     ordersBetween(context, start, end).forEach((order) =>
       JSON.parse(order.items).forEach((item) => {
@@ -224,7 +304,7 @@ export function executeTool(name, args = {}, scope) {
   }
 
   if (name === "get_refund_summary") {
-    const [start, end] = rangeFor(args.range);
+    const [start, end] = rangeFor(args.range, context);
     const rows = refundsBetween(context, start, end);
     const reasons = rows.reduce((result, row) => {
       const reason = row.reason || "Unspecified";
@@ -246,16 +326,21 @@ export function executeTool(name, args = {}, scope) {
     return { query: args.query, results: searchKnowledgeBase(args.query, context.restaurantId) };
 
   if (name === "suggest_staffing") {
-    const date = (args.date_time || new Date().toISOString()).slice(0, 10);
+    const timeZone = context.timezone || "UTC";
+    const date = args.date_time ? isoDayInTz(timeZone, new Date(args.date_time)) : isoDayInTz(timeZone);
     const sales = executeTool("get_daily_sales", { date }, context);
     const demand = args.level === "busy" ? Math.max(sales.orders, 40) : sales.orders;
+    // Single source of truth for staffing thresholds (M5): both the Arabic and
+    // English reply templates map from this level instead of re-deriving it.
+    const level = demand >= 40 ? "high" : demand >= 25 ? "medium" : "standard";
     return {
       date_time: args.date_time,
       expected_orders: demand,
+      level,
       recommendation:
-        demand >= 40
+        level === "high"
           ? "Schedule 1 extra server and 1 extra line cook for peak service."
-          : demand >= 25
+          : level === "medium"
             ? "Add 1 flexible server during peak hour."
             : "Standard staffing is sufficient.",
       basis: "branch-scoped orders and observed peak demand"

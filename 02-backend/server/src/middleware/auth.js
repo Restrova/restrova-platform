@@ -1,9 +1,22 @@
 import { forbidden } from "../errors/appError.js";
 import { authenticateBearerHeader, roleRank } from "../services/authService.js";
 
+// Preview-environment compatibility: some reverse proxies strip the standard
+// Authorization header from proxied requests. The client therefore also sends
+// the token in X-Auth-Token; accept either one.
+function extractBearerToken(req) {
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.trim()) return authHeader;
+  const customHeader = req.headers["x-auth-token"];
+  if (customHeader && customHeader.trim()) {
+    return /^Bearer\s+/i.test(customHeader) ? customHeader : `Bearer ${customHeader}`;
+  }
+  return "";
+}
+
 export function auth(req, _res, next) {
   try {
-    req.user = authenticateBearerHeader(req.headers.authorization || "");
+    req.user = authenticateBearerHeader(extractBearerToken(req));
     next();
   } catch (error) {
     next(error);

@@ -1,6 +1,12 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { ApiError } from "../lib/api.js";
-import { loginRequest, logoutRequest, registerRequest, restoreSessionRequest } from "../lib/auth.js";
+import {
+  loginRequest,
+  logoutRequest,
+  registerRequest,
+  restoreSessionRequest,
+  switchRestaurantRequest
+} from "../lib/auth.js";
 import { clearAuthStorage, getStoredSession, getToken, notifyAuthChange } from "../lib/storage.js";
 
 const AuthContext = createContext(null);
@@ -79,6 +85,15 @@ export function AuthProvider({ children }) {
     return session;
   }, []);
 
+  // Switch the active session to another restaurant in the same organization
+  // (H4). The server re-verifies access and issues a fresh token.
+  const switchRestaurant = useCallback(async (restaurantId) => {
+    const session = await switchRestaurantRequest(restaurantId);
+    setState({ status: "authenticated", session, error: null });
+    notifyAuthChange();
+    return session;
+  }, []);
+
   const logout = useCallback(async () => {
     await logoutRequest();
     clearAuthStorage();
@@ -97,9 +112,10 @@ export function AuthProvider({ children }) {
       login,
       logout,
       register,
-      restore
+      restore,
+      switchRestaurant
     }),
-    [login, logout, register, restore, state]
+    [login, logout, register, restore, state, switchRestaurant]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

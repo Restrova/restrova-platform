@@ -26,6 +26,10 @@ const importMaxColumns = integerEnv("IMPORT_MAX_COLUMNS", 100);
 const importMaxCellLength = integerEnv("IMPORT_MAX_CELL_LENGTH", 10_000);
 const importPreviewRows = integerEnv("IMPORT_PREVIEW_ROWS", 20);
 const importConfirmationTokenTtlSeconds = integerEnv("IMPORT_CONFIRMATION_TOKEN_TTL_SECONDS", 30 * 60);
+// Simple database backup policy (see src/backup.js and docs/operations/backup-restore.md).
+const backupEnabled = process.env.BACKUP_ENABLED === "true";
+const backupIntervalHours = integerEnv("BACKUP_INTERVAL_HOURS", 24);
+const backupRetentionCount = integerEnv("BACKUP_RETENTION_COUNT", 7);
 function platformOrigin(hostname) {
   if (!hostname || !/^[a-z0-9.-]+$/i.test(hostname)) return null;
   return `https://${hostname}`;
@@ -48,6 +52,8 @@ if (apiRateLimitMax < 1) failStartup("API_RATE_LIMIT_MAX must be a positive inte
 if (authRateLimitMax < 1) failStartup("AUTH_RATE_LIMIT_MAX must be a positive integer.");
 if (importPreviewRateLimitMax < 1) failStartup("IMPORT_PREVIEW_RATE_LIMIT_MAX must be a positive integer.");
 if (importActionRateLimitMax < 1) failStartup("IMPORT_ACTION_RATE_LIMIT_MAX must be a positive integer.");
+if (backupIntervalHours < 1) failStartup("BACKUP_INTERVAL_HOURS must be a positive integer.");
+if (backupRetentionCount < 1) failStartup("BACKUP_RETENTION_COUNT must be a positive integer.");
 for (const [name, value] of [
   ["IMPORT_MAX_FILE_SIZE_BYTES", importMaxFileSizeBytes],
   ["IMPORT_MAX_ROWS", importMaxRows],
@@ -73,6 +79,7 @@ export const config = {
   isProduction,
   isTest,
   port: process.env.PORT || 4000,
+  databasePath: process.env.DATABASE_PATH || "./data/restaurant.db",
   requestBodyLimit: process.env.REQUEST_BODY_LIMIT || "3mb",
   jwt: {
     secret: process.env.JWT_SECRET || crypto.randomBytes(32).toString("hex"),
@@ -83,7 +90,10 @@ export const config = {
   bcryptCost,
   cors: {
     allowedOrigins,
-    allowLoopbackOrigins: !isProduction && !isTest
+    allowLoopbackOrigins: !isProduction && !isTest,
+    // Opt-in pattern matching for ephemeral sandbox preview hosts
+    // (https://<port>-<sandbox-id>.e2b.app). Never active in production.
+    allowPreviewOrigins: !isProduction && process.env.ALLOW_PREVIEW_ORIGINS === "true"
   },
   rateLimits: {
     windowMs: rateLimitWindowMs,
@@ -99,5 +109,11 @@ export const config = {
     maxCellLength: importMaxCellLength,
     previewRows: importPreviewRows,
     confirmationTokenTtlSeconds: importConfirmationTokenTtlSeconds
+  },
+  backup: {
+    enabled: backupEnabled,
+    outputDir: process.env.BACKUP_DIR || null, // null → <database dir>/backups
+    intervalHours: backupIntervalHours,
+    retentionCount: backupRetentionCount
   }
 };

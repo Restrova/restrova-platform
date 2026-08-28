@@ -3,8 +3,10 @@ import { dataConnectionStatus, importRestaurantData, previewRestaurantData } fro
 import { branchIdFromRequest, defaultBranchId } from "./branchService.js";
 import { importConfirmSchema, importPreviewSchema, validate } from "../validation/schemas.js";
 
-export function getDataStatus(user) {
-  return dataConnectionStatus(user.restaurant_id, defaultBranchId(user));
+export function getDataStatus(user, query = {}) {
+  const branchId = branchIdFromRequest(user, { query });
+  if (query.branchId && !branchId) throw notFound("Branch not found");
+  return dataConnectionStatus(user.restaurant_id, branchId || defaultBranchId(user));
 }
 
 export function previewImport(body) {

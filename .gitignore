@@ -19,6 +19,11 @@ playwright-report/
 *.db-journal
 *.sqlite
 *.sqlite3
+*.db-wal
+*.db-shm
+
+# Local production-like test artifacts (Phase 4 audit)
+.p4prod/
 
 # OS/editor
 .DS_Store

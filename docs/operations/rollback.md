@@ -15,11 +15,11 @@
 
 ## Database rollback
 
-SQLite rollback is currently backup-restore based. Before real customers, Restrova must add:
-
-- automated backups
-- restore drills
-- migration versioning
-- documented RPO/RTO
+SQLite rollback is backup-restore based. The backup/restore toolkit
+(`scripts/backup-db.js`, `scripts/restore-db.js`, optional `BACKUP_ENABLED`
+scheduler) and the tested restore drill are documented in
+`backup-restore.md`. Migration versioning exists in `db/migrations/`
+(`0001`–`0006`, tracked in `schema_migrations`). RPO/RTO guidance is in the
+backup runbook.
 
 Do not manually edit a production database file during an incident unless a backup exists and the incident commander approves.

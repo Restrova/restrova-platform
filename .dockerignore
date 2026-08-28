@@ -1,8 +1,15 @@
 .git
 .env
+**/.env
 node_modules
 **/node_modules
-web/dist
+dist
+**/dist
 data
+**/data
 *.log
-
+**/*.log
+*.db
+**/*.db
+**/*.db-shm
+**/*.db-wal

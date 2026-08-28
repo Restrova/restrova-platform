@@ -1,10 +1,7 @@
 import { db } from "../db.js";
 
-export function getAuthContext(ownerId, organizationId, restaurantId) {
-  const membership = db
-    .prepare(
-      `
-    SELECT u.id owner_id,u.email,u.name,ou.role,ou.branch_id,o.id organization_id,o.name organization_name,o.currency,o.timezone,o.language,r.id restaurant_id,r.name restaurant_name
+const MEMBERSHIP_CONTEXT_SQL = `
+    SELECT u.id owner_id,u.email,u.name,u.token_invalid_before,ou.role,ou.branch_id,o.id organization_id,o.name organization_name,o.currency,o.timezone,o.language,r.id restaurant_id,r.name restaurant_name
     FROM organization_users ou
     JOIN owners u ON u.id=ou.owner_id
     JOIN organizations o ON o.id=ou.organization_id
@@ -14,13 +11,24 @@ export function getAuthContext(ownerId, organizationId, restaurantId) {
       AND (? IS NULL OR r.id=?)
     ORDER BY ou.id
     LIMIT 1
-  `
-    )
+  `;
+
+// Strict membership lookup (no legacy fallback): used by restaurant switching
+// where requesting a foreign organization's restaurant must fail outright.
+export function findMembershipContext(ownerId, organizationId, restaurantId) {
+  return db
+    .prepare(MEMBERSHIP_CONTEXT_SQL)
+    .get(ownerId, organizationId || null, organizationId || null, restaurantId || null, restaurantId || null);
+}
+
+export function getAuthContext(ownerId, organizationId, restaurantId) {
+  const membership = db
+    .prepare(MEMBERSHIP_CONTEXT_SQL)
     .get(ownerId, organizationId || null, organizationId || null, restaurantId || null, restaurantId || null);
   if (membership) return membership;
   const legacy = db
     .prepare(
-      "SELECT o.id owner_id,o.email,o.name,r.id restaurant_id,r.name restaurant_name,r.organization_id FROM owners o JOIN restaurants r ON r.owner_id=o.id WHERE o.id=? LIMIT 1"
+      "SELECT o.id owner_id,o.email,o.name,o.token_invalid_before,r.id restaurant_id,r.name restaurant_name,r.organization_id FROM owners o JOIN restaurants r ON r.owner_id=o.id WHERE o.id=? LIMIT 1"
     )
     .get(ownerId);
   if (!legacy) return null;
@@ -36,8 +44,16 @@ export function getAuthContext(ownerId, organizationId, restaurantId) {
   };
 }
 
+// Server-side logout (M3): tokens issued before this moment stop working.
+// Stored in whole seconds so a fresh login in the same second still works.
+export function invalidateOwnerTokens(ownerId) {
+  db.prepare("UPDATE owners SET token_invalid_before=? WHERE id=?").run(Math.floor(Date.now() / 1000), ownerId);
+}
+
 export function findOwnerByEmail(email) {
-  return db.prepare("SELECT * FROM owners WHERE email=?").get(email);
+  // Case-insensitive lookup so users can log in regardless of how the email
+  // case was typed at registration (matches isEmailRegistered semantics).
+  return db.prepare("SELECT * FROM owners WHERE lower(email)=lower(?)").get(email);
 }
 
 export function isEmailRegistered(email) {

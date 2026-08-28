@@ -2,6 +2,10 @@ const TOKEN_KEY = "token";
 const RESTAURANT_KEY = "restaurant";
 const ME_KEY = "me";
 
+// In-memory mirror so the session survives environments where localStorage is
+// partitioned, blocked, or unreliable (e.g. sandboxed preview iframes).
+let memoryToken = null;
+
 function readJson(key) {
   try {
     const value = localStorage.getItem(key);
@@ -12,11 +16,21 @@ function readJson(key) {
 }
 
 export function getToken() {
-  return localStorage.getItem(TOKEN_KEY);
+  try {
+    return localStorage.getItem(TOKEN_KEY) || memoryToken;
+  } catch {
+    return memoryToken;
+  }
 }
 
 export function setToken(token) {
-  if (token) localStorage.setItem(TOKEN_KEY, token);
+  memoryToken = token || null;
+  if (!token) return;
+  try {
+    localStorage.setItem(TOKEN_KEY, token);
+  } catch {
+    // Storage unavailable: keep the in-memory copy only.
+  }
 }
 
 export function getRestaurantName() {
@@ -38,9 +52,14 @@ export function setStoredSession(session) {
 }
 
 export function clearAuthStorage() {
-  localStorage.removeItem(TOKEN_KEY);
-  localStorage.removeItem(RESTAURANT_KEY);
-  localStorage.removeItem(ME_KEY);
+  memoryToken = null;
+  try {
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(RESTAURANT_KEY);
+    localStorage.removeItem(ME_KEY);
+  } catch {
+    // Storage unavailable: the in-memory reset above is enough.
+  }
 }
 
 export function notifyAuthChange() {

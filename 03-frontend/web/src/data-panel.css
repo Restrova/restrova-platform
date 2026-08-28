@@ -3,7 +3,7 @@
   z-index: 20;
   left: 24px;
   bottom: 58px;
-  width: 262px;
+  width: min(262px, calc(100vw - 48px));
   border: 1px solid #ffffff1c;
   border-radius: 11px;
   padding: 11px 14px;
@@ -16,6 +16,8 @@
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
+  /* keep the floating button clear of the mobile bottom navigation */
+  min-height: 44px;
 }
 .data-fab svg {
   width: 17px;
@@ -46,7 +48,7 @@
 .data-panel header small {
   font-size: 10px;
   letter-spacing: 0.14em;
-  color: #78918a;
+  color: #66706c;
   font-weight: 700;
 }
 .data-panel h2 {
@@ -95,7 +97,7 @@
 }
 .connection-grid small {
   font-size: 10px;
-  color: #89908d;
+  color: #66706c;
   margin-top: 3px;
 }
 .data-panel form label {
@@ -116,7 +118,7 @@
   background: white;
 }
 .csv-help {
-  color: #7f8783;
+  color: #66706c;
 }
 .import-success,
 .import-error {
@@ -248,7 +250,7 @@
   display: block;
 }
 .user-table small {
-  color: #7f8783;
+  color: #66706c;
   font-size: 10px;
   margin-top: 3px;
 }
@@ -293,4 +295,36 @@
   .user-table > div {
     grid-template-columns: 1fr;
   }
+}
+
+/* ── Small-screen refinements (UI/UX pass) ────────────────────────────── */
+
+/* Lift the floating data button above the mobile bottom navigation. */
+@media (max-width: 1023px) {
+  .data-fab {
+    bottom: calc(4rem + 1.5rem + env(safe-area-inset-bottom));
+  }
+}
+
+/* Tighter dialog padding on phones so form controls keep usable width. */
+@media (max-width: 480px) {
+  .modal-backdrop {
+    padding: 12px;
+  }
+  .data-panel {
+    padding: 18px;
+    max-height: 94vh;
+  }
+  .data-panel h2 {
+    font-size: 22px;
+  }
+  .connection-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Touch-friendly close button (was 38px). */
+.data-panel header button {
+  width: 44px;
+  height: 44px;
 }

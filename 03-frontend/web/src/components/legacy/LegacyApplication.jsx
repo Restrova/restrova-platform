@@ -21,12 +21,17 @@ import {
 } from "lucide-react";
 import { ErrorState } from "../ui/ErrorState.jsx";
 import { api } from "../../lib/api.js";
+import { useRestaurant } from "../../contexts/RestaurantContext.jsx";
 
 const safeMessage = (message, fallback = "I could not read that response safely. Please try again.") => ({
   role: message?.role === "user" ? "user" : "assistant",
   content: typeof message?.content === "string" && message.content.trim() ? message.content : fallback,
   id: message?.id,
-  toolsUsed: Array.isArray(message?.toolsUsed) ? message.toolsUsed : []
+  toolsUsed: Array.isArray(message?.toolsUsed) ? message.toolsUsed : [],
+  pendingAction:
+    message?.pendingAction && typeof message?.pendingAction === "object" && message?.pendingAction?.hash
+      ? message.pendingAction
+      : null
 });
 
 const money = (value, currency = "CNY") =>
@@ -656,8 +661,13 @@ function App() {
     }
   });
   const [showManage, setShowManage] = useState(false);
+  const [actionStates, setActionStates] = useState({});
+  const restaurantContext = useRestaurant();
+  const selectedBranchId = restaurantContext?.selectedBranchId || "";
   const bottom = useRef();
   const currency = stats?.currency || me?.organization?.currency || "CNY";
+
+  const branchQuery = selectedBranchId ? `?branchId=${encodeURIComponent(selectedBranchId)}` : "";
 
   const refreshContext = async () => {
     const context = await api("/auth/me");
@@ -668,14 +678,45 @@ function App() {
 
   useEffect(() => {
     if (ready) {
-      Promise.all([api("/dashboard").then(setStats), refreshContext()]).catch(() => setReady(false));
+      Promise.all([api(`/dashboard${branchQuery}`).then(setStats), refreshContext()]).catch(() => setReady(false));
     } else {
       setMessages(initialMessages);
       setSessionId();
       setStats();
       setMe(null);
     }
-  }, [initialMessages, ready]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialMessages, ready, selectedBranchId]);
+
+  // Owner-approval loop (C1): confirm or cancel a pending executive action.
+  const resolveAction = async (pendingAction, decision) => {
+    const hash = pendingAction?.hash;
+    const state = hash ? actionStates[hash] : null;
+    if (!hash || state === "working" || state === "executed" || state === "cancelled") return;
+    if (typeof state === "string" && state.startsWith("error") && decision === "confirm") return;
+    setActionStates((states) => ({ ...states, [hash]: "working" }));
+    try {
+      if (decision === "confirm") {
+        const result = await api(`/actions/${encodeURIComponent(hash)}/confirm`, { method: "POST" });
+        setActionStates((states) => ({ ...states, [hash]: "executed" }));
+        setMessages((items) => [
+          ...items,
+          safeMessage({
+            role: "assistant",
+            content: `✅ Action executed: ${result.tool}.\n\n${JSON.stringify(result.result, null, 2).slice(0, 600)}`
+          })
+        ]);
+      } else {
+        await api(`/actions/${encodeURIComponent(hash)}/cancel`, { method: "POST" });
+        setActionStates((states) => ({ ...states, [hash]: "cancelled" }));
+      }
+      api(`/dashboard${branchQuery}`)
+        .then(setStats)
+        .catch(() => {});
+    } catch (error) {
+      setActionStates((states) => ({ ...states, [hash]: `error: ${error.message}` }));
+    }
+  };
   useEffect(() => {
     const node = bottom.current;
     if (node && typeof node.scrollIntoView === "function") node.scrollIntoView();
@@ -689,14 +730,18 @@ function App() {
     setMessages((items) => [...items, safeMessage({ role: "user", content: value })]);
     setLoading(true);
     try {
-      const data = await api("/chat", { method: "POST", body: JSON.stringify({ message: value, sessionId }) });
+      const payload = { message: value, sessionId };
+      if (selectedBranchId) payload.branchId = Number(selectedBranchId);
+      const data = await api("/chat", { method: "POST", body: JSON.stringify(payload) });
       const assistant = safeMessage(data.message);
       setSessionId(data.sessionId);
       setMessages((items) => [...items, assistant]);
+      if (assistant.pendingAction)
+        setActionStates((states) => ({ ...states, [assistant.pendingAction.hash]: "pending" }));
       window.dispatchEvent(
         new CustomEvent("answer-ready", { detail: { ...assistant, sessionId: data.sessionId, question: value } })
       );
-      api("/dashboard")
+      api(`/dashboard${branchQuery}`)
         .then(setStats)
         .catch(() => {});
     } catch (err) {
@@ -799,12 +844,82 @@ function App() {
         <section className="messages">
           {messages.map((raw, index) => {
             const message = safeMessage(raw);
+            const action = message.pendingAction;
+            const actionState = action ? actionStates[action.hash] : null;
             return (
               <div key={index} className={`message ${message.role}`}>
                 <div className="avatar">{message.role === "assistant" ? <Bot /> : "YO"}</div>
                 <div>
                   <small>{message.role === "assistant" ? "DECISION AI" : "YOU"}</small>
                   <p>{message.content}</p>
+                  {action && actionState !== "cancelled" && actionState !== "executed" && (
+                    <div
+                      className="action-card"
+                      style={{
+                        border: "1px solid #d4a017",
+                        borderRadius: 10,
+                        padding: "10px 14px",
+                        margin: "8px 0",
+                        background: "#fffaf0"
+                      }}
+                    >
+                      <small style={{ fontWeight: 700, color: "#8a6d00", letterSpacing: "0.06em" }}>
+                        ⚠ ACTION REQUIRES YOUR APPROVAL
+                      </small>
+                      <p style={{ margin: "6px 0 10px", fontWeight: 600 }}>{action.description}</p>
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <button
+                          type="button"
+                          disabled={actionState === "working" || actionState?.startsWith("error")}
+                          onClick={() => resolveAction(action, "confirm")}
+                          style={{
+                            padding: "6px 16px",
+                            borderRadius: 8,
+                            border: "none",
+                            background: "#166534",
+                            color: "#fff",
+                            fontWeight: 700,
+                            cursor: "pointer"
+                          }}
+                        >
+                          {actionState === "working" ? "…" : "Confirm & execute"}
+                        </button>
+                        <button
+                          type="button"
+                          disabled={actionState === "working" || actionState?.startsWith("error")}
+                          onClick={() => resolveAction(action, "cancel")}
+                          style={{
+                            padding: "6px 16px",
+                            borderRadius: 8,
+                            border: "1px solid #b91c1c",
+                            background: "#fff",
+                            color: "#b91c1c",
+                            fontWeight: 700,
+                            cursor: "pointer"
+                          }}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                      {actionState?.startsWith("error") && (
+                        <small style={{ color: "#b91c1c", display: "block", marginTop: 6 }}>
+                          {actionState.replace("error: ", "")}
+                        </small>
+                      )}
+                    </div>
+                  )}
+                  {action && (actionState === "executed" || actionState === "cancelled") && (
+                    <small
+                      style={{
+                        display: "inline-block",
+                        marginTop: 4,
+                        fontWeight: 700,
+                        color: actionState === "executed" ? "#166534" : "#6b7280"
+                      }}
+                    >
+                      {actionState === "executed" ? "✔ Action executed" : "✖ Action cancelled"}
+                    </small>
+                  )}
                 </div>
               </div>
             );

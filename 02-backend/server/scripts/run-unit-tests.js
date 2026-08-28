@@ -12,7 +12,9 @@ try {
     env: {
       ...process.env,
       NODE_ENV: "test",
-      DATABASE_PATH: databasePath
+      DATABASE_PATH: databasePath,
+      // Tests rely on the seeded demo restaurant fixture.
+      ENABLE_DEMO_SEED: "true"
     },
     stdio: "inherit"
   });

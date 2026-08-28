@@ -133,67 +133,65 @@ test("general strategy questions receive manager advice instead of a dead-end fa
   assert.doesNotMatch(reply, /need one clearer restaurant question/i);
 });
 
-test("restaurant logic questions calculate step by step", () => {
+test("word-problem questions are no longer answered from memorized text (M4)", () => {
+  // بعد إزالة الإجابات المحفوظة: الوضع التجريبي يجب أن يجيب بأمانة
+  // (نص عام أو نصيحة عامة) دون اختلاق حسابات لأي سؤال حرفي من أسئلة التقييم.
   const portions = demoReply(
     "A restaurant has 120 chicken portions. It sells 35 at lunch and 48 at dinner. Ten portions are damaged. How many usable portions remain?",
     restaurantId
   );
-  assert.match(portions, /27 usable chicken portions/i);
-  assert.match(portions, /120.*35.*48.*10.*27/s);
+  assert.ok(portions.trim().length >= 20);
+  assert.doesNotMatch(portions, /27 usable chicken portions/i);
+  assert.doesNotMatch(portions, /120 starting portions/i);
 
   const seating = demoReply(
     "We have 30 tables. Twenty tables seat four people and ten tables seat two people. What is the restaurant's maximum seating capacity?",
     restaurantId
   );
-  assert.match(seating, /100 customers/i);
-  assert.match(seating, /20 tables.*4 seats.*80/s);
+  assert.ok(seating.trim().length >= 20);
+  assert.doesNotMatch(seating, /100 customers/i);
+  assert.doesNotMatch(seating, /20 tables.*4 seats.*80/s);
 
   const margin = demoReply(
     "A dish costs $8 to prepare and is sold for $12. What is the profit per dish and the profit margin based on the selling price?",
     restaurantId
   );
-  assert.match(margin, /\$4/);
-  assert.match(margin, /33\.3%/);
+  assert.ok(margin.trim().length >= 20);
+  assert.doesNotMatch(margin, /33\.3%/);
+  assert.doesNotMatch(margin, /Profit = Selling price/i);
 });
 
-test("restaurant logic questions recognize missing information and safety constraints", () => {
-  const cooks = demoReply(
-    "Yesterday was unusually busy. Tell me exactly how many cooks I need tomorrow.",
-    restaurantId
-  );
-  assert.match(cooks, /cannot give an exact number/i);
-  assert.match(cooks, /Expected customers/i);
-  assert.doesNotMatch(cooks, /you need \d+ cooks/i);
-
-  const allergy = demoReply(
-    "A customer says they have a severe peanut allergy, but the selected meal contains peanut sauce. What should the restaurant manager recommend?",
-    restaurantId
-  );
-  assert.match(allergy, /Do not serve/i);
-  assert.match(allergy, /cross-contamination/i);
-});
-
-test("multi-step staffing and consistency prompts stay logical", () => {
+test("staffing and consistency prompts get honest responses without fabricated numbers (M4)", () => {
   const staffing = demoReply(
     "Tomorrow, 180 customers are expected. One waiter can effectively serve 20 customers during the main service period. The restaurant currently has seven waiters. Two additional temporary waiters are available for $60 each. How many more waiters are needed, and should the manager hire them?",
     restaurantId
   );
-  assert.match(staffing, /2 more waiters/i);
-  assert.match(staffing, /\$120/);
+  assert.ok(staffing.trim().length >= 20);
+  assert.doesNotMatch(staffing, /2 more waiters/i);
+  assert.doesNotMatch(staffing, /\$120/);
 
   const waste = demoReply(
     "We throw away 30% of prepared food. Should we continue preparing the same amount?",
     restaurantId
   );
-  assert.match(waste, /No/i);
-  assert.match(waste, /30%/);
+  assert.ok(waste.trim().length >= 20);
+  assert.doesNotMatch(waste, /reduce or rebalance prep/i);
 
   const consistency = demoReply(
     "Earlier you said reducing waste was important. Explain whether your recommendations are consistent.",
     restaurantId
   );
-  assert.match(consistency, /consistent/i);
-  assert.match(consistency, /reduce waste/i);
+  assert.ok(consistency.trim().length >= 20);
+  assert.doesNotMatch(consistency, /Yes, the recommendations are consistent/i);
+});
+
+test("questions without enough information never invent an exact staffing number", () => {
+  const cooks = demoReply(
+    "Yesterday was unusually busy. Tell me exactly how many cooks I need tomorrow.",
+    restaurantId
+  );
+  assert.ok(cooks.trim().length >= 20);
+  assert.doesNotMatch(cooks, /you need \d+ cooks/i);
 });
 
 test("Arabic sales question receives an Arabic data-backed answer", () => {

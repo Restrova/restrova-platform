@@ -40,13 +40,13 @@ textarea {
   background: #f5f4ef;
 }
 .login > section {
-  padding: 54px 11vw;
+  padding: clamp(28px, 7vw, 54px);
   display: flex;
   flex-direction: column;
   justify-content: center;
 }
 .login h1 {
-  font-size: 64px;
+  font-size: clamp(40px, 6vw, 64px);
   line-height: 1.03;
   letter-spacing: -3px;
   margin: 76px 0 22px;
@@ -60,7 +60,7 @@ textarea {
   font-size: 18px;
 }
 .login form {
-  width: 390px;
+  width: min(390px, 100%);
   margin-top: 30px;
 }
 .login label {
@@ -117,7 +117,8 @@ textarea {
 .shell {
   height: 100vh;
   display: grid;
-  grid-template-columns: 310px 1fr;
+  /* minmax(0,1fr) lets the chat column shrink on tablets/dual-sidebar widths */
+  grid-template-columns: 310px minmax(0, 1fr);
 }
 .sidebar {
   background: #112f28;
@@ -136,6 +137,13 @@ textarea {
   letter-spacing: 0.14em;
   font-weight: 700;
   color: #8ba69f;
+}
+
+/* Chat-column captions sit on the light #faf9f5 background — they need a
+   darker tone than their sidebar siblings to stay readable (WCAG AA). */
+.chat header small,
+.message small {
+  color: #6b7370;
 }
 .restaurant h2 {
   font-size: 20px;
@@ -198,12 +206,22 @@ textarea {
   min-width: 0;
   background: #faf9f5;
 }
+/* Grid rows must be allowed to shrink below their content's min-width,
+   otherwise nowrap prompt buttons force a ~724px track and cause horizontal
+   overflow on phones. The prompt chips scroll inside .prompts instead. */
+.chat > header,
+.chat > section,
+.chat > footer {
+  min-width: 0;
+}
 .chat header {
-  padding: 25px 5vw;
+  padding: 20px max(5vw, 20px);
   border-bottom: 1px solid #e7e5de;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  min-width: 0;
+  gap: 12px;
 }
 .chat header h1 {
   font-size: 25px;
@@ -223,7 +241,7 @@ textarea {
 }
 .messages {
   overflow-y: auto;
-  padding: 34px max(7vw, 40px);
+  padding: 34px max(5vw, 20px);
 }
 .message {
   display: flex;
@@ -288,21 +306,28 @@ textarea {
   }
 }
 footer {
-  padding: 10px max(7vw, 40px) 22px;
+  min-width: 0;
+  padding: 10px max(5vw, 20px) 22px;
 }
 .prompts {
   max-width: 760px;
   margin: auto;
   display: flex;
   gap: 8px;
-  overflow: auto;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+  /* keep chips fully visible when they scroll horizontally */
+  padding-block: 4px;
 }
 .prompts button {
   white-space: nowrap;
   border: 1px solid #deddd7;
   background: white;
   border-radius: 99px;
-  padding: 8px 13px;
+  padding: 9px 14px;
   color: #58615d;
   font-size: 12px;
   cursor: pointer;
@@ -310,6 +335,7 @@ footer {
 footer form {
   display: flex;
   max-width: 760px;
+  min-width: 0;
   margin: 12px auto 8px;
   background: white;
   border: 1px solid #dcdcd5;
@@ -320,15 +346,20 @@ footer form {
 textarea {
   resize: none;
   flex: 1;
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
   border: 0;
   outline: 0;
-  padding: 10px;
+  padding: 11px 10px;
   background: transparent;
 }
 footer form button {
   border: 0;
   border-radius: 10px;
-  width: 42px;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
   background: #175c49;
   color: white;
   display: grid;
@@ -340,7 +371,7 @@ footer form button:disabled {
 footer > small {
   display: block;
   text-align: center;
-  color: #969b98;
+  color: #6b7370;
   font-size: 10px;
 }
 @media (max-width: 800px) {

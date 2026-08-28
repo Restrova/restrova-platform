@@ -21,14 +21,16 @@ export const ready = (_req, res) => res.json(healthService.getReadiness());
 
 export const register = (req, res) => res.status(201).json(authService.register(req.body));
 export const login = (req, res) => res.json(authService.login(req.body));
-export const logout = (_req, res) => res.json({ ok: true });
+export const logout = (req, res) => res.json(authService.logout(req.user));
 export const me = (req, res) => res.json(authService.serializeMe(req.user));
+export const switchRestaurant = (req, res) => res.json(authService.switchRestaurant(req.user, req.body));
 
 export const createOrganization = (req, res) =>
   res.status(201).json(organizationService.createOrganization(req.user, req.body));
 export const currentOrganization = (req, res) => res.json(organizationService.currentOrganization(req.user));
 export const createRestaurant = (req, res) =>
   res.status(201).json(organizationService.createRestaurant(req.user, req.body));
+export const listRestaurants = (req, res) => res.json(organizationService.listRestaurants(req.user));
 export const currentRestaurant = (req, res) => res.json(organizationService.currentRestaurant(req.user));
 
 export const createBranch = (req, res) => res.status(201).json(branchService.createBranch(req.user, req.body));
@@ -41,8 +43,8 @@ export const listUsers = (req, res) => res.json(userService.listUsers(req.user))
 export const updateUserRole = (req, res) =>
   res.json(userService.updateUserRole(req.user, Number(req.params.id), req.body));
 
-export const dashboard = (req, res) => res.json(dashboardService.getDashboard(req.user));
-export const dataStatus = (req, res) => res.json(dataService.getDataStatus(req.user));
+export const dashboard = (req, res) => res.json(dashboardService.getDashboard(req.user, req.query));
+export const dataStatus = (req, res) => res.json(dataService.getDataStatus(req.user, req.query));
 export const listImportTemplates = (_req, res) => res.json(importTemplateService.listImportTemplates());
 export const getImportTemplate = (req, res) => res.json(importTemplateService.getImportTemplate(req.params.key));
 export const downloadImportTemplate = (req, res) => {
@@ -100,6 +102,7 @@ export const searchKnowledge = (req, res) => res.json(knowledgeService.searchKno
 export const listChatSessions = (req, res) => res.json(chatService.listChatSessions(req.user));
 export const getChatMessages = (req, res) => res.json(chatService.getChatMessages(req.user, req.params.id));
 export const sendChatMessage = async (req, res) => res.json(await chatService.sendChatMessage(req.user, req.body));
+export const cancelAction = (req, res) => res.json(chatService.cancelAction(req.user, req.params.hash));
 export const confirmAction = (req, res) => res.json(chatService.confirmAction(req.user, req.params.hash));
 export const saveFeedback = (req, res) => res.status(201).json(chatService.saveFeedback(req.user, req.body));
 export const exportTraining = (req, res) => res.json(chatService.exportTrainingFeedback(req.user));

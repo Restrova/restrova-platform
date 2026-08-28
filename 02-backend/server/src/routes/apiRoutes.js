@@ -3,6 +3,7 @@ import * as controller from "../controllers/apiController.js";
 import { auth, requireOwner, requireRole } from "../middleware/auth.js";
 import { authRateLimit, importActionRateLimit, importPreviewRateLimit } from "../middleware/security.js";
 import { config } from "../config/appConfig.js";
+import { notFound } from "../errors/appError.js";
 
 const router = Router();
 const asyncHandler = (handler) => (req, res, next) => Promise.resolve(handler(req, res, next)).catch(next);
@@ -22,12 +23,14 @@ router.get("/ready", controller.ready);
 
 router.post("/auth/register", authRateLimit, asyncHandler(controller.register));
 router.post("/auth/login", authRateLimit, asyncHandler(controller.login));
-router.post("/auth/logout", controller.logout);
+router.post("/auth/logout", auth, controller.logout);
 router.get("/auth/me", auth, controller.me);
+router.post("/auth/switch-restaurant", auth, asyncHandler(controller.switchRestaurant));
 
 router.post("/organizations", auth, requireRole("owner"), asyncHandler(controller.createOrganization));
 router.get("/organizations/current", auth, controller.currentOrganization);
 router.post("/restaurants", auth, requireRole("owner"), asyncHandler(controller.createRestaurant));
+router.get("/restaurants", auth, controller.listRestaurants);
 router.get("/restaurants/current", auth, controller.currentRestaurant);
 
 router.post("/branches", auth, requireRole("owner"), asyncHandler(controller.createBranch));
@@ -97,7 +100,14 @@ router.get("/chat/sessions", auth, controller.listChatSessions);
 router.get("/chat/sessions/:id/messages", auth, asyncHandler(controller.getChatMessages));
 router.post("/chat", auth, asyncHandler(controller.sendChatMessage));
 router.post("/actions/:hash/confirm", auth, requireOwner, asyncHandler(controller.confirmAction));
+router.post("/actions/:hash/cancel", auth, requireOwner, asyncHandler(controller.cancelAction));
 router.post("/feedback", auth, asyncHandler(controller.saveFeedback));
 router.get("/training/export", auth, controller.exportTraining);
+
+// JSON 404 for any unmatched /api route so the frontend error contract
+// ({error, code}) holds instead of Express default HTML (M2).
+router.use((req, _res, next) => {
+  next(notFound(`API route not found: ${req.method} ${req.path}`));
+});
 
 export { router as apiRoutes };

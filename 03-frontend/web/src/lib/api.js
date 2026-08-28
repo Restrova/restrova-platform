@@ -25,7 +25,12 @@ export async function api(path, options = {}) {
     ...(options.headers || {})
   };
 
-  if (token) headers.Authorization = `Bearer ${token}`;
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+    // Preview environments whose reverse proxy strips the Authorization header
+    // still pass custom headers through, so send the token twice.
+    headers["X-Auth-Token"] = `Bearer ${token}`;
+  }
 
   const response = await fetch(`/api${path}`, { ...options, headers });
   const body = parseResponseBody(await response.text());

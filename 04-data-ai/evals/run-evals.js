@@ -1,7 +1,12 @@
 import assert from "node:assert/strict";
-import { db } from "../../02-backend/server/src/db.js";
-import { demoReply, inferTools, SYSTEM_PROMPT } from "../../02-backend/server/src/ai.js";
-import { evaluationDataset } from "./dataset.js";
+
+// The evaluation dataset relies on the seeded demo restaurant. Set the flag
+// before importing the database module (imports are evaluated eagerly).
+process.env.ENABLE_DEMO_SEED = process.env.ENABLE_DEMO_SEED || "true";
+
+const { db } = await import("../../02-backend/server/src/db.js");
+const { demoReply, inferTools, SYSTEM_PROMPT } = await import("../../02-backend/server/src/ai.js");
+const { evaluationDataset } = await import("./dataset.js");
 
 const restaurantId = db.prepare("SELECT id FROM restaurants ORDER BY id LIMIT 1").get().id;
 const failures = [];

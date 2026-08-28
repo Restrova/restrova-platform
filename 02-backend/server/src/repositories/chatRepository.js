@@ -46,8 +46,36 @@ export function findPendingAction(hash, restaurantId, branchId, ownerId) {
     .get(hash, restaurantId, branchId, ownerId);
 }
 
+// Confirmation may arrive from any branch context; resolve by hash within the
+// owner's restaurant, then let the service validate the action's own branch.
+export function findPendingActionForOwner(hash, restaurantId, ownerId) {
+  return db
+    .prepare(
+      "SELECT * FROM pending_ai_actions WHERE action_hash=? AND restaurant_id=? AND owner_id=? AND status='pending'"
+    )
+    .get(hash, restaurantId, ownerId);
+}
+
+// Idempotent per (owner, scope, tool, arguments): asking the same action again
+// re-arms the same hash instead of piling up duplicate pending rows.
+export function upsertPendingAction({ restaurantId, branchId, ownerId, toolName, argumentsJson, actionHash }) {
+  db.prepare(
+    `INSERT INTO pending_ai_actions(restaurant_id,branch_id,owner_id,tool_name,arguments,action_hash,status)
+     VALUES (?,?,?,?,?,?,'pending')
+     ON CONFLICT(action_hash) DO UPDATE SET status='pending', created_at=CURRENT_TIMESTAMP, executed_at=NULL`
+  ).run(restaurantId, branchId, ownerId, toolName, argumentsJson, actionHash);
+  return findPendingAction(actionHash, restaurantId, branchId, ownerId);
+}
+
 export function markActionExecuted(actionId) {
   db.prepare("UPDATE pending_ai_actions SET status='executed',executed_at=CURRENT_TIMESTAMP WHERE id=?").run(actionId);
+}
+
+export function cancelPendingAction(actionId) {
+  return (
+    db.prepare("UPDATE pending_ai_actions SET status='cancelled' WHERE id=? AND status='pending'").run(actionId)
+      .changes === 1
+  );
 }
 
 export function findAssistantMessage(restaurantId, branchId, sessionId, messageId) {
@@ -76,7 +104,8 @@ export function saveFeedback({
   question,
   originalAnswer,
   rating,
-  correctedAnswer
+  correctedAnswer,
+  correctTools
 }) {
   db.prepare(
     `INSERT INTO answer_feedback(restaurant_id,owner_id,session_id,message_id,question,original_answer,rating,corrected_answer,correct_tools)
@@ -91,7 +120,7 @@ export function saveFeedback({
     originalAnswer,
     rating,
     correctedAnswer || null,
-    JSON.stringify([])
+    JSON.stringify(Array.isArray(correctTools) ? correctTools : [])
   );
 }
 

@@ -1,7 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { AuthBoundary } from "../components/auth/AuthBoundary.jsx";
 import { AppShell } from "../components/layout/AppShell.jsx";
-import { navigationItems } from "./navigation.js";
+import { allNavigationItems } from "./navigation.js";
 import { DesignSystemPage } from "../pages/DesignSystemPage.jsx";
 import { BranchesPage } from "../pages/BranchesPage.jsx";
 import { LegacyWorkspacePage } from "../pages/LegacyWorkspacePage.jsx";
@@ -53,7 +53,7 @@ export function AppRoutes() {
           <Route path="/app/imports" element={<ImportWizardPage />} />
           <Route path="/app/branches" element={<BranchesPage />} />
           <Route path="/app/team" element={<TeamPage />} />
-          {navigationItems
+          {allNavigationItems
             .filter((item) => !["dashboard", "workspace", "imports", "branches", "team"].includes(item.id))
             .map((item) => (
               <Route

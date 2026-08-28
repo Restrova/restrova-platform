@@ -83,7 +83,11 @@ export const navigationGroups = [
         titleKey: "navigation.recommendations",
         path: "/app/recommendations",
         icon: Lightbulb,
-        requiredRoles: allRoles
+        requiredRoles: allRoles,
+        // Hidden for MVP (approved Phase 3 decision): the owner-approval loop
+        // this page would host already lives in the workspace. The route,
+        // page and APIs stay intact — only the sidebar entry is hidden.
+        hidden: true
       },
       {
         id: "reports",
@@ -100,7 +104,11 @@ export const navigationGroups = [
         path: "/app/assistant",
         icon: Bot,
         mobilePriority: true,
-        requiredRoles: allRoles
+        requiredRoles: allRoles,
+        // Hidden for MVP (approved Phase 3 decision): the full assistant chat
+        // already lives in the workspace. The route and page stay intact —
+        // only the sidebar entry is hidden.
+        hidden: true
       },
       {
         id: "dataQuality",
@@ -144,8 +152,12 @@ export const navigationGroups = [
   }
 ];
 
-export const navigationItems = navigationGroups.flatMap((group) =>
-  group.items.map((item) => ({ ...item, groupId: group.id }))
+// Items flagged `hidden` are excluded from rendered navigation (sidebar and
+// mobile bar). Their routes and pages remain reachable by direct URL.
+const visibleItems = (items) => items.filter((item) => !item.hidden);
+
+export const navigationItems = visibleItems(
+  navigationGroups.flatMap((group) => group.items.map((item) => ({ ...item, groupId: group.id })))
 );
 export const mobilePriorityItems = navigationItems.filter((item) => item.mobilePriority).slice(0, 4);
 
@@ -157,13 +169,21 @@ export function getNavigationForRole(role) {
   return navigationGroups
     .map((group) => ({
       ...group,
-      items: group.items.filter((item) => roleCanAccess(item, role))
+      items: visibleItems(group.items).filter((item) => roleCanAccess(item, role))
     }))
     .filter((group) => group.items.length > 0);
 }
 
+// All items including hidden ones: direct URL visits to a hidden page still
+// resolve their title and group for the shell header, and routes stay
+// registered so those pages remain reachable.
+const allItemsWithGroups = navigationGroups.flatMap((group) =>
+  group.items.map((item) => ({ ...item, groupId: group.id }))
+);
+export const allNavigationItems = allItemsWithGroups;
+
 export function findNavigationItem(pathname) {
-  return navigationItems.find((item) => item.path === pathname) || null;
+  return allItemsWithGroups.find((item) => item.path === pathname) || null;
 }
 
 export function isNavigationItemActive(item, pathname) {

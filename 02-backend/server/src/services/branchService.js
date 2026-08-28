@@ -20,10 +20,10 @@ export function branchIdFromRequest(user, requestData = {}) {
   return branchId;
 }
 
-export function toolScope(user) {
+export function toolScope(user, branchId = defaultBranchId(user)) {
   return {
     restaurantId: user.restaurant_id,
-    branchId: defaultBranchId(user),
+    branchId,
     role: user.role,
     ownerId: user.owner_id,
     currency: user.currency,

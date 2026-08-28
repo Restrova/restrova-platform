@@ -227,3 +227,17 @@ test("development CORS accepts changing loopback ports without weakening configu
   assert.equal(isCorsOriginAllowed("http://localhost:5180", strict), false);
   assert.equal(isCorsOriginAllowed("https://app.example", strict), true);
 });
+
+test("preview origin pattern is opt-in and only matches sandboxed preview hosts", () => {
+  const withPreview = { allowedOrigins: new Set(), allowLoopbackOrigins: false, allowPreviewOrigins: true };
+  const withoutPreview = { allowedOrigins: new Set(), allowLoopbackOrigins: false, allowPreviewOrigins: false };
+
+  assert.equal(isCorsOriginAllowed("https://5173-ij088msqzvzuxebcussg5.e2b.app", withPreview), true);
+  assert.equal(isCorsOriginAllowed("https://4000-abc123def.e2b.app", withPreview), true);
+  // Opt-out keeps the strict behaviour, and lookalike hosts never match.
+  assert.equal(isCorsOriginAllowed("https://5173-ij088msqzvzuxebcussg5.e2b.app", withoutPreview), false);
+  assert.equal(isCorsOriginAllowed("https://e2b.app", withPreview), false);
+  assert.equal(isCorsOriginAllowed("https://5173-sandboxid.e2b.app.evil.example", withPreview), false);
+  assert.equal(isCorsOriginAllowed("https://evil.e2b.app", withPreview), false);
+  assert.equal(isCorsOriginAllowed("http://5173-sandboxid.e2b.app", withPreview), false);
+});
