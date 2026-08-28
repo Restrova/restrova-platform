@@ -363,3 +363,99 @@ test("Task 4.2 enforces tenant, branch-manager, validation, and pagination bound
   assert.equal(paged.payload.pagination.returnedItems, 1);
   assert.ok(paged.payload.pagination.totalItems >= 1);
 });
+
+test("Task 4.3 classifies STAR, PLOWHORSE, PUZZLE, and DOG from recorded evidence", async (t) => {
+  const server = app.listen(0);
+  t.after(() => server.close());
+  const owner = await registerOwner(server, "matrix-four", "zh");
+  const branchId = owner.branches[0].id;
+  const stamp = Date.now();
+  const fixtures = [
+    ["STAR", 40, 40000, 10000, "明星菜"],
+    ["PLOW", 30, 30000, 24000, "招牌饭"],
+    ["PUZZLE", 20, 20000, 5000, "لغز مربح"],
+    ["DOG", 10, 10000, 8000, "طبق ضعيف"]
+  ];
+  for (const [code, quantity, revenue, foodCost, name] of fixtures) {
+    const itemId = insertCatalog(owner, `${code}-${stamp}`, name);
+    insertCost(owner, itemId, null, foodCost / quantity, 0, "2026-01-01T00:00:00.000Z");
+    insertSale(owner, itemId, branchId, `${code}-${stamp}`, {
+      createdAt: "2026-08-10T12:00:00.000Z",
+      quantity,
+      grossMinor: revenue
+    });
+  }
+  const excludedId = insertCatalog(owner, `MISSING-${stamp}`, "Missing cost");
+  insertSale(owner, excludedId, branchId, `MISSING-${stamp}`, {
+    createdAt: "2026-08-10T12:00:00.000Z",
+    grossMinor: 5000
+  });
+
+  const result = await request(
+    server,
+    `/api/menu/engineering-matrix?branchId=${branchId}&from=2026-08-01T00:00:00.000Z&to=2026-08-31T23:59:59.999Z`,
+    { token: owner.token }
+  );
+
+  assert.equal(result.status, 200);
+  assert.equal(result.payload.formulaVersion, "4.3-v1");
+  assert.equal(result.payload.sourceFormulaVersion, "4.2-v1");
+  assert.deepEqual(result.payload.scope, {
+    organizationId: owner.organization.id,
+    restaurantId: owner.restaurant.id,
+    branchId,
+    currencyCode: "SAR"
+  });
+  assert.deepEqual(result.payload.thresholds, {
+    method: "portfolio_average",
+    popularityThresholdBps: 2500,
+    marginThresholdBps: 5300,
+    eligibleItemCount: 4,
+    eligibleQuantitySoldMicros: 100000000,
+    eligibleRevenueMinor: 100000,
+    eligibleContributionProfitMinor: 53000
+  });
+  assert.deepEqual(
+    Object.fromEntries(
+      result.payload.items.map((item) => [item.itemCode.split("-")[0], item.engineering.classification])
+    ),
+    { DOG: "DOG", PLOW: "PLOWHORSE", PUZZLE: "PUZZLE", STAR: "STAR" }
+  );
+  assert.equal(result.payload.excluded.length, 1);
+  assert.deepEqual(result.payload.excluded[0].reasons, ["effective_cost_records"]);
+  assert.ok(result.payload.items.every((item) => item.lineage.sales.references.length === 1));
+});
+
+test("Task 4.3 keeps thresholds scope-wide while filtering and rejects foreign branches", async (t) => {
+  const server = app.listen(0);
+  t.after(() => server.close());
+  const owner = await registerOwner(server, "matrix-scope");
+  const foreign = await registerOwner(server, "matrix-foreign");
+  const branchId = owner.branches[0].id;
+  const stamp = Date.now();
+  for (const [suffix, quantity] of [
+    ["A", 3],
+    ["B", 1]
+  ]) {
+    const itemId = insertCatalog(owner, `MATRIX-${suffix}-${stamp}`, `Matrix ${suffix}`);
+    insertCost(owner, itemId, null, 100, 0, "2026-01-01T00:00:00.000Z");
+    insertSale(owner, itemId, branchId, `MATRIX-${suffix}-${stamp}`, {
+      createdAt: "2026-08-10T12:00:00.000Z",
+      quantity,
+      grossMinor: quantity * 1000
+    });
+  }
+  const filtered = await request(
+    server,
+    `/api/menu/engineering-matrix?itemCode=MATRIX-A-${stamp.toString().toLowerCase()}`,
+    { token: owner.token }
+  );
+  const blocked = await request(server, `/api/menu/engineering-matrix?branchId=${foreign.branches[0].id}`, {
+    token: owner.token
+  });
+  assert.equal(filtered.status, 200);
+  assert.equal(filtered.payload.items.length, 1);
+  assert.equal(filtered.payload.thresholds.eligibleItemCount, 2);
+  assert.equal(filtered.payload.thresholds.popularityThresholdBps, 5000);
+  assert.equal(blocked.status, 404);
+});

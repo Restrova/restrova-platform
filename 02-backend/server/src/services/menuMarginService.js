@@ -199,7 +199,7 @@ function calculateItem(item, lines, history, totalScopeQuantity) {
   };
 }
 
-export function getMenuMargins(user, query) {
+export function getMenuMargins(user, query, { allItems = false } = {}) {
   const parsed = validate(menuMarginQuerySchema, query);
   const branchId = resolveBranchId(user, parsed.branchId);
   if (parsed.from && parsed.to && new Date(parsed.from) > new Date(parsed.to)) {
@@ -208,7 +208,7 @@ export function getMenuMargins(user, query) {
 
   const filters = { ...parsed, branchId };
   const totalItems = menuMarginRepository.countCatalogItems(user, filters);
-  const catalogItems = menuMarginRepository.listCatalogItems(user, filters);
+  const catalogItems = menuMarginRepository.listCatalogItems(user, filters, { paginate: !allItems });
   if (parsed.itemCode && !catalogItems.length) throw notFound("Menu item not found");
 
   const itemIds = catalogItems.map((item) => item.id);
