@@ -122,4 +122,45 @@ describe("AppShell", () => {
     expect(screen.getByPlaceholderText("Ask for a decision about sales, menu profit, or stock...")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "مساحة العمل الحالية" })).toBeInTheDocument();
   });
+
+  it("keeps an authenticated user in the workspace when dashboard data is temporarily unavailable", async () => {
+    const session = createTestSession();
+    localStorage.setItem("token", "test-token");
+    localStorage.setItem("restaurant", session.restaurant.name);
+    localStorage.setItem("me", JSON.stringify(session));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url) => {
+        if (String(url).includes("/api/auth/me")) {
+          return { ok: true, status: 200, text: async () => JSON.stringify(session) };
+        }
+        if (String(url).includes("/api/dashboard")) {
+          return {
+            ok: false,
+            status: 503,
+            text: async () => JSON.stringify({ error: "Dashboard temporarily unavailable" })
+          };
+        }
+        return { ok: true, status: 200, text: async () => JSON.stringify({}) };
+      })
+    );
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(
+      <QueryClientProvider client={queryClient}>
+        <LocaleProvider>
+          <AuthProvider>
+            <RestaurantProvider>
+              <MemoryRouter initialEntries={["/app/workspace"]}>
+                <AppRoutes />
+              </MemoryRouter>
+            </RestaurantProvider>
+          </AuthProvider>
+        </LocaleProvider>
+      </QueryClientProvider>
+    );
+
+    expect(await screen.findByText("AI DECISION COPILOT")).toBeInTheDocument();
+    expect(await screen.findByRole("status")).toHaveTextContent(/signed-in session is still active/i);
+    expect(screen.getByPlaceholderText("Ask for a decision about sales, menu profit, or stock...")).toBeInTheDocument();
+  });
 });

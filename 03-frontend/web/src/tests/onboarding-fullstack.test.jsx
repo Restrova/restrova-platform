@@ -117,4 +117,55 @@ describe("full-stack restaurant onboarding", () => {
 
     await waitFor(() => expect(localStorage.getItem("selectedBranchId")).toBe(String(session.branches[0].id)));
   }, 15_000);
+
+  it("logs a registered owner into the protected workspace without returning to authentication", async () => {
+    const user = userEvent.setup();
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const stamp = `${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+    const email = `ui-login-${stamp}@example.test`;
+    const password = "full-stack-login-password-123";
+    const registration = await nativeFetch(`${apiOrigin}/api/auth/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: "Login Regression Owner",
+        email,
+        password,
+        organizationName: `Login Organization ${stamp}`,
+        restaurantName: `Login Restaurant ${stamp}`,
+        branchName: "Login Main",
+        branchCode: `LOGIN-${String(Date.now()).slice(-6)}`,
+        city: "Riyadh",
+        currency: "SAR",
+        timezone: "Asia/Riyadh",
+        language: "en"
+      })
+    });
+    expect(registration.status).toBe(201);
+    localStorage.clear();
+    localStorage.setItem("locale", "en");
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <LocaleProvider>
+          <AuthProvider>
+            <RestaurantProvider>
+              <MemoryRouter initialEntries={["/login?next=/app/branches"]}>
+                <AppRoutes />
+              </MemoryRouter>
+            </RestaurantProvider>
+          </AuthProvider>
+        </LocaleProvider>
+      </QueryClientProvider>
+    );
+
+    await user.type(screen.getByLabelText("Email"), email);
+    await user.type(screen.getByLabelText("Password"), password);
+    await user.click(screen.getByRole("button", { name: "Open decision center" }));
+
+    expect(await screen.findByRole("heading", { name: "Branch management" })).toBeInTheDocument();
+    expect(await screen.findByText("Login Main")).toBeInTheDocument();
+    expect(localStorage.getItem("token")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Open decision center" })).not.toBeInTheDocument();
+  }, 15_000);
 });
