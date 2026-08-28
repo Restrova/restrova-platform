@@ -4,6 +4,17 @@ All notable project changes should be documented here.
 
 This project follows a simple date-based changelog until a formal release process is introduced.
 
+## 2026-08-27
+
+- Completed Task 3.8 with a canonical financial engine documentation set covering metric definitions, calculation examples, data lineage, assumptions, known limits, version history, and release/rollback notes.
+- Added documentation contract tests that keep supported categories, API/formula versions, assumptions, worked examples, and navigation aligned with the implementation.
+- Completed Task 3.7 with financial golden datasets covering rounding, tax policy, deductions, negative results, multiple branches/currencies, millisecond boundaries, and timezones.
+- Corrected negative-revenue margin behavior, ISO currency minor-unit display, fractional-second queries, and full-stack QA stability.
+- Completed Task 3.6 with a localized, accessible financial dashboard UI backed by the versioned financial API, data coverage, and source lineage.
+- Completed Task 3.5 with dashboard-ready summaries, trends, cost breakdown, comparisons, branch ranking, reconciliation, and deterministic evidence.
+
+See the [financial engine release notes](docs/financial/release-notes.md) for contract versions and compatibility details.
+
 ## 2026-08-26
 
 - Completed Task 3.4 with independent branch economics, restaurant and organization consolidation, explicit unallocated costs, and reconciliation checks.
