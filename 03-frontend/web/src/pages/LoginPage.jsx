@@ -32,6 +32,10 @@ const defaultProfile = {
 
 const stepIcons = [User, Building2, Store, MapPin, Check];
 
+function workspaceDestination(value) {
+  return value === "/app" || value?.startsWith("/app/") ? value : "/app/workspace";
+}
+
 export function LoginPage({ mode = "login" }) {
   const auth = useAuth();
   const { direction, locale, t } = useLocale();
@@ -44,7 +48,7 @@ export function LoginPage({ mode = "login" }) {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const isRegister = mode === "register";
-  const next = searchParams.get("next") || "/app/workspace";
+  const next = workspaceDestination(searchParams.get("next"));
   const steps = useMemo(
     () => ["account", "organization", "restaurant", "branch", "review"].map((key) => t(`auth.steps.${key}`)),
     [t]

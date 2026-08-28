@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
   Bot,
   Send,
-  Sparkles,
   TrendingUp,
   Package,
   Utensils,
@@ -21,6 +20,7 @@ import {
 } from "lucide-react";
 import { ErrorState } from "../ui/ErrorState.jsx";
 import { api } from "../../lib/api.js";
+import { useAuth } from "../../contexts/AuthContext.jsx";
 
 const safeMessage = (message, fallback = "I could not read that response safely. Please try again.") => ({
   role: message?.role === "user" ? "user" : "assistant",
@@ -79,147 +79,6 @@ class ErrorBoundary extends React.Component {
       </main>
     );
   }
-}
-
-function Login({ onLogin }) {
-  const [mode, setMode] = useState("login");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [profile, setProfile] = useState({
-    name: "Restaurant Owner",
-    organizationName: "Sana'a Hospitality",
-    restaurantName: "مطعم صنعاء",
-    branchName: "Guangzhou Main",
-    branchCode: "GZ-01",
-    city: "Guangzhou"
-  });
-  const [error, setError] = useState("");
-
-  const submit = async (event) => {
-    event.preventDefault();
-    setError("");
-    try {
-      const body = mode === "login" ? { email, password } : { ...profile, email, password };
-      const data = await api(mode === "login" ? "/auth/login" : "/auth/register", {
-        method: "POST",
-        body: JSON.stringify(body)
-      });
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("restaurant", data.restaurant.name);
-      localStorage.setItem("me", JSON.stringify(data));
-      window.dispatchEvent(new Event("auth-change"));
-      onLogin();
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-
-  return (
-    <main className="login">
-      <section>
-        <div className="brand">
-          <span>
-            <Bot />
-          </span>
-          <b>Restrova Platform</b>
-        </div>
-        <h1>
-          Daily profit decisions.
-          <br />
-          <em>In seconds.</em>
-        </h1>
-        <p>The AI decision layer for restaurant owners - ask, understand, then approve.</p>
-        <div className="superpowers">
-          <span>Daily summary</span>
-          <span>Menu profit</span>
-          <span>Stock warnings</span>
-        </div>
-        <form onSubmit={submit}>
-          <div className="auth-tabs">
-            <button type="button" className={mode === "login" ? "active" : ""} onClick={() => setMode("login")}>
-              Login
-            </button>
-            <button type="button" className={mode === "register" ? "active" : ""} onClick={() => setMode("register")}>
-              Create restaurant
-            </button>
-          </div>
-          {mode === "register" && (
-            <>
-              <label>
-                Your name
-                <input
-                  value={profile.name}
-                  onChange={(event) => setProfile({ ...profile, name: event.target.value })}
-                />
-              </label>
-              <label>
-                Organization
-                <input
-                  value={profile.organizationName}
-                  onChange={(event) => setProfile({ ...profile, organizationName: event.target.value })}
-                />
-              </label>
-              <label>
-                Restaurant
-                <input
-                  value={profile.restaurantName}
-                  onChange={(event) => setProfile({ ...profile, restaurantName: event.target.value })}
-                />
-              </label>
-              <div className="form-grid">
-                <label>
-                  First branch
-                  <input
-                    value={profile.branchName}
-                    onChange={(event) => setProfile({ ...profile, branchName: event.target.value })}
-                  />
-                </label>
-                <label>
-                  Code
-                  <input
-                    value={profile.branchCode}
-                    onChange={(event) => setProfile({ ...profile, branchCode: event.target.value })}
-                  />
-                </label>
-              </div>
-              <label>
-                City
-                <input
-                  value={profile.city}
-                  onChange={(event) => setProfile({ ...profile, city: event.target.value })}
-                />
-              </label>
-              <small className="quiet-note">Defaults: CNY, Asia/Shanghai, Arabic, operating day 10:00-02:00.</small>
-            </>
-          )}
-          <label>
-            Email
-            <input value={email} onChange={(event) => setEmail(event.target.value)} />
-          </label>
-          <label>
-            Password
-            <input type="password" value={password} onChange={(event) => setPassword(event.target.value)} />
-          </label>
-          {error && <small>{error}</small>}
-          <button>{mode === "login" ? "Open decision center" : "Create organization"}</button>
-        </form>
-      </section>
-      <aside>
-        <div className="quote">"What deserves my attention tonight?"</div>
-        <div className="answer">
-          <Sparkles size={18} />
-          <div>
-            <b>Your next best move</b>
-            <br />
-            Two inventory items are below threshold. Review them before dinner service.
-          </div>
-        </div>
-        <div className="boundary">
-          <ShieldCheck /> You stay in control. AI recommends; you approve every operational change.
-        </div>
-      </aside>
-    </main>
-  );
 }
 
 const importOptions = {
@@ -632,6 +491,7 @@ function FeedbackCollector() {
 }
 
 function App() {
+  const auth = useAuth();
   const initialMessages = useMemo(
     () => [
       {
@@ -642,7 +502,6 @@ function App() {
     ],
     []
   );
-  const [ready, setReady] = useState(!!localStorage.getItem("token"));
   const [messages, setMessages] = useState(initialMessages);
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
@@ -656,26 +515,29 @@ function App() {
     }
   });
   const [showManage, setShowManage] = useState(false);
+  const [workspaceError, setWorkspaceError] = useState("");
   const bottom = useRef();
   const currency = stats?.currency || me?.organization?.currency || "CNY";
 
-  const refreshContext = async () => {
+  const refreshContext = useCallback(async () => {
     const context = await api("/auth/me");
     setMe(context);
     localStorage.setItem("me", JSON.stringify(context));
     localStorage.setItem("restaurant", context.restaurant.name);
-  };
+  }, []);
 
   useEffect(() => {
-    if (ready) {
-      Promise.all([api("/dashboard").then(setStats), refreshContext()]).catch(() => setReady(false));
-    } else {
-      setMessages(initialMessages);
-      setSessionId();
-      setStats();
-      setMe(null);
-    }
-  }, [initialMessages, ready]);
+    if (!auth.isAuthenticated) return;
+    let active = true;
+    setWorkspaceError("");
+    Promise.allSettled([api("/dashboard").then(setStats), refreshContext()]).then((results) => {
+      if (!active || !results.some((result) => result.status === "rejected") || !localStorage.getItem("token")) return;
+      setWorkspaceError("Some live data could not be loaded. Your signed-in session is still active; retry shortly.");
+    });
+    return () => {
+      active = false;
+    };
+  }, [auth.isAuthenticated, refreshContext]);
   useEffect(() => {
     const node = bottom.current;
     if (node && typeof node.scrollIntoView === "function") node.scrollIntoView();
@@ -708,8 +570,6 @@ function App() {
       setLoading(false);
     }
   };
-
-  if (!ready) return <Login onLogin={() => setReady(true)} />;
 
   return (
     <div className="shell">
@@ -775,14 +635,7 @@ function App() {
             <small>AI cannot change operations without you.</small>
           </div>
         </div>
-        <button
-          className="logout"
-          onClick={() => {
-            localStorage.clear();
-            window.dispatchEvent(new Event("auth-change"));
-            setReady(false);
-          }}
-        >
+        <button className="logout" onClick={() => auth.logout()}>
           <LogOut size={16} /> Sign out
         </button>
       </aside>
@@ -796,6 +649,11 @@ function App() {
             <i /> Live data ready
           </span>
         </header>
+        {workspaceError && (
+          <p className="quiet-note" role="status">
+            {workspaceError}
+          </p>
+        )}
         <section className="messages">
           {messages.map((raw, index) => {
             const message = safeMessage(raw);
