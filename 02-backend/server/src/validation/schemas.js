@@ -151,6 +151,16 @@ export const financialReportQuerySchema = financialPeriodQuerySchema.extend({
   restaurantId: z.coerce.number().int().positive().optional()
 });
 
+export const menuCostQuerySchema = z.object({
+  branchId: z.coerce.number().int().positive().optional(),
+  itemCode: z.string().trim().min(1).max(100).optional(),
+  status: z.enum(["active", "inactive", "all"]).default("active"),
+  asOf: financialTimestampSchema.optional(),
+  commissionFrom: financialTimestampSchema.optional(),
+  limit: z.coerce.number().int().min(1).max(500).default(100),
+  offset: z.coerce.number().int().min(0).max(100_000).default(0)
+});
+
 export const knowledgeImportSchema = z.object({
   title: z.string().trim().min(1).max(200),
   source: z.string().trim().max(500).optional(),

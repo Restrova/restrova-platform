@@ -28,6 +28,10 @@ pnpm --filter server eval
 
 The versioned financial ledger, calculation, period, hierarchy, and dashboard APIs are documented in the [canonical financial engine guide](../docs/financial/README.md). Start with the [metric reference](../docs/financial/metric-reference.md) for formulas and units, and the [lineage contract](../docs/financial/lineage-and-audit.md) for audit and scope behavior.
 
+## Menu cost engine
+
+`GET /api/menu/costs` returns versioned per-item selling price, effective food and packaging cost, observed delivery commission, contribution profit, completeness, and source lineage. Calculations use integer minor units and basis points, apply branch-cost precedence, and never replace missing evidence with estimates. See the [menu cost engine contract](../docs/menu/menu-cost-engine.md).
+
 ## Task 2.1 — import template API
 
 Authenticated users can inspect and download the platform CSV templates used by the staged-import flow:

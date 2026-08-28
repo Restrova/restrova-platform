@@ -4,6 +4,12 @@ All notable project changes should be documented here.
 
 This project follows a simple date-based changelog until a formal release process is introduced.
 
+## 2026-08-28
+
+- Completed Task 4.1 with a deterministic menu cost engine for selling price, effective food cost, packaging, observed delivery commission, and contribution profit.
+- Added branch-over-restaurant cost precedence, explicit missing-evidence behavior, integer rounding, pagination, tenant/role isolation, and audit lineage.
+- Added the canonical menu intelligence documentation and multilingual menu-cost acceptance coverage.
+
 ## 2026-08-27
 
 - Completed Task 3.8 with a canonical financial engine documentation set covering metric definitions, calculation examples, data lineage, assumptions, known limits, version history, and release/rollback notes.
