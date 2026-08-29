@@ -230,6 +230,62 @@ function DetectionSummary({ job, template }) {
   );
 }
 
+function DatasetEvaluation({ evaluation, locale }) {
+  if (!evaluation) return null;
+  const ar = locale === "ar";
+  const completeness = `${(evaluation.completenessBps / 100).toFixed(1)}%`;
+  return (
+    <section className="import-section" aria-labelledby="dataset-evaluation-title">
+      <div className="import-section__heading">
+        <div>
+          <p className="import-eyebrow">{ar ? "تقييم تلقائي" : "Automatic evaluation"}</p>
+          <h2 id="dataset-evaluation-title">{ar ? "ملخص جودة الملف" : "Dataset quality summary"}</h2>
+          <p>
+            {evaluation.importReady
+              ? ar
+                ? "الملف جاهز للاستيراد بعد مراجعة النتائج."
+                : "The file is ready to import after you review the results."
+              : ar
+                ? "تم تحليل الملف، لكنه مجموعة بيانات تحليلية وليس سجل طلبات POS كاملًا؛ لن نحفظه كمعاملات تشغيلية غير دقيقة."
+                : "The file was analyzed, but it is an analytical dataset rather than a complete POS transaction log, so it will not be saved as inaccurate operational data."}
+          </p>
+        </div>
+        <Badge variant={evaluation.importReady ? "success" : "warning"}>
+          {evaluation.importReady ? (ar ? "جاهز للاستيراد" : "Import ready") : ar ? "تحليل فقط" : "Analysis only"}
+        </Badge>
+      </div>
+      <div className="import-evaluation-grid">
+        <div>
+          <span>{ar ? "الصفوف" : "Rows"}</span>
+          <strong>{evaluation.rowCount.toLocaleString()}</strong>
+        </div>
+        <div>
+          <span>{ar ? "الأعمدة" : "Columns"}</span>
+          <strong>{evaluation.columnCount}</strong>
+        </div>
+        <div>
+          <span>{ar ? "اكتمال البيانات" : "Completeness"}</span>
+          <strong>{completeness}</strong>
+        </div>
+        <div>
+          <span>{ar ? "صفوف مكررة" : "Duplicate rows"}</span>
+          <strong>{evaluation.duplicateRows}</strong>
+        </div>
+      </div>
+      {evaluation.numericColumns?.length > 0 && (
+        <div className="import-evaluation-columns">
+          <strong>{ar ? "المقاييس الرقمية المكتشفة" : "Detected numeric metrics"}</strong>
+          <div>
+            {evaluation.numericColumns.slice(0, 8).map((metric) => (
+              <code key={metric.column}>{metric.column}</code>
+            ))}
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
 function MappingEditor({ job, mappings, onChange, onSave, loading }) {
   const targets = job.mapping?.targetFields || [];
   return (
@@ -724,6 +780,7 @@ export function ImportWizardPage() {
       ) : (
         <>
           <DetectionSummary job={job} template={selected} />
+          <DatasetEvaluation evaluation={job.datasetEvaluation} locale={locale} />
           <MappingEditor
             job={job}
             mappings={mappings}

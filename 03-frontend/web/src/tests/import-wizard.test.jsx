@@ -37,6 +37,16 @@ const readyJob = {
     requiredCoverageBps: 10000,
     matchedFields: ["branch_code", "name", "city"]
   },
+  datasetEvaluation: {
+    rowCount: 1,
+    columnCount: 3,
+    completenessBps: 10000,
+    duplicateRows: 0,
+    numericColumns: [],
+    importReady: true,
+    missingRequiredFields: [],
+    mode: "operational_import"
+  },
   confirmationToken: "confirm-me",
   file: { name: "branches.csv", byteSize: 128 },
   mapping: {
@@ -92,6 +102,8 @@ describe("ImportWizardPage", () => {
 
     expect(await screen.findByRole("heading", { name: "Branches" })).toBeInTheDocument();
     expect(screen.getByText("High confidence")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Dataset quality summary" })).toBeInTheDocument();
+    expect(screen.getByText("100.0%")).toBeInTheDocument();
     expect(await screen.findByText("Validation results")).toBeInTheDocument();
     expect(screen.getByText("Ready to confirm")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Confirm import" })).toBeEnabled();
