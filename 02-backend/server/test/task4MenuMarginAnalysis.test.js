@@ -459,3 +459,106 @@ test("Task 4.3 keeps thresholds scope-wide while filtering and rejects foreign b
   assert.equal(filtered.payload.thresholds.popularityThresholdBps, 5000);
   assert.equal(blocked.status, 404);
 });
+
+test("Task 4.7 derives all six menu proposals from recorded matrix evidence", async (t) => {
+  const server = app.listen(0);
+  t.after(() => server.close());
+  const owner = await registerOwner(server, "recommendations-six", "ar");
+  const branchId = owner.branches[0].id;
+  const stamp = Date.now();
+  const fixtures = [
+    ["STAR", 40, 40000, 10000, "明星菜"],
+    ["PLOW", 30, 30000, 24000, "طبق شعبي"],
+    ["PUZZLE", 20, 20000, 5000, "لغز مربح"],
+    ["DOG", 10, 10000, 8000, "طبق ضعيف"]
+  ];
+  for (const [code, quantity, revenue, foodCost, name] of fixtures) {
+    const itemId = insertCatalog(owner, `${code}-${stamp}`, name);
+    insertCost(owner, itemId, null, foodCost / quantity, 0, "2026-01-01T00:00:00.000Z");
+    insertSale(owner, itemId, branchId, `${code}-${stamp}`, {
+      createdAt: "2026-08-10T12:00:00.000Z",
+      quantity,
+      grossMinor: revenue
+    });
+  }
+
+  const result = await request(
+    server,
+    `/api/menu/recommendations?branchId=${branchId}&from=2026-08-01T00:00:00.000Z&to=2026-08-31T23:59:59.999Z`,
+    { token: owner.token }
+  );
+
+  assert.equal(result.status, 200);
+  assert.equal(result.payload.formulaVersion, "4.7-v1");
+  assert.equal(result.payload.sourceFormulaVersion, "4.3-v1");
+  assert.deepEqual(
+    new Set(result.payload.recommendations.map((recommendation) => recommendation.action)),
+    new Set([
+      "raise_price",
+      "reduce_ingredient_cost",
+      "change_portion",
+      "promote_item",
+      "bundle_item",
+      "consider_removal"
+    ])
+  );
+  assert.ok(result.payload.recommendations.some((recommendation) => recommendation.item.name === "明星菜"));
+  assert.ok(result.payload.recommendations.some((recommendation) => recommendation.item.name === "طبق شعبي"));
+  assert.ok(
+    result.payload.recommendations.every(
+      (recommendation) =>
+        recommendation.projectedImpact === null &&
+        recommendation.approval.status === "proposed" &&
+        recommendation.approval.requiredRole === "owner" &&
+        recommendation.approval.executionPerformed === false &&
+        recommendation.evidence.costCoverageBps === 10000 &&
+        recommendation.lineage.sales.references.length === 1
+    )
+  );
+  assert.deepEqual(result.payload.governance.lifecycle, [
+    "proposed",
+    "accepted",
+    "rejected",
+    "in_progress",
+    "completed",
+    "cancelled"
+  ]);
+  assert.deepEqual(result.payload.recommendations[0].outcomeMeasurement.checkpointsDays, [7, 14]);
+});
+
+test("Task 4.7 publishes uncertainty, excludes incomplete items, and enforces branch isolation", async (t) => {
+  const server = app.listen(0);
+  t.after(() => server.close());
+  const owner = await registerOwner(server, "recommendations-scope");
+  const foreign = await registerOwner(server, "recommendations-foreign");
+  const branchId = owner.branches[0].id;
+  const stamp = Date.now();
+  const itemId = insertCatalog(owner, `ONLY-${stamp}`, "Single evidence item");
+  insertCost(owner, itemId, null, 200, 0, "2026-01-01T00:00:00.000Z");
+  insertSale(owner, itemId, branchId, `ONLY-${stamp}`, {
+    createdAt: "2026-08-10T12:00:00.000Z",
+    quantity: 2,
+    grossMinor: 2000
+  });
+  const incompleteId = insertCatalog(owner, `INCOMPLETE-${stamp}`, "No cost evidence");
+  insertSale(owner, incompleteId, branchId, `INCOMPLETE-${stamp}`, {
+    createdAt: "2026-08-10T12:00:00.000Z",
+    quantity: 1,
+    grossMinor: 500
+  });
+
+  const result = await request(server, `/api/menu/recommendations?branchId=${branchId}`, { token: owner.token });
+  const blocked = await request(server, `/api/menu/recommendations?branchId=${foreign.branches[0].id}`, {
+    token: owner.token
+  });
+
+  assert.equal(result.status, 200);
+  assert.equal(result.payload.recommendations.length, 1);
+  assert.equal(result.payload.recommendations[0].confidence.level, "medium");
+  assert.deepEqual(result.payload.recommendations[0].confidence.limitations, [
+    "limited_sales_history_review_before_acceptance"
+  ]);
+  assert.equal(result.payload.excluded.length, 1);
+  assert.deepEqual(result.payload.excluded[0].reasons, ["effective_cost_records"]);
+  assert.equal(blocked.status, 404);
+});

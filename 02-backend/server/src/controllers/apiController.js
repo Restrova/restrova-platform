@@ -18,6 +18,7 @@ import * as menuMarginService from "../services/menuMarginService.js";
 import * as menuEngineeringService from "../services/menuEngineeringService.js";
 import * as priceSimulationService from "../services/priceSimulationService.js";
 import * as costSimulationService from "../services/costSimulationService.js";
+import * as menuRecommendationService from "../services/menuRecommendationService.js";
 
 export const health = (_req, res) => res.json(healthService.getHealth());
 export const ready = (_req, res) => res.json(healthService.getReadiness());
@@ -99,6 +100,8 @@ export const getMenuEngineeringMatrix = (req, res) =>
   res.json(menuEngineeringService.getMenuEngineeringMatrix(req.user, req.query));
 export const simulateMenuPrice = (req, res) => res.json(priceSimulationService.simulatePrice(req.user, req.body));
 export const simulateMenuCosts = (req, res) => res.json(costSimulationService.simulateCosts(req.user, req.body));
+export const getMenuRecommendations = (req, res) =>
+  res.json(menuRecommendationService.getMenuRecommendations(req.user, req.query));
 
 export const knowledgeStatus = (req, res) => res.json(knowledgeService.getKnowledgeStatus(req.user));
 export const importKnowledge = (req, res) => res.status(201).json(knowledgeService.importKnowledge(req.user, req.body));

@@ -91,6 +91,7 @@ router.get("/menu/margins", auth, asyncHandler(controller.getMenuMargins));
 router.get("/menu/engineering-matrix", auth, asyncHandler(controller.getMenuEngineeringMatrix));
 router.post("/menu/price-simulation", auth, asyncHandler(controller.simulateMenuPrice));
 router.post("/menu/cost-simulation", auth, asyncHandler(controller.simulateMenuCosts));
+router.get("/menu/recommendations", auth, asyncHandler(controller.getMenuRecommendations));
 
 router.get("/knowledge/status", auth, controller.knowledgeStatus);
 router.post("/knowledge/import", auth, requireOwner, asyncHandler(controller.importKnowledge));
