@@ -171,6 +171,15 @@ export const menuMarginQuerySchema = z.object({
   offset: z.coerce.number().int().min(0).max(100_000).default(0)
 });
 
+export const priceSimulationSchema = z.object({
+  branchId: z.coerce.number().int().positive().optional(),
+  itemCode: z.string().trim().min(1).max(100),
+  proposedPriceMinor: z.number().int().min(1).max(1_000_000_000),
+  from: financialTimestampSchema.optional(),
+  to: financialTimestampSchema.optional(),
+  demandChangesBps: z.array(z.number().int().min(-9000).max(10000)).min(1).max(9).default([-1000, 0, 1000])
+});
+
 export const knowledgeImportSchema = z.object({
   title: z.string().trim().min(1).max(200),
   source: z.string().trim().max(500).optional(),

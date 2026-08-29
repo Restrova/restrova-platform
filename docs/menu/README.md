@@ -10,6 +10,7 @@ This directory is the canonical reference for Restrova's menu economics and reco
 | Margin analysis    | `4.2-v1` | [Menu margin analysis](menu-margin-analysis.md)       |
 | Engineering matrix | `4.3-v1` | [Menu engineering matrix](menu-engineering-matrix.md) |
 | Profitability UI   | `4.4-v1` | [Menu profitability UI](menu-profitability-ui.md)     |
+| Price simulation   | `4.5-v1` | [Price simulation](price-simulation.md)               |
 | Source imports     | Task 2   | [Import guide](../imports/README.md)                  |
 | Financial rules    | `3.7-v1` | [Financial engine](../financial/README.md)            |
 

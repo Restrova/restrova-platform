@@ -36,6 +36,8 @@ The versioned financial ledger, calculation, period, hierarchy, and dashboard AP
 
 `GET /api/menu/engineering-matrix` deterministically classifies eligible items as STAR, PLOWHORSE, PUZZLE, or DOG using scope-wide popularity and contribution-margin thresholds while preserving evidence lineage. See the [menu engineering matrix contract](../docs/menu/menu-engineering-matrix.md).
 
+`POST /api/menu/price-simulation` compares current and proposed item prices and projects contribution impact across explicit demand-sensitivity assumptions. It is read-only and blocks projections when recorded evidence is incomplete. See the [price simulation contract](../docs/menu/price-simulation.md).
+
 ## Task 2.1 — import template API
 
 Authenticated users can inspect and download the platform CSV templates used by the staged-import flow:

@@ -261,6 +261,16 @@ test("Task 4.1 enforces tenant and branch-manager scope", async (t) => {
   const blockedTenantItem = await request(server, `/api/menu/costs?itemCode=${foreignCode}`, {
     token: owner.token
   });
+  const scopedSimulation = await request(server, "/api/menu/price-simulation", {
+    token: login.payload.token,
+    method: "POST",
+    body: { itemCode: code, proposedPriceMinor: 5000 }
+  });
+  const blockedSimulation = await request(server, "/api/menu/price-simulation", {
+    token: login.payload.token,
+    method: "POST",
+    body: { branchId: firstBranchId, itemCode: code, proposedPriceMinor: 5000 }
+  });
 
   assert.equal(scoped.status, 200);
   assert.equal(scoped.payload.scope.branchId, secondBranch.payload.id);
@@ -269,6 +279,9 @@ test("Task 4.1 enforces tenant and branch-manager scope", async (t) => {
   assert.equal(blockedBranch.status, 404);
   assert.equal(blockedTenantBranch.status, 404);
   assert.equal(blockedTenantItem.status, 404);
+  assert.equal(scopedSimulation.status, 200);
+  assert.equal(scopedSimulation.payload.scope.branchId, secondBranch.payload.id);
+  assert.equal(blockedSimulation.status, 404);
 });
 
 test("Task 4.1 validates observation periods and preserves explicit incompleteness", async (t) => {
@@ -299,4 +312,118 @@ test("Task 4.1 validates observation periods and preserves explicit incompletene
   assert.equal(zeroGross.payload.items[0].metrics.contributionProfitMinor, null);
   assert.deepEqual(zeroGross.payload.items[0].completeness.missingInputs, ["positive_delivery_gross_sales"]);
   assert.equal(zeroGross.payload.items[0].lineage.commission.recordedCommissionMinor, 25);
+});
+
+test("Task 4.5 simulates proposed price contribution across deterministic demand sensitivity", async (t) => {
+  const server = app.listen(0);
+  t.after(() => server.close());
+  const owner = await registerOwner(server, "price-simulation");
+  const branchId = owner.branches[0].id;
+  const code = `SIM-${Date.now()}`;
+  const itemId = insertCatalog(owner, { code, name: "مندي تجريبي", priceMinor: 5000 });
+  const costId = insertCost(owner, itemId, branchId, 2400, 150, "2026-08-01T00:00:00.000Z");
+  insertDeliverySale(owner, itemId, branchId, `${code}-1`, 10000, 1500, "2026-08-10T10:00:00.000Z");
+  insertDeliverySale(owner, itemId, branchId, `${code}-2`, 5000, 500, "2026-08-11T10:00:00.000Z");
+
+  const result = await request(server, "/api/menu/price-simulation", {
+    token: owner.token,
+    method: "POST",
+    body: {
+      branchId,
+      itemCode: code.toLowerCase(),
+      proposedPriceMinor: 6000,
+      from: "2026-08-01T00:00:00.000Z",
+      to: "2026-08-20T00:00:00.000Z",
+      demandChangesBps: [1000, 0, -1000, 0]
+    }
+  });
+
+  assert.equal(result.status, 200);
+  assert.equal(result.payload.formulaVersion, "4.5-v1");
+  assert.deepEqual(result.payload.sourceFormulaVersions, { costs: "4.1-v1", margins: "4.2-v1" });
+  assert.equal(result.payload.mode, "read_only_simulation");
+  assert.deepEqual(result.payload.scope, {
+    organizationId: owner.organization.id,
+    restaurantId: owner.restaurant.id,
+    branchId,
+    currencyCode: "SAR"
+  });
+  assert.deepEqual(result.payload.baseline, {
+    quantitySoldMicros: 2000000,
+    quantitySold: 2,
+    observedContributionProfitMinor: 7900
+  });
+  assert.deepEqual(result.payload.unitEconomics, {
+    currentPriceMinor: 5000,
+    proposedPriceMinor: 6000,
+    priceChangeMinor: 1000,
+    priceChangeBps: 2000,
+    foodCostMinor: 2400,
+    packagingMinor: 150,
+    commissionRateBps: 1333,
+    currentCommissionMinor: 667,
+    proposedCommissionMinor: 800,
+    currentContributionMinor: 1783,
+    proposedContributionMinor: 2650,
+    contributionChangeMinor: 867,
+    currentContributionMarginBps: 3566,
+    proposedContributionMarginBps: 4417
+  });
+  assert.deepEqual(result.payload.scenarios, [
+    {
+      demandChangeBps: -1000,
+      projectedQuantitySoldMicros: 1800000,
+      projectedQuantitySold: 1.8,
+      modeledCurrentContributionMinor: 3566,
+      projectedContributionMinor: 4770,
+      contributionImpactMinor: 1204
+    },
+    {
+      demandChangeBps: 0,
+      projectedQuantitySoldMicros: 2000000,
+      projectedQuantitySold: 2,
+      modeledCurrentContributionMinor: 3566,
+      projectedContributionMinor: 5300,
+      contributionImpactMinor: 1734
+    },
+    {
+      demandChangeBps: 1000,
+      projectedQuantitySoldMicros: 2200000,
+      projectedQuantitySold: 2.2,
+      modeledCurrentContributionMinor: 3566,
+      projectedContributionMinor: 5830,
+      contributionImpactMinor: 2264
+    }
+  ]);
+  assert.equal(result.payload.completeness.ready, true);
+  assert.equal(result.payload.lineage.costs.costs.sourceId, costId);
+  assert.equal(result.payload.lineage.sales.lineCount, 2);
+});
+
+test("Task 4.5 blocks invented projections when cost or sales evidence is incomplete", async (t) => {
+  const server = app.listen(0);
+  t.after(() => server.close());
+  const owner = await registerOwner(server, "price-incomplete");
+  const code = `NO-EVIDENCE-${Date.now()}`;
+  insertCatalog(owner, { code, name: "无证据菜品", priceMinor: 3200 });
+
+  const result = await request(server, "/api/menu/price-simulation", {
+    token: owner.token,
+    method: "POST",
+    body: { itemCode: code, proposedPriceMinor: 3500 }
+  });
+  const invalid = await request(server, "/api/menu/price-simulation", {
+    token: owner.token,
+    method: "POST",
+    body: { itemCode: code, proposedPriceMinor: -1, demandChangesBps: [-10000] }
+  });
+
+  assert.equal(result.status, 200);
+  assert.equal(result.payload.completeness.ready, false);
+  assert.equal(result.payload.unitEconomics, null);
+  assert.deepEqual(result.payload.scenarios, []);
+  assert.ok(result.payload.completeness.missingInputs.includes("cost_record"));
+  assert.ok(result.payload.completeness.missingInputs.includes("sales_lines"));
+  assert.ok(result.payload.completeness.missingInputs.includes("recorded_sales_quantity"));
+  assert.equal(invalid.status, 400);
 });

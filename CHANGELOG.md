@@ -4,6 +4,11 @@ All notable project changes should be documented here.
 
 This project follows a simple date-based changelog until a formal release process is introduced.
 
+## 2026-08-29
+
+- Completed Task 4.5 with read-only current/proposed price comparison and deterministic contribution-impact sensitivity scenarios.
+- Added recorded quantity/cost/commission lineage, explicit assumptions, incomplete-evidence blocking, branch isolation, validation limits, and API tests.
+
 ## 2026-08-28
 
 - Completed Task 4.4 with a responsive, multilingual menu profitability UI for profit, revenue, volume, margin, and rising-cost decisions.
