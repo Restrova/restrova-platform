@@ -231,7 +231,7 @@ function DetectionSummary({ job, template }) {
   );
 }
 
-function DatasetEvaluation({ evaluation, locale, onReset }) {
+function DatasetEvaluation({ evaluation, locale, onReset, onFinish }) {
   if (!evaluation) return null;
   const ar = locale === "ar";
   const completeness = `${(evaluation.completenessBps / 100).toFixed(1)}%`;
@@ -303,10 +303,24 @@ function DatasetEvaluation({ evaluation, locale, onReset }) {
         </div>
       )}
       {evaluation.mode === "analysis_only" && (
-        <div className="import-actions import-actions--end">
-          <Button variant="outline" leadingIcon={<RefreshCcw size={16} />} onClick={onReset}>
-            {ar ? "تحليل ملف آخر" : "Analyze another file"}
-          </Button>
+        <div className="import-analysis-complete">
+          <div>
+            <CheckCircle2 size={22} />
+            <span>
+              <strong>{ar ? "اكتمل تحليل الملف" : "File analysis complete"}</strong>
+              <small>
+                {ar
+                  ? "يمكنك الآن العودة إلى مركز القرار أو تحليل ملف آخر."
+                  : "Continue to the decision center or analyze another file."}
+              </small>
+            </span>
+          </div>
+          <div className="import-actions">
+            <Button onClick={onFinish}>{ar ? "الانتقال إلى مركز القرار" : "Continue to decision center"}</Button>
+            <Button variant="outline" leadingIcon={<RefreshCcw size={16} />} onClick={onReset}>
+              {ar ? "تحليل ملف آخر" : "Analyze another file"}
+            </Button>
+          </div>
         </div>
       )}
     </section>
@@ -807,7 +821,12 @@ export function ImportWizardPage() {
       ) : (
         <>
           <DetectionSummary job={job} template={selected} />
-          <DatasetEvaluation evaluation={job.datasetEvaluation} locale={locale} onReset={resetImport} />
+          <DatasetEvaluation
+            evaluation={job.datasetEvaluation}
+            locale={locale}
+            onReset={resetImport}
+            onFinish={() => window.location.assign("/app/workspace")}
+          />
           {job.datasetEvaluation?.mode !== "analysis_only" && (
             <>
               <MappingEditor
