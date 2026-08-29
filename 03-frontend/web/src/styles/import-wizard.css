@@ -99,6 +99,87 @@
   gap: var(--space-4);
 }
 
+.import-manual-choice {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+.import-manual-choice > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+
+.import-manual-choice > summary span {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.import-manual-choice > summary small {
+  color: var(--color-text-muted);
+  font-weight: var(--font-weight-regular);
+}
+
+.import-manual-choice[open] > summary {
+  border-block-end: 1px solid var(--color-border);
+}
+
+.import-manual-choice > .import-section {
+  padding: var(--space-5);
+}
+
+.import-detection {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: var(--space-4);
+  border: 1px solid var(--color-success-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-success-soft);
+  padding: var(--space-5);
+}
+
+.import-detection__icon {
+  display: grid;
+  inline-size: 3rem;
+  block-size: 3rem;
+  place-items: center;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  color: var(--color-success);
+}
+
+.import-detection h2 {
+  margin: var(--space-1) 0;
+  color: var(--color-text-primary);
+}
+
+.import-detection p:not(.import-eyebrow) {
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
+.import-detection__fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-block-start: var(--space-3);
+}
+
+.import-detection__fields code {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  background: var(--color-surface);
+  padding: 0.25rem 0.6rem;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+}
+
 .import-template-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -347,5 +428,14 @@
 
   .import-card-footer--split {
     align-items: stretch;
+  }
+
+  .import-detection {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .import-detection > :last-child {
+    grid-column: 2;
+    justify-self: start;
   }
 }

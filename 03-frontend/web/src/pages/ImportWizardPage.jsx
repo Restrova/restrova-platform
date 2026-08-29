@@ -8,6 +8,7 @@ import {
   FileSpreadsheet,
   RefreshCcw,
   Save,
+  ScanSearch,
   UploadCloud,
   XCircle
 } from "lucide-react";
@@ -22,8 +23,39 @@ import {
   previewImportFile,
   updateImportMapping
 } from "../lib/imports.js";
+import { useLocale } from "../contexts/LocaleContext.jsx";
 
-const STEPS = ["Template", "Upload", "Mapping", "Validation", "Preview", "Confirm"];
+const STEPS = ["Upload", "Detection", "Mapping", "Validation", "Preview", "Confirm"];
+
+const introCopy = {
+  ar: {
+    title: "ارفع ملفك ودع Restrova يتعرّف عليه",
+    description: "سنحدد نوع البيانات تلقائيًا، ثم نفحص الأعمدة والأخطاء والتكرارات قبل حفظ أي شيء.",
+    choose: "اختر ملف CSV أو XLSX",
+    browse: "اضغط هنا لاختيار الملف من جهازك",
+    action: "تحليل الملف وتقييمه",
+    optional: "اختيار النوع يدويًا (اختياري)",
+    optionalHelp: "استخدم هذا الخيار فقط إذا لم يستطع النظام تحديد نوع الملف بثقة."
+  },
+  en: {
+    title: "Upload a file and let Restrova identify it",
+    description: "We detect the data type, then check columns, errors, and duplicates before anything is saved.",
+    choose: "Choose a CSV or XLSX file",
+    browse: "Click to browse from your computer",
+    action: "Analyze and evaluate file",
+    optional: "Choose the type manually (optional)",
+    optionalHelp: "Use this only when the system cannot identify the file confidently."
+  },
+  "zh-CN": {
+    title: "上传文件，让 Restrova 自动识别",
+    description: "系统会自动识别数据类型，并在保存前检查列、错误和重复记录。",
+    choose: "选择 CSV 或 XLSX 文件",
+    browse: "点击从电脑中选择文件",
+    action: "分析并评估文件",
+    optional: "手动选择类型（可选）",
+    optionalHelp: "仅当系统无法可靠识别文件时使用。"
+  }
+};
 
 function bytes(value) {
   const size = Number(value || 0);
@@ -36,10 +68,8 @@ function errorMessage(error) {
   return error?.message || "Unable to complete the import request.";
 }
 
-function stepIndex({ template, file, job }) {
-  if (!template) return 0;
-  if (!file && !job) return 1;
-  if (!job) return 1;
+function stepIndex({ job }) {
+  if (!job) return 0;
   if (job.validationStatus === "needs_mapping") return 2;
   if (job.validationStatus === "validation_failed") return 3;
   if (job.validationStatus === "ready") return 4;
@@ -59,67 +89,76 @@ function WizardStepper({ active }) {
   );
 }
 
-function TemplateSelection({ templates, selectedKey, onSelect, onDownload, downloadingKey }) {
+function TemplateSelection({ templates, selectedKey, onSelect, onDownload, downloadingKey, text }) {
   return (
-    <section className="import-section" aria-labelledby="import-template-title">
-      <div className="import-section__heading">
-        <div>
-          <p className="import-eyebrow">Step 1</p>
-          <h2 id="import-template-title">Choose what you want to import</h2>
-          <p>Use a Restrova template or upload an existing CSV/XLSX file. Nothing is written before confirmation.</p>
+    <details className="import-manual-choice">
+      <summary>
+        <span>
+          <strong>{text.optional}</strong>
+          <small>{text.optionalHelp}</small>
+        </span>
+      </summary>
+      <section className="import-section" aria-labelledby="import-template-title">
+        <div className="import-section__heading">
+          <div>
+            <h2 id="import-template-title">{text.optional}</h2>
+            <p>{text.optionalHelp}</p>
+          </div>
         </div>
-      </div>
-      <div className="import-template-grid">
-        {templates.map((template) => {
-          const selected = template.key === selectedKey;
-          return (
-            <Card key={template.key} interactive className={`import-template-card ${selected ? "is-selected" : ""}`}>
-              <CardHeader status={selected ? <Badge variant="success">Selected</Badge> : null}>
-                <div className="import-template-card__title">
-                  <FileSpreadsheet size={20} />
-                  <CardTitle>{template.displayName}</CardTitle>
-                </div>
-                <CardDescription>{template.description}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="import-template-card__meta">
-                  {template.requiredColumns?.length || 0} required · {template.optionalColumns?.length || 0} optional
-                </p>
-                <div className="import-template-card__actions">
-                  <Button variant={selected ? "primary" : "outline"} onClick={() => onSelect(template)}>
-                    {selected ? "Selected" : "Choose"}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    leadingIcon={<Download size={16} />}
-                    loading={downloadingKey === template.key}
-                    onClick={() => onDownload(template.key)}
-                  >
-                    Template
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
-    </section>
+        <div className="import-template-grid">
+          {templates.map((template) => {
+            const selected = template.key === selectedKey;
+            return (
+              <Card key={template.key} interactive className={`import-template-card ${selected ? "is-selected" : ""}`}>
+                <CardHeader status={selected ? <Badge variant="success">Selected</Badge> : null}>
+                  <div className="import-template-card__title">
+                    <FileSpreadsheet size={20} />
+                    <CardTitle>{template.displayName}</CardTitle>
+                  </div>
+                  <CardDescription>{template.description}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="import-template-card__meta">
+                    {template.requiredColumns?.length || 0} required · {template.optionalColumns?.length || 0} optional
+                  </p>
+                  <div className="import-template-card__actions">
+                    <Button variant={selected ? "primary" : "outline"} onClick={() => onSelect(template)}>
+                      {selected ? "Selected" : "Choose"}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      leadingIcon={<Download size={16} />}
+                      loading={downloadingKey === template.key}
+                      onClick={() => onDownload(template.key)}
+                    >
+                      Template
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      </section>
+    </details>
   );
 }
 
-function FileUpload({ template, file, onFile, onUpload, loading, onBack }) {
+function FileUpload({ template, file, onFile, onUpload, loading, onBack, text }) {
   const inputRef = useRef(null);
   return (
     <section className="import-section" aria-labelledby="import-upload-title">
       <div className="import-section__heading">
         <div>
-          <p className="import-eyebrow">Step 2</p>
-          <h2 id="import-upload-title">Upload {template.displayName}</h2>
-          <p>Accepted formats: CSV and XLSX. The server validates the file before creating a preview.</p>
+          <p className="import-eyebrow">Smart import</p>
+          <h2 id="import-upload-title">{text.title}</h2>
+          <p>{text.description}</p>
         </div>
-        <Button variant="ghost" leadingIcon={<ArrowLeft size={16} />} onClick={onBack}>
-          Change template
-        </Button>
+        {template && (
+          <Button variant="ghost" leadingIcon={<ArrowLeft size={16} />} onClick={onBack}>
+            Automatic detection
+          </Button>
+        )}
       </div>
       <Card>
         <CardContent>
@@ -133,8 +172,8 @@ function FileUpload({ template, file, onFile, onUpload, loading, onBack }) {
             }}
           >
             <UploadCloud size={34} />
-            <strong>{file ? file.name : "Choose a CSV or XLSX file"}</strong>
-            <span>{file ? `${bytes(file.size)} · ${file.type || "File"}` : "Click to browse from your computer"}</span>
+            <strong>{file ? file.name : text.choose}</strong>
+            <span>{file ? `${bytes(file.size)} · ${file.type || "File"}` : text.browse}</span>
             <input
               ref={inputRef}
               className="sr-only"
@@ -146,11 +185,47 @@ function FileUpload({ template, file, onFile, onUpload, loading, onBack }) {
           </div>
           <div className="import-actions import-actions--end">
             <Button disabled={!file} loading={loading} leadingIcon={<UploadCloud size={16} />} onClick={onUpload}>
-              Validate file
+              {text.action}
             </Button>
           </div>
         </CardContent>
       </Card>
+    </section>
+  );
+}
+
+function DetectionSummary({ job, template }) {
+  const detection = job.detection || {
+    displayName: template?.displayName || job.templateKey,
+    confidence: "confirmed",
+    matchedFields: []
+  };
+  const confidenceLabel =
+    detection.confidence === "high"
+      ? "High confidence"
+      : detection.confidence === "medium"
+        ? "Review suggested"
+        : "Confirmed";
+  return (
+    <section className="import-detection" aria-labelledby="import-detection-title">
+      <div className="import-detection__icon">
+        <ScanSearch size={24} />
+      </div>
+      <div>
+        <p className="import-eyebrow">Step 2 · File detected</p>
+        <h2 id="import-detection-title">{detection.displayName}</h2>
+        <p>
+          Restrova classified this as <strong>{detection.displayName}</strong> data and evaluated the uploaded rows.
+        </p>
+        {detection.matchedFields?.length > 0 && (
+          <div className="import-detection__fields">
+            {detection.matchedFields.map((field) => (
+              <code key={field}>{field}</code>
+            ))}
+          </div>
+        )}
+      </div>
+      <Badge variant={detection.confidence === "medium" ? "warning" : "success"}>{confidenceLabel}</Badge>
     </section>
   );
 }
@@ -455,6 +530,8 @@ function Completion({ job, onReset }) {
 }
 
 export function ImportWizardPage() {
+  const { locale } = useLocale();
+  const text = introCopy[locale] || introCopy.en;
   const [templates, setTemplates] = useState([]);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [file, setFile] = useState(null);
@@ -517,11 +594,11 @@ export function ImportWizardPage() {
   }
 
   async function upload() {
-    if (!selectedTemplate || !file) return;
+    if (!file) return;
     setError("");
     setUploading(true);
     try {
-      const result = await previewImportFile({ templateKey: selectedTemplate.key, file });
+      const result = await previewImportFile({ templateKey: selectedTemplate?.key, file });
       setJob(result);
       setConfirmationToken(result.confirmationToken || null);
     } catch (requestError) {
@@ -618,34 +695,35 @@ export function ImportWizardPage() {
             <p>Loading import templates...</p>
           </CardContent>
         </Card>
-      ) : !selectedTemplate && !job ? (
-        <TemplateSelection
-          templates={templates}
-          selectedKey={selectedTemplate?.key}
-          onSelect={(template) => {
-            setSelectedTemplate(template);
-            setError("");
-          }}
-          onDownload={downloadTemplate}
-          downloadingKey={downloadingKey}
-        />
       ) : !job ? (
-        <FileUpload
-          template={selectedTemplate}
-          file={file}
-          onFile={(nextFile) => {
-            setFile(nextFile);
-            setError("");
-          }}
-          onUpload={upload}
-          loading={uploading}
-          onBack={() => {
-            setSelectedTemplate(null);
-            setFile(null);
-          }}
-        />
+        <>
+          <FileUpload
+            template={selectedTemplate}
+            file={file}
+            text={text}
+            onFile={(nextFile) => {
+              setFile(nextFile);
+              setError("");
+            }}
+            onUpload={upload}
+            loading={uploading}
+            onBack={() => setSelectedTemplate(null)}
+          />
+          <TemplateSelection
+            templates={templates}
+            selectedKey={selectedTemplate?.key}
+            text={text}
+            onSelect={(template) => {
+              setSelectedTemplate(template);
+              setError("");
+            }}
+            onDownload={downloadTemplate}
+            downloadingKey={downloadingKey}
+          />
+        </>
       ) : (
         <>
+          <DetectionSummary job={job} template={selected} />
           <MappingEditor
             job={job}
             mappings={mappings}

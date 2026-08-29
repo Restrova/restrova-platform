@@ -12,7 +12,7 @@ import {
 import { parseUploadedTable } from "../import/stagedFileParser.js";
 import { logInfo } from "../observability/logger.js";
 import * as stagedImportRepository from "../repositories/stagedImportRepository.js";
-import { getImportTemplate } from "./importTemplateService.js";
+import { detectImportTemplate, getImportTemplate } from "./importTemplateService.js";
 
 const MAX_FILENAME_LENGTH = 255;
 
@@ -506,10 +506,21 @@ function getJobOrThrow(user, jobId) {
 
 export function previewStagedImport(user, { templateKey, filename, contentType, buffer, requestId }) {
   const safeRequestId = requestIdOrFallback(requestId);
-  const template = getImportTemplate(templateKey);
   const originalFilename = cleanFilename(filename);
   const parsed = parseUploadedTable({ buffer, filename: originalFilename, contentType });
-  const mappings = suggestColumnMappings(parsed.headers, template);
+  const automatic = !templateKey || templateKey === "auto";
+  const detected = automatic ? detectImportTemplate(parsed.headers) : null;
+  const template = detected?.template || getImportTemplate(templateKey);
+  const mappings = detected?.mappings || suggestColumnMappings(parsed.headers, template);
+  const detection = detected?.detection || {
+    mode: "manual",
+    templateKey: template.key,
+    displayName: template.displayName,
+    confidence: "confirmed",
+    requiredCoverageBps: null,
+    matchedFields: mappings.filter((mapping) => mapping.targetField).map((mapping) => mapping.targetField),
+    candidates: []
+  };
   const validation = buildValidation(user, template, parsed.rows, mappings);
   const confirmationToken = newConfirmationToken();
 
@@ -546,6 +557,7 @@ export function previewStagedImport(user, { templateKey, filename, contentType, 
     byteSize: buffer.length,
     sha256: job.file_sha256
   });
+  recordAudit(user, job, "file_type_classified", safeRequestId, detection);
   recordAudit(user, job, "validation_started", safeRequestId);
   recordAudit(user, job, "validation_completed", safeRequestId, {
     totalRows: validation.counts.total,
@@ -574,6 +586,7 @@ export function previewStagedImport(user, { templateKey, filename, contentType, 
 
   return {
     ...result,
+    detection,
     confirmationToken: validation.validationStatus === "ready" ? confirmationToken : null
   };
 }
