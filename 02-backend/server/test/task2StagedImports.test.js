@@ -418,4 +418,13 @@ test("Smart import classifies and evaluates analytical restaurant sales datasets
   assert.ok(
     preview.payload.datasetEvaluation.numericColumns.some((metric) => metric.column === "actual_selling_price")
   );
+
+  const reopened = await jsonRequest(server, `/api/data/import-jobs/${preview.payload.id}`, { token });
+  assert.equal(reopened.status, 200);
+  assert.equal(reopened.payload.datasetEvaluation.rowCount, 2);
+  assert.equal(reopened.payload.datasetEvaluation.mode, "analysis_only");
+
+  const history = await jsonRequest(server, "/api/data/import-jobs", { token });
+  const saved = history.payload.jobs.find((job) => job.id === preview.payload.id);
+  assert.equal(saved.datasetEvaluation.rowCount, 2);
 });

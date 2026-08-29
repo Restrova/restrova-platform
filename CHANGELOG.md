@@ -6,6 +6,7 @@ This project follows a simple date-based changelog until a formal release proces
 
 ## 2026-08-29
 
+- Persisted analysis-only dataset evaluations in the import audit trail and added a previous analyses section for reopening saved results.
 - Added a clear analysis completion state with actions to continue to the decision center or analyze another file.
 - Simplified analysis-only imports to show the dataset evaluation and numeric ranges directly, without irrelevant POS mapping or confirmation controls.
 - Added analysis-only profiling for non-POS restaurant sales datasets, including row/column counts, completeness, duplicates, and detected numeric metrics.

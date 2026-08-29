@@ -43,6 +43,10 @@ export function getImportJob(jobId) {
   return api(`/data/import-jobs/${encodeURIComponent(jobId)}`);
 }
 
+export function listImportJobs() {
+  return api("/data/import-jobs");
+}
+
 export async function previewImportFile({ templateKey, file }) {
   const query = new URLSearchParams({ filename: file.name });
   if (templateKey) query.set("templateKey", templateKey);

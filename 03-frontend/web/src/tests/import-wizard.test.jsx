@@ -7,6 +7,8 @@ import { LocaleProvider } from "../contexts/LocaleContext.jsx";
 
 vi.mock("../lib/imports.js", () => ({
   listImportTemplates: vi.fn(),
+  listImportJobs: vi.fn(),
+  getImportJob: vi.fn(),
   downloadImportTemplate: vi.fn(),
   previewImportFile: vi.fn(),
   updateImportMapping: vi.fn(),
@@ -84,6 +86,7 @@ describe("ImportWizardPage", () => {
     vi.clearAllMocks();
     localStorage.setItem("locale", "en");
     importsApi.listImportTemplates.mockResolvedValue(templates);
+    importsApi.listImportJobs.mockResolvedValue({ count: 0, jobs: [] });
   });
 
   it("automatically detects the file type, evaluates it and shows confirmation", async () => {
@@ -251,5 +254,33 @@ describe("ImportWizardPage", () => {
     expect(screen.getByText("File analysis complete")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Continue to decision center" })).toBeEnabled();
     expect(screen.getByRole("button", { name: "Analyze another file" })).toBeEnabled();
+  });
+
+  it("reopens a saved dataset analysis", async () => {
+    const user = userEvent.setup();
+    const saved = {
+      ...readyJob,
+      id: 44,
+      file: { name: "saved-sales.csv", byteSize: 200 },
+      datasetEvaluation: {
+        rowCount: 10000,
+        columnCount: 13,
+        completenessBps: 10000,
+        duplicateRows: 0,
+        numericColumns: [],
+        importReady: false,
+        missingRequiredFields: [],
+        mode: "analysis_only"
+      }
+    };
+    importsApi.listImportJobs.mockResolvedValue({ count: 1, jobs: [saved] });
+    importsApi.getImportJob.mockResolvedValue(saved);
+
+    renderPage();
+    expect(await screen.findByText("saved-sales.csv")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Open analysis" }));
+
+    expect(await screen.findByRole("heading", { name: "Dataset quality summary" })).toBeInTheDocument();
+    expect(importsApi.getImportJob).toHaveBeenCalledWith(44);
   });
 });

@@ -19,6 +19,8 @@ import {
   cancelImportJob,
   confirmImportJob,
   downloadImportTemplate,
+  getImportJob,
+  listImportJobs,
   listImportTemplates,
   previewImportFile,
   updateImportMapping
@@ -191,6 +193,46 @@ function FileUpload({ template, file, onFile, onUpload, loading, onBack, text })
           </div>
         </CardContent>
       </Card>
+    </section>
+  );
+}
+
+function SavedAnalyses({ jobs, locale, onOpen }) {
+  if (!jobs.length) return null;
+  const ar = locale === "ar";
+  return (
+    <section className="import-section" aria-labelledby="saved-analyses-title">
+      <div className="import-section__heading">
+        <div>
+          <p className="import-eyebrow">{ar ? "محفوظ" : "Saved"}</p>
+          <h2 id="saved-analyses-title">{ar ? "التحليلات السابقة" : "Previous analyses"}</h2>
+          <p>
+            {ar
+              ? "يمكنك فتح نتائج الملفات المحفوظة دون رفعها من جديد."
+              : "Open saved file results without uploading again."}
+          </p>
+        </div>
+      </div>
+      <div className="import-saved-grid">
+        {jobs.slice(0, 6).map((job) => (
+          <Card key={job.id}>
+            <CardContent className="import-saved-card">
+              <div>
+                <FileSpreadsheet size={20} />
+                <span>
+                  <strong>{job.file.name}</strong>
+                  <small>
+                    {job.datasetEvaluation.rowCount.toLocaleString()} {ar ? "صف" : "rows"}
+                  </small>
+                </span>
+              </div>
+              <Button variant="outline" onClick={() => onOpen(job.id)}>
+                {ar ? "فتح التحليل" : "Open analysis"}
+              </Button>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </section>
   );
 }
@@ -630,6 +672,7 @@ export function ImportWizardPage() {
   const { locale } = useLocale();
   const text = introCopy[locale] || introCopy.en;
   const [templates, setTemplates] = useState([]);
+  const [savedAnalyses, setSavedAnalyses] = useState([]);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [file, setFile] = useState(null);
   const [job, setJob] = useState(null);
@@ -646,10 +689,13 @@ export function ImportWizardPage() {
   useEffect(() => {
     let alive = true;
     setLoadingTemplates(true);
-    listImportTemplates()
-      .then((result) => {
+    Promise.all([listImportTemplates(), listImportJobs()])
+      .then(([result, history]) => {
         if (!alive) return;
         setTemplates(Array.isArray(result) ? result : []);
+        setSavedAnalyses(
+          (history?.jobs || []).filter((savedJob) => savedJob.datasetEvaluation?.mode === "analysis_only")
+        );
       })
       .catch((requestError) => alive && setError(errorMessage(requestError)))
       .finally(() => alive && setLoadingTemplates(false));
@@ -697,11 +743,23 @@ export function ImportWizardPage() {
     try {
       const result = await previewImportFile({ templateKey: selectedTemplate?.key, file });
       setJob(result);
+      if (result.datasetEvaluation?.mode === "analysis_only") {
+        setSavedAnalyses((current) => [result, ...current.filter((savedJob) => savedJob.id !== result.id)]);
+      }
       setConfirmationToken(result.confirmationToken || null);
     } catch (requestError) {
       setError(errorMessage(requestError));
     } finally {
       setUploading(false);
+    }
+  }
+
+  async function openSavedAnalysis(jobId) {
+    setError("");
+    try {
+      setJob(await getImportJob(jobId));
+    } catch (requestError) {
+      setError(errorMessage(requestError));
     }
   }
 
@@ -817,6 +875,7 @@ export function ImportWizardPage() {
             onDownload={downloadTemplate}
             downloadingKey={downloadingKey}
           />
+          <SavedAnalyses jobs={savedAnalyses} locale={locale} onOpen={openSavedAnalysis} />
         </>
       ) : (
         <>

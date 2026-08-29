@@ -255,6 +255,29 @@
   color: var(--color-text-secondary);
 }
 
+.import-saved-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.import-saved-card,
+.import-saved-card > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.import-saved-card > div > span {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.import-saved-card small {
+  color: var(--color-text-muted);
+}
+
 .import-template-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -470,7 +493,8 @@
   .import-template-grid,
   .import-stats,
   .import-confirm-grid,
-  .import-evaluation-grid {
+  .import-evaluation-grid,
+  .import-saved-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 

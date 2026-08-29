@@ -453,6 +453,8 @@ function publicJob(job, rows, auditRows = []) {
   const template = getImportTemplate(job.template_key);
   const summary = mappingSummary(template, mappings);
   const validationStatus = job.validation_status || "ready";
+  const datasetEvaluationEvent = [...auditRows].reverse().find((event) => event.event_type === "dataset_evaluated");
+  const datasetEvaluation = datasetEvaluationEvent ? JSON.parse(datasetEvaluationEvent.details_json || "{}") : null;
   let workflowStatus = job.status === "preview_ready" ? validationStatus : job.status;
   if (job.status === "preview_ready" && auditRows.at(-1)?.event_type === "import_failed") {
     workflowStatus = "failed";
@@ -488,6 +490,7 @@ function publicJob(job, rows, auditRows = []) {
     status: job.status,
     validationStatus,
     workflowStatus,
+    datasetEvaluation,
     file: {
       name: job.original_filename,
       type: job.file_type,
@@ -599,6 +602,7 @@ export function previewStagedImport(user, { templateKey, filename, contentType, 
     sha256: job.file_sha256
   });
   recordAudit(user, job, "file_type_classified", safeRequestId, detection);
+  recordAudit(user, job, "dataset_evaluated", safeRequestId, datasetEvaluation);
   recordAudit(user, job, "validation_started", safeRequestId);
   recordAudit(user, job, "validation_completed", safeRequestId, {
     totalRows: validation.counts.total,
@@ -628,7 +632,6 @@ export function previewStagedImport(user, { templateKey, filename, contentType, 
   return {
     ...result,
     detection,
-    datasetEvaluation,
     confirmationToken: validation.validationStatus === "ready" ? confirmationToken : null
   };
 }
@@ -743,9 +746,7 @@ export function listStagedImportJobs(user, filters = {}) {
 
   const jobs = stagedImportRepository
     .listImportJobsInScope(user, normalized)
-    .map((job) =>
-      publicJob(job, [], normalized.status === "failed" ? stagedImportRepository.listImportAuditEvents(job.id) : [])
-    );
+    .map((job) => publicJob(job, [], stagedImportRepository.listImportAuditEvents(job.id)));
   return { count: jobs.length, jobs };
 }
 
