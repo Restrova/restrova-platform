@@ -271,6 +271,23 @@ test("Task 4.1 enforces tenant and branch-manager scope", async (t) => {
     method: "POST",
     body: { branchId: firstBranchId, itemCode: code, proposedPriceMinor: 5000 }
   });
+  const scopedCostSimulation = await request(server, "/api/menu/cost-simulation", {
+    token: login.payload.token,
+    method: "POST",
+    body: {
+      itemCode: code,
+      scenarios: [{ name: "Manager scenario", proposedFoodCostMinor: 1900, proposedPackagingMinor: 200 }]
+    }
+  });
+  const blockedCostSimulation = await request(server, "/api/menu/cost-simulation", {
+    token: login.payload.token,
+    method: "POST",
+    body: {
+      branchId: firstBranchId,
+      itemCode: code,
+      scenarios: [{ name: "Blocked", proposedFoodCostMinor: 900, proposedPackagingMinor: 100 }]
+    }
+  });
 
   assert.equal(scoped.status, 200);
   assert.equal(scoped.payload.scope.branchId, secondBranch.payload.id);
@@ -282,6 +299,9 @@ test("Task 4.1 enforces tenant and branch-manager scope", async (t) => {
   assert.equal(scopedSimulation.status, 200);
   assert.equal(scopedSimulation.payload.scope.branchId, secondBranch.payload.id);
   assert.equal(blockedSimulation.status, 404);
+  assert.equal(scopedCostSimulation.status, 200);
+  assert.equal(scopedCostSimulation.payload.scope.branchId, secondBranch.payload.id);
+  assert.equal(blockedCostSimulation.status, 404);
 });
 
 test("Task 4.1 validates observation periods and preserves explicit incompleteness", async (t) => {
@@ -424,6 +444,129 @@ test("Task 4.5 blocks invented projections when cost or sales evidence is incomp
   assert.deepEqual(result.payload.scenarios, []);
   assert.ok(result.payload.completeness.missingInputs.includes("cost_record"));
   assert.ok(result.payload.completeness.missingInputs.includes("sales_lines"));
+  assert.ok(result.payload.completeness.missingInputs.includes("recorded_sales_quantity"));
+  assert.equal(invalid.status, 400);
+});
+
+test("Task 4.6 compares supplier, ingredient, and packaging cost scenarios deterministically", async (t) => {
+  const server = app.listen(0);
+  t.after(() => server.close());
+  const owner = await registerOwner(server, "cost-simulation");
+  const branchId = owner.branches[0].id;
+  const code = `COST-SIM-${Date.now()}`;
+  const itemId = insertCatalog(owner, { code, name: "套餐成本测试", priceMinor: 5000 });
+  const costId = insertCost(owner, itemId, branchId, 2400, 150, "2026-08-01T00:00:00.000Z");
+  insertDeliverySale(owner, itemId, branchId, `${code}-1`, 10000, 1500, "2026-08-10T10:00:00.000Z");
+  insertDeliverySale(owner, itemId, branchId, `${code}-2`, 5000, 500, "2026-08-11T10:00:00.000Z");
+
+  const result = await request(server, "/api/menu/cost-simulation", {
+    token: owner.token,
+    method: "POST",
+    body: {
+      branchId,
+      itemCode: code.toLowerCase(),
+      from: "2026-08-01T00:00:00.000Z",
+      to: "2026-08-20T00:00:00.000Z",
+      scenarios: [
+        { name: "Supplier increase", proposedFoodCostMinor: 2600, proposedPackagingMinor: 150 },
+        { name: "Packaging increase", proposedFoodCostMinor: 2400, proposedPackagingMinor: 250 },
+        { name: "Recipe saving", proposedFoodCostMinor: 2200, proposedPackagingMinor: 100 }
+      ]
+    }
+  });
+
+  assert.equal(result.status, 200);
+  assert.equal(result.payload.formulaVersion, "4.6-v1");
+  assert.deepEqual(result.payload.sourceFormulaVersions, { costs: "4.1-v1", margins: "4.2-v1" });
+  assert.equal(result.payload.mode, "read_only_simulation");
+  assert.deepEqual(result.payload.baseline, {
+    sellingPriceMinor: 5000,
+    foodCostMinor: 2400,
+    packagingMinor: 150,
+    directCostMinor: 2550,
+    commissionMinor: 667,
+    commissionRateBps: 1333,
+    contributionMinor: 1783,
+    contributionMarginBps: 3566,
+    quantitySoldMicros: 2000000,
+    quantitySold: 2,
+    modeledContributionMinor: 3566,
+    observedContributionProfitMinor: 7900
+  });
+  assert.deepEqual(result.payload.scenarios, [
+    {
+      name: "Supplier increase",
+      proposedFoodCostMinor: 2600,
+      foodCostChangeMinor: 200,
+      proposedPackagingMinor: 150,
+      packagingChangeMinor: 0,
+      proposedDirectCostMinor: 2750,
+      directCostChangeMinor: 200,
+      proposedContributionMinor: 1583,
+      contributionChangePerUnitMinor: -200,
+      proposedContributionMarginBps: 3166,
+      projectedContributionMinor: 3166,
+      contributionImpactMinor: -400
+    },
+    {
+      name: "Packaging increase",
+      proposedFoodCostMinor: 2400,
+      foodCostChangeMinor: 0,
+      proposedPackagingMinor: 250,
+      packagingChangeMinor: 100,
+      proposedDirectCostMinor: 2650,
+      directCostChangeMinor: 100,
+      proposedContributionMinor: 1683,
+      contributionChangePerUnitMinor: -100,
+      proposedContributionMarginBps: 3366,
+      projectedContributionMinor: 3366,
+      contributionImpactMinor: -200
+    },
+    {
+      name: "Recipe saving",
+      proposedFoodCostMinor: 2200,
+      foodCostChangeMinor: -200,
+      proposedPackagingMinor: 100,
+      packagingChangeMinor: -50,
+      proposedDirectCostMinor: 2300,
+      directCostChangeMinor: -250,
+      proposedContributionMinor: 2033,
+      contributionChangePerUnitMinor: 250,
+      proposedContributionMarginBps: 4066,
+      projectedContributionMinor: 4066,
+      contributionImpactMinor: 500
+    }
+  ]);
+  assert.equal(result.payload.completeness.ready, true);
+  assert.equal(result.payload.lineage.costs.costs.sourceId, costId);
+  assert.equal(result.payload.lineage.sales.lineCount, 2);
+});
+
+test("Task 4.6 rejects invalid scenarios and blocks projections without recorded evidence", async (t) => {
+  const server = app.listen(0);
+  t.after(() => server.close());
+  const owner = await registerOwner(server, "cost-simulation-incomplete");
+  const code = `NO-COST-${Date.now()}`;
+  insertCatalog(owner, { code, name: "No cost evidence", priceMinor: 3000 });
+  const body = {
+    itemCode: code,
+    scenarios: [{ name: "Candidate", proposedFoodCostMinor: 1000, proposedPackagingMinor: 100 }]
+  };
+  const result = await request(server, "/api/menu/cost-simulation", {
+    token: owner.token,
+    method: "POST",
+    body
+  });
+  const invalid = await request(server, "/api/menu/cost-simulation", {
+    token: owner.token,
+    method: "POST",
+    body: { ...body, scenarios: [{ name: "Invalid", proposedFoodCostMinor: -1, proposedPackagingMinor: 0 }] }
+  });
+  assert.equal(result.status, 200);
+  assert.equal(result.payload.completeness.ready, false);
+  assert.equal(result.payload.baseline, null);
+  assert.deepEqual(result.payload.scenarios, []);
+  assert.ok(result.payload.completeness.missingInputs.includes("cost_record"));
   assert.ok(result.payload.completeness.missingInputs.includes("recorded_sales_quantity"));
   assert.equal(invalid.status, 400);
 });

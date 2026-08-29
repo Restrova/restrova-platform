@@ -6,6 +6,8 @@ This project follows a simple date-based changelog until a formal release proces
 
 ## 2026-08-29
 
+- Completed Task 4.6 with read-only supplier, ingredient, and packaging cost scenario comparison.
+- Added deterministic per-unit and recorded-volume contribution impact, evidence boundaries, validation, branch isolation, and API tests.
 - Completed Task 4.5 with read-only current/proposed price comparison and deterministic contribution-impact sensitivity scenarios.
 - Added recorded quantity/cost/commission lineage, explicit assumptions, incomplete-evidence blocking, branch isolation, validation limits, and API tests.
 

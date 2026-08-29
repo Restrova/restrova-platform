@@ -180,6 +180,23 @@ export const priceSimulationSchema = z.object({
   demandChangesBps: z.array(z.number().int().min(-9000).max(10000)).min(1).max(9).default([-1000, 0, 1000])
 });
 
+export const costSimulationSchema = z.object({
+  branchId: z.coerce.number().int().positive().optional(),
+  itemCode: z.string().trim().min(1).max(100),
+  from: financialTimestampSchema.optional(),
+  to: financialTimestampSchema.optional(),
+  scenarios: z
+    .array(
+      z.object({
+        name: z.string().trim().min(1).max(80),
+        proposedFoodCostMinor: z.number().int().min(0).max(1_000_000_000),
+        proposedPackagingMinor: z.number().int().min(0).max(1_000_000_000)
+      })
+    )
+    .min(1)
+    .max(9)
+});
+
 export const knowledgeImportSchema = z.object({
   title: z.string().trim().min(1).max(200),
   source: z.string().trim().max(500).optional(),
