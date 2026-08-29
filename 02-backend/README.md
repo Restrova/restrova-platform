@@ -40,6 +40,8 @@ The versioned financial ledger, calculation, period, hierarchy, and dashboard AP
 
 `POST /api/menu/cost-simulation` compares named supplier, ingredient, and packaging cost scenarios at the recorded selling price, commission rate, and sales quantity. It is read-only and preserves evidence and missing-data boundaries. See the [cost simulation contract](../docs/menu/cost-simulation.md).
 
+`GET /api/menu/recommendations` produces deterministic, read-only menu action proposals from the engineering matrix. Every proposal preserves evidence, requires owner approval, leaves projected impact unavailable until an explicit simulation exists, and defines 7/14-day outcome checks. See the [menu recommendation rules contract](../docs/menu/menu-recommendation-rules.md).
+
 ## Task 2.1 — import template API
 
 Authenticated users can inspect and download the platform CSV templates used by the staged-import flow:
