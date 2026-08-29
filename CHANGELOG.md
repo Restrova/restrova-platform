@@ -6,6 +6,7 @@ This project follows a simple date-based changelog until a formal release proces
 
 ## 2026-08-29
 
+- Completed Task 4.8 with golden-chain calculation reconciliation, menu edge-case and scope verification, multilingual keyboard UX coverage, and a documented release/rollback gate.
 - Completed Task 4.7 with deterministic raise-price, reduce-cost, change-portion, promote, bundle, and removal-review proposals.
 - Added evidence lineage, explicit confidence limits, owner-approval metadata, no invented impact projections, and 7/14-day measurement checkpoints.
 - Completed Task 4.6 with read-only supplier, ingredient, and packaging cost scenario comparison.
