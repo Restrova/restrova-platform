@@ -9,49 +9,63 @@
   display: block;
   width: 100%;
   margin-top: 8px;
-  padding: 15px;
-  border: 1px solid #d8dad4;
-  border-radius: 10px;
-  background: white;
+  min-height: 52px;
+  padding: 13px 15px;
+  border: 1px solid #d4ddd8;
+  border-radius: 12px;
+  background: #fbfcfb;
   color: inherit;
   font: inherit;
 }
 
 .login--onboarding > section {
-  padding: 32px clamp(32px, 6vw, 108px);
+  padding: 30px clamp(32px, 6vw, 96px);
 }
 
 .login--onboarding h1 {
-  margin: 34px 0 12px;
-  font-size: clamp(42px, 4vw, 62px);
+  margin: 30px 0 12px;
+  font-size: clamp(38px, 3.5vw, 56px);
 }
 
 .login--onboarding form {
   width: min(720px, 100%);
-  margin-top: 22px;
+  margin-top: 20px;
 }
 
 .auth-tabs {
   display: flex;
-  justify-content: space-between;
-  gap: 20px;
+  gap: 6px;
+  padding: 5px;
+  border: 1px solid #e0e7e2;
+  border-radius: 12px;
+  background: #f3f6f4;
 }
 
 .auth-tabs a {
-  color: #665348;
-  text-underline-offset: 4px;
+  flex: 1;
+  padding: 9px 12px;
+  border-radius: 8px;
+  color: #66736e;
+  text-align: center;
+  text-decoration: none;
+  transition:
+    background 160ms ease,
+    color 160ms ease,
+    box-shadow 160ms ease;
 }
 
 .auth-tabs a.active {
+  background: white;
   color: #175c49;
   font-weight: 700;
+  box-shadow: 0 2px 8px rgb(32 64 53 / 0.08);
 }
 
 .onboarding-stepper {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 8px;
-  margin: 22px 0;
+  margin: 24px 0 18px;
   padding: 0;
   list-style: none;
 }
@@ -67,8 +81,8 @@
 .onboarding-stepper li > span {
   display: grid;
   place-items: center;
-  width: 30px;
-  height: 30px;
+  width: 34px;
+  height: 34px;
   border: 1px solid #d8dad4;
   border-radius: 999px;
   background: white;
@@ -87,7 +101,7 @@
 }
 
 .onboarding-fieldset {
-  min-height: 300px;
+  min-height: 280px;
   margin: 0;
   padding: 8px 0 0;
   border: 0;
@@ -128,10 +142,10 @@
 }
 
 .onboarding-review div {
-  padding: 13px;
+  padding: 14px;
   border: 1px solid #e1e3de;
-  border-radius: 10px;
-  background: white;
+  border-radius: 12px;
+  background: #fbfcfb;
 }
 
 .onboarding-review dt {

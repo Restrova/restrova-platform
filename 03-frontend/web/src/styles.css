@@ -1,6 +1,6 @@
-@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@1,600&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Noto+Sans+Arabic:wght@400;500;600;700&family=Playfair+Display:ital,wght@1,600&display=swap");
 :root {
-  font-family: "DM Sans", sans-serif;
+  font-family: "Noto Sans Arabic", "DM Sans", sans-serif;
   color: #18201d;
   background: #f5f4ef;
   font-synthesis: none;
@@ -20,15 +20,18 @@ textarea {
   display: flex;
   align-items: center;
   gap: 11px;
+  color: #163c32;
+  font-size: 15px;
 }
 .brand span {
   display: grid;
   place-items: center;
-  width: 38px;
-  height: 38px;
-  border-radius: 12px;
-  background: #175c49;
+  width: 42px;
+  height: 42px;
+  border-radius: 13px;
+  background: linear-gradient(145deg, #1a7059, #104b3d);
   color: white;
+  box-shadow: 0 8px 18px rgb(16 75 61 / 0.18);
 }
 .brand svg {
   width: 21px;
@@ -36,83 +39,177 @@ textarea {
 .login {
   min-height: 100vh;
   display: grid;
-  grid-template-columns: 1.1fr 0.9fr;
-  background: #f5f4ef;
+  grid-template-columns: minmax(560px, 1.08fr) minmax(430px, 0.92fr);
+  padding: clamp(16px, 2vw, 28px);
+  gap: clamp(16px, 2vw, 28px);
+  background:
+    radial-gradient(circle at 12% 8%, rgb(200 224 215 / 0.42), transparent 30%),
+    linear-gradient(145deg, #f8faf8, #f2f5f2 55%, #f7f4ef);
 }
 .login > section {
-  padding: 54px 11vw;
+  position: relative;
+  padding: clamp(32px, 5vw, 76px) clamp(32px, 7vw, 112px);
   display: flex;
   flex-direction: column;
   justify-content: center;
+  border: 1px solid rgb(219 226 221 / 0.86);
+  border-radius: 28px;
+  background: rgb(255 255 255 / 0.82);
+  box-shadow: 0 24px 70px rgb(35 65 54 / 0.08);
+  backdrop-filter: blur(18px);
+  overflow: hidden;
+}
+.login > section::before {
+  position: absolute;
+  inset-block-start: -120px;
+  inset-inline-end: -110px;
+  width: 260px;
+  height: 260px;
+  border-radius: 50%;
+  background: rgb(30 112 89 / 0.055);
+  content: "";
+  pointer-events: none;
 }
 .login h1 {
-  font-size: 64px;
-  line-height: 1.03;
-  letter-spacing: -3px;
-  margin: 76px 0 22px;
+  max-width: 720px;
+  font-size: clamp(44px, 4.1vw, 68px);
+  line-height: 1.08;
+  letter-spacing: -0.045em;
+  margin: clamp(42px, 7vh, 82px) 0 18px;
+  color: #10251f;
+}
+[dir="rtl"] .login h1 {
+  letter-spacing: 0;
 }
 .login h1 em {
   font-family: "Playfair Display";
-  color: #c8773e;
+  color: #b86c37;
+  font-weight: 600;
 }
 .login p {
+  max-width: 640px;
+  margin: 0;
   color: #66706c;
-  font-size: 18px;
+  font-size: clamp(15px, 1.2vw, 18px);
+  line-height: 1.8;
 }
 .login form {
-  width: 390px;
-  margin-top: 30px;
+  width: min(440px, 100%);
+  margin-top: 28px;
+  padding: 22px;
+  border: 1px solid #e1e7e3;
+  border-radius: 18px;
+  background: rgb(255 255 255 / 0.88);
+  box-shadow: 0 14px 36px rgb(31 61 51 / 0.07);
 }
 .login label {
   display: block;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  margin: 16px 0;
+  color: #263d35;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  margin: 15px 0;
 }
 .login input {
   display: block;
   width: 100%;
-  padding: 15px;
+  min-height: 52px;
+  padding: 13px 15px;
   margin-top: 8px;
-  border: 1px solid #d8dad4;
-  border-radius: 10px;
+  border: 1px solid #d4ddd8;
+  border-radius: 12px;
+  background: #fbfcfb;
+  color: #142a23;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    background 160ms ease;
+}
+.login input:hover,
+.login select:hover {
+  border-color: #9fb8ae;
+}
+.login input:focus,
+.login select:focus {
+  border-color: #20775f;
   background: white;
+  box-shadow: 0 0 0 4px rgb(32 119 95 / 0.1);
+  outline: none;
 }
 .login form button {
   width: 100%;
   border: 0;
-  border-radius: 10px;
-  padding: 16px;
-  background: #175c49;
+  min-height: 52px;
+  border-radius: 12px;
+  padding: 14px 18px;
+  background: linear-gradient(135deg, #1c6d57, #12523f);
   color: white;
   font-weight: 700;
-  margin-top: 12px;
+  margin-top: 10px;
+  box-shadow: 0 10px 22px rgb(18 82 63 / 0.18);
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    filter 160ms ease;
+}
+.login form button:hover:not(:disabled) {
+  filter: brightness(1.04);
+  box-shadow: 0 13px 28px rgb(18 82 63 / 0.24);
+  transform: translateY(-1px);
+}
+.login form button:disabled {
+  box-shadow: none;
+  opacity: 0.65;
 }
 .login form small {
   color: #a33;
 }
 .login > aside {
-  margin: 24px;
-  background: linear-gradient(145deg, #133e34, #1b6652);
-  border-radius: 24px;
+  position: relative;
+  margin: 0;
+  background:
+    radial-gradient(circle at 85% 12%, rgb(231 180 117 / 0.2), transparent 22%),
+    radial-gradient(circle at 10% 90%, rgb(112 197 166 / 0.16), transparent 28%),
+    linear-gradient(145deg, #0f362d, #174f40 52%, #1a634f);
+  border-radius: 28px;
   color: white;
-  padding: 10vw 5vw;
+  padding: clamp(48px, 7vw, 112px) clamp(38px, 5vw, 84px);
   display: flex;
   flex-direction: column;
   justify-content: center;
+  overflow: hidden;
+  box-shadow: 0 24px 70px rgb(15 54 45 / 0.18);
+}
+.login > aside::after {
+  position: absolute;
+  inset: 18px;
+  border: 1px solid rgb(255 255 255 / 0.08);
+  border-radius: 20px;
+  content: "";
+  pointer-events: none;
 }
 .quote {
-  font: italic 600 38px "Playfair Display";
-  line-height: 1.25;
+  position: relative;
+  z-index: 1;
+  max-width: 620px;
+  font:
+    600 clamp(32px, 3vw, 48px) "Noto Sans Arabic",
+    "DM Sans",
+    sans-serif;
+  line-height: 1.35;
+  letter-spacing: -0.025em;
 }
 .answer {
-  margin-top: 40px;
-  padding: 25px;
-  background: #ffffff12;
-  border: 1px solid #ffffff20;
-  border-radius: 15px;
-  line-height: 1.6;
+  position: relative;
+  z-index: 1;
+  margin-top: 36px;
+  padding: 24px;
+  background: rgb(255 255 255 / 0.09);
+  border: 1px solid rgb(255 255 255 / 0.14);
+  border-radius: 18px;
+  line-height: 1.75;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.07);
+  backdrop-filter: blur(12px);
 }
 .shell {
   height: 100vh;
@@ -352,16 +449,20 @@ footer > small {
   }
   .login {
     grid-template-columns: 1fr;
+    padding: 0;
   }
   .login > aside {
     display: none;
   }
   .login > section {
-    padding: 35px;
+    min-height: 100vh;
+    padding: 28px clamp(20px, 7vw, 48px);
+    border: 0;
+    border-radius: 0;
   }
   .login h1 {
-    font-size: 46px;
-    margin-top: 65px;
+    font-size: clamp(38px, 11vw, 52px);
+    margin-top: 48px;
   }
   .login form {
     width: 100%;
