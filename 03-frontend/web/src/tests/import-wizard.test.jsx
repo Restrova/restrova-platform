@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ImportWizardPage } from "../pages/ImportWizardPage.jsx";
 import * as importsApi from "../lib/imports.js";
+import { LocaleProvider } from "../contexts/LocaleContext.jsx";
 
 vi.mock("../lib/imports.js", () => ({
   listImportTemplates: vi.fn(),
@@ -28,6 +29,14 @@ const readyJob = {
   templateKey: "branches",
   status: "preview_ready",
   validationStatus: "ready",
+  detection: {
+    mode: "automatic",
+    templateKey: "branches",
+    displayName: "Branches",
+    confidence: "high",
+    requiredCoverageBps: 10000,
+    matchedFields: ["branch_code", "name", "city"]
+  },
   confirmationToken: "confirm-me",
   file: { name: "branches.csv", byteSize: 128 },
   mapping: {
@@ -52,29 +61,41 @@ const readyJob = {
   rowWarnings: []
 };
 
+function renderPage() {
+  return render(
+    <LocaleProvider>
+      <ImportWizardPage />
+    </LocaleProvider>
+  );
+}
+
 describe("ImportWizardPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    localStorage.setItem("locale", "en");
     importsApi.listImportTemplates.mockResolvedValue(templates);
   });
 
-  it("completes template selection, upload preview and shows confirmation", async () => {
+  it("automatically detects the file type, evaluates it and shows confirmation", async () => {
     const user = userEvent.setup();
     importsApi.previewImportFile.mockResolvedValue(readyJob);
 
-    render(<ImportWizardPage />);
+    renderPage();
 
-    expect(await screen.findByText("Branches")).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Choose" }));
+    expect(
+      await screen.findByRole("heading", { name: "Upload a file and let Restrova identify it" })
+    ).toBeInTheDocument();
 
     const file = new File(["Branch Code,Name,City\nMAIN,Main,Riyadh\n"], "branches.csv", { type: "text/csv" });
-    await user.upload(screen.getByLabelText("CSV or XLSX file"), file);
-    await user.click(screen.getByRole("button", { name: "Validate file" }));
+    await user.upload(await screen.findByLabelText("CSV or XLSX file"), file);
+    await user.click(screen.getByRole("button", { name: "Analyze and evaluate file" }));
 
+    expect(await screen.findByRole("heading", { name: "Branches" })).toBeInTheDocument();
+    expect(screen.getByText("High confidence")).toBeInTheDocument();
     expect(await screen.findByText("Validation results")).toBeInTheDocument();
     expect(screen.getByText("Ready to confirm")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Confirm import" })).toBeEnabled();
-    expect(importsApi.previewImportFile).toHaveBeenCalledWith({ templateKey: "branches", file });
+    expect(importsApi.previewImportFile).toHaveBeenCalledWith({ templateKey: undefined, file });
   });
 
   it("saves a manual mapping when required fields are missing", async () => {
@@ -97,11 +118,10 @@ describe("ImportWizardPage", () => {
     importsApi.previewImportFile.mockResolvedValue(needsMapping);
     importsApi.updateImportMapping.mockResolvedValue(readyJob);
 
-    render(<ImportWizardPage />);
-    await user.click(await screen.findByRole("button", { name: "Choose" }));
+    renderPage();
     const file = new File(["Code,Name,City\nMAIN,Main,Riyadh\n"], "branches.csv", { type: "text/csv" });
-    await user.upload(screen.getByLabelText("CSV or XLSX file"), file);
-    await user.click(screen.getByRole("button", { name: "Validate file" }));
+    await user.upload(await screen.findByLabelText("CSV or XLSX file"), file);
+    await user.click(screen.getByRole("button", { name: "Analyze and evaluate file" }));
 
     const select = await screen.findByLabelText("Map Code");
     await user.selectOptions(select, "branch_code");
@@ -121,11 +141,10 @@ describe("ImportWizardPage", () => {
       statistics: { ...readyJob.statistics, imported: 1 }
     });
 
-    render(<ImportWizardPage />);
-    await user.click(await screen.findByRole("button", { name: "Choose" }));
+    renderPage();
     const file = new File(["Branch Code,Name,City\nMAIN,Main,Riyadh\n"], "branches.csv", { type: "text/csv" });
-    await user.upload(screen.getByLabelText("CSV or XLSX file"), file);
-    await user.click(screen.getByRole("button", { name: "Validate file" }));
+    await user.upload(await screen.findByLabelText("CSV or XLSX file"), file);
+    await user.click(screen.getByRole("button", { name: "Analyze and evaluate file" }));
     await user.click(await screen.findByRole("button", { name: "Confirm import" }));
 
     expect(await screen.findByRole("heading", { name: "Import completed" })).toBeInTheDocument();
@@ -155,11 +174,10 @@ describe("ImportWizardPage", () => {
       ]
     });
 
-    render(<ImportWizardPage />);
-    await user.click(await screen.findByRole("button", { name: "Choose" }));
+    renderPage();
     const file = new File(["Branch Code,Name,City\nMAIN,Main,\n"], "branches.csv", { type: "text/csv" });
-    await user.upload(screen.getByLabelText("CSV or XLSX file"), file);
-    await user.click(screen.getByRole("button", { name: "Validate file" }));
+    await user.upload(await screen.findByLabelText("CSV or XLSX file"), file);
+    await user.click(screen.getByRole("button", { name: "Analyze and evaluate file" }));
 
     expect(await screen.findByText("Action required")).toBeInTheDocument();
     expect(screen.getByText("city is required.")).toBeInTheDocument();
@@ -175,11 +193,10 @@ describe("ImportWizardPage", () => {
       confirmationToken: null
     });
 
-    render(<ImportWizardPage />);
-    await user.click(await screen.findByRole("button", { name: "Choose" }));
+    renderPage();
     const file = new File(["Branch Code,Name,City\nMAIN,Main,Riyadh\n"], "branches.csv", { type: "text/csv" });
-    await user.upload(screen.getByLabelText("CSV or XLSX file"), file);
-    await user.click(screen.getByRole("button", { name: "Validate file" }));
+    await user.upload(await screen.findByLabelText("CSV or XLSX file"), file);
+    await user.click(screen.getByRole("button", { name: "Analyze and evaluate file" }));
     await user.click(await screen.findByRole("button", { name: "Cancel import" }));
 
     expect(await screen.findByRole("heading", { name: "Import cancelled" })).toBeInTheDocument();

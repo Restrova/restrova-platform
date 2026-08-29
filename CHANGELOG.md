@@ -6,6 +6,8 @@ This project follows a simple date-based changelog until a formal release proces
 
 ## 2026-08-29
 
+- Added smart CSV/XLSX imports that automatically classify branch, menu, cost, or sales files from their columns before validating and previewing them.
+- Simplified the import UI to one primary upload action with confidence evidence and an optional manual fallback for ambiguous files.
 - Completed Task 5.1 with evidence-backed branch revenue, profit, margin, orders, AOV, costs, growth, refunds, and discounts.
 - Added zero-baseline growth boundaries, period comparison lineage, multilingual names, and tenant/role-safe branch performance access.
 - Completed Task 4.8 with golden-chain calculation reconciliation, menu edge-case and scope verification, multilingual keyboard UX coverage, and a documented release/rollback gate.

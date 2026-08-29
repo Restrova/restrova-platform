@@ -44,10 +44,8 @@ export function getImportJob(jobId) {
 }
 
 export async function previewImportFile({ templateKey, file }) {
-  const query = new URLSearchParams({
-    templateKey,
-    filename: file.name
-  });
+  const query = new URLSearchParams({ filename: file.name });
+  if (templateKey) query.set("templateKey", templateKey);
   const response = await authenticatedFetch(`/data/import-jobs/preview?${query.toString()}`, {
     method: "POST",
     headers: { "Content-Type": fileContentType(file) },

@@ -2,13 +2,15 @@
 
 Restrova imports branch, menu, cost, and sales data through a staged workflow:
 
-1. Choose a versioned template.
-2. Upload a CSV or XLSX file.
+1. Upload a CSV or XLSX file.
+2. Restrova identifies the file type from its columns and reports the confidence and matched fields.
 3. Review automatic column mappings and correct them when needed.
 4. Validate required fields, types, references, dates, and duplicates.
 5. Review the first configured number of rows (20 by default).
 6. Confirm with the job-specific, short-lived token or cancel the job.
 7. Review the scoped history and audit events.
+
+Users do not need to choose Branches, Menu, Costs, or Sales before uploading. Manual type selection remains available as a fallback when a file has too few identifying columns or two templates receive the same score. Automatic detection never writes operational data and never guesses when the evidence is ambiguous.
 
 Preview and mapping updates never write operational restaurant data. Only the confirm endpoint writes accepted rows, inside a database transaction. Duplicate cost and sales rows are skipped safely.
 

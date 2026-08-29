@@ -59,7 +59,8 @@ Supported keys are `branches`, `menu`, `costs`, and `sales`. Downloads are UTF-8
 Owners can upload CSV or XLSX files without writing live restaurant data during preview:
 
 ```text
-POST /api/data/import-jobs/preview?templateKey=<key>&filename=<file>
+POST /api/data/import-jobs/preview?filename=<file>
+POST /api/data/import-jobs/preview?templateKey=<key>&filename=<file>  # optional manual fallback
 GET  /api/data/import-jobs/:id
 POST /api/data/import-jobs/:id/confirm
 POST /api/data/import-jobs/:id/cancel

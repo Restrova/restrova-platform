@@ -51,6 +51,14 @@ async function previewCsv(server, token, templateKey, filename, csv) {
   );
 }
 
+async function previewAutoCsv(server, token, filename, csv) {
+  return fileRequest(server, `/api/data/import-jobs/preview?filename=${encodeURIComponent(filename)}`, {
+    token,
+    contentType: "text/csv; charset=utf-8",
+    body: Buffer.from(csv, "utf8")
+  });
+}
+
 async function confirmJob(server, token, preview) {
   return jsonRequest(server, `/api/data/import-jobs/${preview.id}/confirm`, {
     token,
@@ -328,4 +336,59 @@ test("Task 2.2 rejects empty files, supports basic XLSX, and can cancel before c
 
   const confirmCancelled = await confirmJob(server, token, xlsxPreview.payload);
   assert.equal(confirmCancelled.status, 409);
+});
+
+test("Smart import identifies branches, menu, costs, and sales from file columns", async (t) => {
+  const server = app.listen(0);
+  t.after(() => server.close());
+  const stamp = `${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+  const registration = await registerOwner(server, stamp);
+  const token = registration.payload.token;
+
+  const samples = [
+    {
+      templateKey: "branches",
+      csv: `branch_code,name,city,address,phone,pos_system,operating_day_start,operating_day_end\nAUTO-01,Auto Branch,Guangzhou,,,,09:00,01:00`
+    },
+    {
+      templateKey: "menu",
+      csv: `item_code,name,category,selling_price,active\nAUTO-ITEM,Auto Item,Main,25.00,true`
+    },
+    {
+      templateKey: "costs",
+      csv: `item_code,branch_code,direct_food_cost,packaging_cost,effective_from\nAUTO-ITEM,GZ-01,10.00,1.00,2026-08-01`
+    },
+    {
+      templateKey: "sales",
+      csv: `external_order_id,external_line_id,branch_code,created_at,channel,item_code,quantity,gross_sales,discount,refund_amount,delivery_commission\nAUTO-ORDER,1,GZ-01,2026-08-10T12:00:00Z,dine_in,AUTO-ITEM,1,25.00,0,0,0`
+    }
+  ];
+
+  for (const sample of samples) {
+    const preview = await previewAutoCsv(server, token, `${sample.templateKey}.csv`, sample.csv);
+    assert.equal(preview.status, 201);
+    assert.equal(preview.payload.templateKey, sample.templateKey);
+    assert.equal(preview.payload.detection.mode, "automatic");
+    assert.equal(preview.payload.detection.templateKey, sample.templateKey);
+    assert.equal(preview.payload.detection.confidence, "high");
+    assert.ok(preview.payload.detection.matchedFields.length >= 2);
+  }
+});
+
+test("Smart import asks for a manual type when columns are ambiguous", async (t) => {
+  const server = app.listen(0);
+  t.after(() => server.close());
+  const stamp = `${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+  const registration = await registerOwner(server, stamp);
+  const token = registration.payload.token;
+  const csv = "name,notes\nAmbiguous row,No identifying columns";
+
+  const automatic = await previewAutoCsv(server, token, "ambiguous.csv", csv);
+  assert.equal(automatic.status, 400);
+  assert.match(automatic.payload.error, /could not be identified confidently/i);
+
+  const manual = await previewCsv(server, token, "menu", "ambiguous.csv", csv);
+  assert.equal(manual.status, 201);
+  assert.equal(manual.payload.templateKey, "menu");
+  assert.equal(manual.payload.validationStatus, "needs_mapping");
 });
