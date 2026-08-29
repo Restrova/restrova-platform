@@ -38,6 +38,8 @@ The versioned financial ledger, calculation, period, hierarchy, and dashboard AP
 
 `POST /api/menu/price-simulation` compares current and proposed item prices and projects contribution impact across explicit demand-sensitivity assumptions. It is read-only and blocks projections when recorded evidence is incomplete. See the [price simulation contract](../docs/menu/price-simulation.md).
 
+`POST /api/menu/cost-simulation` compares named supplier, ingredient, and packaging cost scenarios at the recorded selling price, commission rate, and sales quantity. It is read-only and preserves evidence and missing-data boundaries. See the [cost simulation contract](../docs/menu/cost-simulation.md).
+
 ## Task 2.1 — import template API
 
 Authenticated users can inspect and download the platform CSV templates used by the staged-import flow:
