@@ -86,6 +86,7 @@ router.get("/financial/calculate", auth, asyncHandler(controller.calculateFinanc
 router.get("/financial/period", auth, asyncHandler(controller.calculateFinancialPeriod));
 router.get("/financial/report", auth, asyncHandler(controller.getFinancialReport));
 router.get("/financial/dashboard", auth, asyncHandler(controller.getFinancialDashboard));
+router.get("/branches/performance", auth, asyncHandler(controller.getBranchPerformance));
 router.get("/menu/costs", auth, asyncHandler(controller.getMenuCosts));
 router.get("/menu/margins", auth, asyncHandler(controller.getMenuMargins));
 router.get("/menu/engineering-matrix", auth, asyncHandler(controller.getMenuEngineeringMatrix));

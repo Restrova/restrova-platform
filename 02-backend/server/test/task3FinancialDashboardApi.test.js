@@ -292,3 +292,147 @@ test("Task 3.5 reports empty data honestly and produces DST-safe trend buckets",
   assert.equal(dashboard.payload.branchRanking.items[0].rank, null);
   assert.equal(invalidScope.status, 400);
 });
+
+test("Task 5.1 returns complete branch economics and deterministic period growth", async (t) => {
+  const server = app.listen(0);
+  t.after(() => server.close());
+  const owner = await registerOwner(server, "branch-performance");
+  const branchId = owner.branches[0].id;
+  const current = "2026-08-26T12:00:00+08:00";
+  const previous = "2026-08-25T12:00:00+08:00";
+  for (const [category, amountMinor, reference] of [
+    ["sales", 10000, "PERF-SALE-1"],
+    ["sales", 5000, "PERF-SALE-2"],
+    ["discounts", 1000, "PERF-DISCOUNT"],
+    ["refunds", 500, "PERF-REFUND"],
+    ["food_costs", 4000, "PERF-FOOD"],
+    ["labor", 2000, "PERF-LABOR"]
+  ]) {
+    await addEntry(server, owner.token, { branchId, category, amountMinor, reference, occurredAt: current });
+  }
+  await addEntry(server, owner.token, {
+    branchId,
+    category: "sales",
+    amountMinor: 10000,
+    reference: "PERF-PREV-SALE",
+    occurredAt: previous
+  });
+  await addEntry(server, owner.token, {
+    branchId,
+    category: "food_costs",
+    amountMinor: 3000,
+    reference: "PERF-PREV-FOOD",
+    occurredAt: previous
+  });
+
+  const result = await request(
+    server,
+    `/api/branches/performance?scope=restaurant&period=today&comparison=previous_period&anchor=2026-08-26T12:00:00Z`,
+    { token: owner.token }
+  );
+
+  assert.equal(result.status, 200);
+  assert.equal(result.payload.performanceVersion, "5.1-v1");
+  assert.equal(result.payload.sourceFormulaVersion, "3.7-v1");
+  assert.equal(result.payload.currencyCode, "CNY");
+  const branch = result.payload.branches[0];
+  assert.equal(branch.branchName, "深圳总店");
+  assert.deepEqual(branch.metrics.revenue, { grossSalesMinor: 15000, revenueMinor: 13500 });
+  assert.deepEqual(branch.metrics.profit, {
+    grossProfitMinor: 9500,
+    contributionProfitMinor: 9500,
+    operatingProfitMinor: 7500,
+    netProfitMinor: 7500
+  });
+  assert.equal(branch.metrics.marginsBps.netMarginBps, 5556);
+  assert.deepEqual(branch.metrics.orders, { orderCount: 2, averageOrderValueMinor: 6750 });
+  assert.deepEqual(branch.metrics.costs, {
+    cogsMinor: 4000,
+    operatingExpensesMinor: 2000,
+    totalCostsMinor: 6000,
+    costPerOrderMinor: 3000
+  });
+  assert.deepEqual(branch.metrics.refunds, { refundsMinor: 500, refundRateBps: 333 });
+  assert.deepEqual(branch.metrics.discounts, { discountsMinor: 1000, discountRateBps: 667 });
+  assert.deepEqual(branch.growth.revenue, {
+    current: 13500,
+    previous: 10000,
+    change: 3500,
+    changeBps: 3500,
+    limitation: null
+  });
+  assert.equal(branch.growth.netProfit.changeBps, 714);
+  assert.equal(branch.growth.orders.changeBps, 10000);
+  assert.equal(branch.lineage.current.sales.length, 2);
+  assert.equal(branch.lineage.comparison.sales[0].sourceReference, "PERF-PREV-SALE");
+  assert.deepEqual(result.payload.completeness, {
+    totalBranches: 1,
+    branchesWithCurrentData: 1,
+    branchesWithComparisonData: 1
+  });
+});
+
+test("Task 5.1 keeps zero-baseline growth honest and enforces role and tenant scope", async (t) => {
+  const server = app.listen(0);
+  t.after(() => server.close());
+  const owner = await registerOwner(server, "branch-performance-access");
+  const foreign = await registerOwner(server, "branch-performance-foreign");
+  const branchId = owner.branches[0].id;
+  const invite = await request(server, "/api/users/invite", {
+    token: owner.token,
+    method: "POST",
+    body: {
+      email: `performance-manager-${Date.now()}@example.test`,
+      name: "Performance Manager",
+      role: "branch_manager",
+      branchId
+    }
+  });
+  const manager = await login(
+    server,
+    { email: invite.payload.email, password: invite.payload.temporaryPassword },
+    owner.organization.id,
+    owner.restaurant.id
+  );
+  await addEntry(server, owner.token, {
+    branchId,
+    category: "sales",
+    amountMinor: 5000,
+    reference: "ZERO-BASE-CURRENT",
+    occurredAt: "2026-08-26T12:00:00+08:00"
+  });
+
+  const scoped = await request(
+    server,
+    "/api/branches/performance?period=today&comparison=previous_period&anchor=2026-08-26T12:00:00Z",
+    { token: manager.token }
+  );
+  const widened = await request(server, "/api/branches/performance?scope=organization", { token: manager.token });
+  const otherBranch = await request(
+    server,
+    `/api/branches/performance?scope=branch&branchId=${foreign.branches[0].id}`,
+    { token: owner.token }
+  );
+  const noComparison = await request(
+    server,
+    `/api/branches/performance?scope=branch&branchId=${branchId}&period=today&comparison=none&anchor=2026-08-26T12:00:00Z`,
+    { token: owner.token }
+  );
+
+  assert.equal(scoped.status, 200);
+  assert.equal(scoped.payload.scope, "branch");
+  assert.equal(scoped.payload.branches.length, 1);
+  assert.equal(scoped.payload.branches[0].branchId, branchId);
+  assert.deepEqual(scoped.payload.branches[0].growth.revenue, {
+    current: 5000,
+    previous: 0,
+    change: 5000,
+    changeBps: null,
+    limitation: "percentage_growth_unavailable_with_zero_baseline"
+  });
+  assert.equal(widened.status, 403);
+  assert.equal(otherBranch.status, 404);
+  assert.equal(noComparison.status, 200);
+  assert.equal(noComparison.payload.branches[0].growth.comparisonAvailable, false);
+  assert.equal(noComparison.payload.branches[0].growth.revenue, null);
+});
