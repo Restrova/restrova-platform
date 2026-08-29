@@ -30,7 +30,7 @@
   --white: #ffffff;
   --black: #000000;
 
-  --color-background: var(--slate-50);
+  --color-background: #f4f7f5;
   --color-surface: var(--white);
   --color-surface-muted: var(--slate-100);
   --color-surface-elevated: var(--white);
@@ -40,10 +40,10 @@
   --color-text-secondary: var(--slate-600);
   --color-text-muted: var(--slate-500);
   --color-text-inverse: var(--slate-50);
-  --color-primary: var(--emerald-600);
-  --color-primary-hover: var(--emerald-700);
-  --color-primary-soft: var(--emerald-50);
-  --color-primary-border: var(--emerald-500);
+  --color-primary: #176b55;
+  --color-primary-hover: #105441;
+  --color-primary-soft: #eaf4f0;
+  --color-primary-border: #63a993;
   --color-secondary: var(--slate-700);
   --color-secondary-hover: var(--slate-800);
   --color-info: var(--blue-600);
@@ -94,8 +94,8 @@
   --radius-full: 9999px;
 
   --shadow-sm: 0 1px 2px var(--shadow-color-sm);
-  --shadow-md: 0 4px 6px -1px var(--shadow-color-md), 0 2px 4px -2px rgb(15 23 42 / 0.06);
-  --shadow-lg: 0 10px 20px -5px var(--shadow-color-lg);
+  --shadow-md: 0 10px 28px -12px rgb(20 57 45 / 0.2), 0 2px 8px -4px rgb(15 23 42 / 0.08);
+  --shadow-lg: 0 24px 52px -20px rgb(20 57 45 / 0.28);
 
   --sidebar-width: 17rem;
   --sidebar-collapsed-width: 5rem;

@@ -2,7 +2,7 @@
   display: grid;
   min-block-size: 100vh;
   grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
-  background: var(--color-background);
+  background: radial-gradient(circle at 78% 0%, rgb(203 226 217 / 0.22), transparent 28rem), var(--color-background);
 }
 
 [dir="rtl"] .app-shell {
@@ -26,14 +26,16 @@
   flex-direction: column;
   gap: var(--space-4);
   overflow-y: auto;
-  border-inline-end: 1px solid var(--color-border);
-  background: var(--color-surface);
-  padding: var(--space-4);
+  border-inline-end: 0;
+  background: linear-gradient(180deg, #103b31, #0d3028 62%, #0a2821);
+  color: #edf7f3;
+  padding: var(--space-5) var(--space-4);
+  box-shadow: 8px 0 32px rgb(13 48 40 / 0.08);
 }
 
 [dir="rtl"] .app-sidebar {
   border-inline-end: 0;
-  border-inline-start: 1px solid var(--color-border);
+  border-inline-start: 0;
 }
 
 .app-sidebar.is-collapsed {
@@ -57,7 +59,7 @@
   justify-content: center;
   flex: 0 0 auto;
   border-radius: var(--radius-lg);
-  background: var(--color-primary);
+  background: linear-gradient(145deg, #d7a66d, #b8753f);
   color: var(--color-text-inverse);
   text-decoration: none;
   font-weight: var(--font-weight-bold);
@@ -74,7 +76,7 @@
 .app-sidebar__product small,
 .user-menu small {
   display: block;
-  color: var(--color-text-muted);
+  color: #91afa5;
   font-size: var(--font-size-xs);
 }
 
@@ -87,7 +89,7 @@
   display: grid;
   gap: var(--space-1);
   min-inline-size: 0;
-  color: var(--color-text-secondary);
+  color: #b8cec6;
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
 }
@@ -96,10 +98,10 @@
   min-block-size: var(--control-height-sm);
   min-inline-size: 8rem;
   max-inline-size: 100%;
-  border: 1px solid var(--color-input-border);
+  border: 1px solid rgb(255 255 255 / 0.12);
   border-radius: var(--radius-md);
-  background: var(--color-input-background);
-  color: var(--color-text-primary);
+  background: rgb(255 255 255 / 0.07);
+  color: #f2f8f5;
   padding-inline: var(--space-3);
 }
 
@@ -119,7 +121,7 @@
 
 .sidebar-nav__group h2 {
   margin: 0;
-  color: var(--color-text-muted);
+  color: #77998e;
   font-size: var(--font-size-xs);
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -137,20 +139,20 @@
   align-items: center;
   gap: var(--space-3);
   border-radius: var(--radius-md);
-  color: var(--color-text-secondary);
+  color: #bdd1ca;
   padding-inline: var(--space-3);
   text-decoration: none;
 }
 
 .sidebar-nav__item:hover,
 .sidebar-nav__item:focus-visible {
-  background: var(--color-interactive-hover);
-  color: var(--color-text-primary);
+  background: rgb(255 255 255 / 0.07);
+  color: white;
 }
 
 .sidebar-nav__item.is-active {
-  background: var(--color-primary-soft);
-  color: var(--color-primary);
+  background: rgb(255 255 255 / 0.11);
+  color: white;
   font-weight: var(--font-weight-semibold);
 }
 
@@ -160,7 +162,7 @@
   inset-inline-start: 0;
   inline-size: 3px;
   border-radius: var(--radius-full);
-  background: var(--color-primary);
+  background: #dfa76d;
   content: "";
 }
 
@@ -173,6 +175,20 @@
   display: grid;
   gap: var(--space-3);
   margin-block-start: auto;
+}
+
+.app-sidebar .ui-button--ghost {
+  --button-color: #bad0c8;
+  --button-hover: rgb(255 255 255 / 0.08);
+}
+
+.app-sidebar .ui-button--ghost:hover:not(:disabled) {
+  color: white;
+}
+
+.app-sidebar select option {
+  background: #103b31;
+  color: white;
 }
 
 .user-menu {
@@ -189,7 +205,7 @@
   min-inline-size: 0;
   align-items: center;
   gap: var(--space-2);
-  color: var(--color-text-secondary);
+  color: #dceae5;
 }
 
 .app-topbar {
@@ -202,7 +218,8 @@
   justify-content: space-between;
   gap: var(--space-4);
   border-block-end: 1px solid var(--color-border);
-  background: var(--color-surface);
+  background: rgb(255 255 255 / 0.86);
+  backdrop-filter: blur(18px);
   padding-inline: var(--space-6);
 }
 
@@ -240,7 +257,7 @@
   max-inline-size: var(--content-max-width);
   min-block-size: calc(100vh - var(--topbar-height));
   margin-inline: auto;
-  padding: var(--space-6);
+  padding: clamp(var(--space-5), 2.5vw, var(--space-10));
 }
 
 .app-main--full-bleed {

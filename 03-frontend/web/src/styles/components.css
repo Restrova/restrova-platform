@@ -92,10 +92,10 @@
 }
 
 .ui-card {
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  border: 1px solid rgb(218 226 221 / 0.9);
+  border-radius: var(--radius-xl);
   background: var(--color-surface);
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 10px 34px -24px rgb(18 67 52 / 0.34);
 }
 
 .ui-card--muted {
