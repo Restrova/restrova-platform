@@ -6,6 +6,7 @@ This project follows a simple date-based changelog until a formal release proces
 
 ## 2026-08-29
 
+- Simplified analysis-only imports to show the dataset evaluation and numeric ranges directly, without irrelevant POS mapping or confirmation controls.
 - Added analysis-only profiling for non-POS restaurant sales datasets, including row/column counts, completeness, duplicates, and detected numeric metrics.
 - Added automatic recognition for analytical sales fields such as date, menu item name, quantity sold, market price, selling price, and ingredient cost.
 - Added smart CSV/XLSX imports that automatically classify branch, menu, cost, or sales files from their columns before validating and previewing them.

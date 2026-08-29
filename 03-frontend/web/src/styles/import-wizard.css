@@ -214,18 +214,17 @@
   padding: var(--space-4);
 }
 
-.import-evaluation-columns > div {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-}
-
-.import-evaluation-columns code {
+.import-evaluation-table code {
   border-radius: var(--radius-full);
   background: var(--color-surface);
   padding: 0.3rem 0.65rem;
   color: var(--color-text-secondary);
   font-size: var(--font-size-xs);
+}
+
+.import-evaluation-table th,
+.import-evaluation-table td {
+  white-space: nowrap;
 }
 
 .import-template-grid {
