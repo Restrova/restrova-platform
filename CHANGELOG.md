@@ -6,6 +6,8 @@ This project follows a simple date-based changelog until a formal release proces
 
 ## 2026-08-28
 
+- Completed Task 4.4 with a responsive, multilingual menu profitability UI for profit, revenue, volume, margin, and rising-cost decisions.
+- Added branch/period filtering, explicit incomplete-data handling, evidence inspection, localized formatting, and frontend regression coverage.
 - Completed Task 4.3 with deterministic STAR, PLOWHORSE, PUZZLE, and DOG menu engineering classifications.
 - Added scope-wide thresholds, explicit incomplete-item exclusions, evidence lineage, tenant/branch isolation, and multilingual coverage.
 - Fixed authenticated users being returned to the legacy registration screen when workspace data temporarily fails to load.

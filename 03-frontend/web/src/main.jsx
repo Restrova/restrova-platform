@@ -9,6 +9,7 @@ import "./styles/components.css";
 import "./styles/shell.css";
 import "./styles/import-wizard.css";
 import "./styles/financial-dashboard.css";
+import "./styles/menu-profitability.css";
 import "./styles/onboarding.css";
 import "./styles.css";
 import "./decision.css";
