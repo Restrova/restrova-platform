@@ -70,6 +70,7 @@ function errorMessage(error) {
 
 function stepIndex({ job }) {
   if (!job) return 0;
+  if (job.datasetEvaluation?.mode === "analysis_only") return 1;
   if (job.validationStatus === "needs_mapping") return 2;
   if (job.validationStatus === "validation_failed") return 3;
   if (job.validationStatus === "ready") return 4;
@@ -230,7 +231,7 @@ function DetectionSummary({ job, template }) {
   );
 }
 
-function DatasetEvaluation({ evaluation, locale }) {
+function DatasetEvaluation({ evaluation, locale, onReset }) {
   if (!evaluation) return null;
   const ar = locale === "ar";
   const completeness = `${(evaluation.completenessBps / 100).toFixed(1)}%`;
@@ -275,11 +276,37 @@ function DatasetEvaluation({ evaluation, locale }) {
       {evaluation.numericColumns?.length > 0 && (
         <div className="import-evaluation-columns">
           <strong>{ar ? "المقاييس الرقمية المكتشفة" : "Detected numeric metrics"}</strong>
-          <div>
-            {evaluation.numericColumns.slice(0, 8).map((metric) => (
-              <code key={metric.column}>{metric.column}</code>
-            ))}
+          <div className="import-table-wrap">
+            <table className="import-table import-evaluation-table">
+              <thead>
+                <tr>
+                  <th>{ar ? "العمود" : "Column"}</th>
+                  <th>{ar ? "أقل قيمة" : "Minimum"}</th>
+                  <th>{ar ? "المتوسط" : "Average"}</th>
+                  <th>{ar ? "أعلى قيمة" : "Maximum"}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {evaluation.numericColumns.slice(0, 8).map((metric) => (
+                  <tr key={metric.column}>
+                    <td>
+                      <code>{metric.column}</code>
+                    </td>
+                    <td>{metric.minimum.toLocaleString()}</td>
+                    <td>{metric.average.toLocaleString()}</td>
+                    <td>{metric.maximum.toLocaleString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
+        </div>
+      )}
+      {evaluation.mode === "analysis_only" && (
+        <div className="import-actions import-actions--end">
+          <Button variant="outline" leadingIcon={<RefreshCcw size={16} />} onClick={onReset}>
+            {ar ? "تحليل ملف آخر" : "Analyze another file"}
+          </Button>
         </div>
       )}
     </section>
@@ -780,25 +807,29 @@ export function ImportWizardPage() {
       ) : (
         <>
           <DetectionSummary job={job} template={selected} />
-          <DatasetEvaluation evaluation={job.datasetEvaluation} locale={locale} />
-          <MappingEditor
-            job={job}
-            mappings={mappings}
-            onChange={changeMapping}
-            onSave={saveMapping}
-            loading={savingMapping}
-          />
-          {job.validationStatus !== "needs_mapping" && <ValidationSummary job={job} />}
-          {job.validationStatus !== "needs_mapping" && <PreviewTable job={job} />}
-          <ConfirmPanel
-            job={job}
-            template={selected}
-            onConfirm={confirm}
-            onCancel={cancel}
-            confirming={confirming}
-            cancelling={cancelling}
-            canConfirm={canConfirm}
-          />
+          <DatasetEvaluation evaluation={job.datasetEvaluation} locale={locale} onReset={resetImport} />
+          {job.datasetEvaluation?.mode !== "analysis_only" && (
+            <>
+              <MappingEditor
+                job={job}
+                mappings={mappings}
+                onChange={changeMapping}
+                onSave={saveMapping}
+                loading={savingMapping}
+              />
+              {job.validationStatus !== "needs_mapping" && <ValidationSummary job={job} />}
+              {job.validationStatus !== "needs_mapping" && <PreviewTable job={job} />}
+              <ConfirmPanel
+                job={job}
+                template={selected}
+                onConfirm={confirm}
+                onCancel={cancel}
+                confirming={confirming}
+                cancelling={cancelling}
+                canConfirm={canConfirm}
+              />
+            </>
+          )}
         </>
       )}
     </main>

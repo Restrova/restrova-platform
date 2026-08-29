@@ -215,4 +215,39 @@ describe("ImportWizardPage", () => {
     expect(importsApi.cancelImportJob).toHaveBeenCalledWith(12);
     expect(importsApi.confirmImportJob).not.toHaveBeenCalled();
   });
+
+  it("shows analytical evaluation without POS mapping controls", async () => {
+    const user = userEvent.setup();
+    importsApi.previewImportFile.mockResolvedValue({
+      ...readyJob,
+      validationStatus: "needs_mapping",
+      confirmationToken: null,
+      datasetEvaluation: {
+        rowCount: 10000,
+        columnCount: 13,
+        completenessBps: 10000,
+        duplicateRows: 3,
+        numericColumns: [
+          { column: "actual_selling_price", count: 10000, minimum: 5.5, average: 42.25, maximum: 112.3 }
+        ],
+        importReady: false,
+        missingRequiredFields: ["external_order_id"],
+        mode: "analysis_only"
+      }
+    });
+
+    renderPage();
+    const file = new File(["date,menu_item_name,quantity_sold\n1/1/2024,Saltah,10"], "sales.csv", {
+      type: "text/csv"
+    });
+    await user.upload(await screen.findByLabelText("CSV or XLSX file"), file);
+    await user.click(screen.getByRole("button", { name: "Analyze and evaluate file" }));
+
+    expect(await screen.findByRole("heading", { name: "Dataset quality summary" })).toBeInTheDocument();
+    expect(screen.getByText("10,000")).toBeInTheDocument();
+    expect(screen.getByText("42.25")).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Review column mapping" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Confirm import" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Analyze another file" })).toBeEnabled();
+  });
 });
