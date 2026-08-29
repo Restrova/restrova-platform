@@ -562,3 +562,83 @@ test("Task 4.7 publishes uncertainty, excludes incomplete items, and enforces br
   assert.deepEqual(result.payload.excluded[0].reasons, ["effective_cost_records"]);
   assert.equal(blocked.status, 404);
 });
+
+test("Task 4.8 reconciles cost, margin, simulation, matrix, and recommendation outputs", async (t) => {
+  const server = app.listen(0);
+  t.after(() => server.close());
+  const owner = await registerOwner(server, "menu-golden-chain", "zh");
+  const branchId = owner.branches[0].id;
+  const code = `GOLDEN-${Date.now()}`;
+  const itemId = insertCatalog(owner, code, "黄金套餐", 5000);
+  insertCost(owner, itemId, branchId, 2000, 200, "2026-08-01T00:00:00.000Z");
+  insertSale(owner, itemId, branchId, code, {
+    createdAt: "2026-08-10T12:00:00.000Z",
+    quantity: 2,
+    grossMinor: 10000,
+    commissionMinor: 1000,
+    channel: "delivery"
+  });
+  const query = `branchId=${branchId}&itemCode=${code}&from=2026-08-01T00:00:00.000Z&to=2026-08-31T23:59:59.999Z`;
+
+  const [costs, margins, matrix, recommendations] = await Promise.all([
+    request(server, `/api/menu/costs?branchId=${branchId}&itemCode=${code}&asOf=2026-08-31T23:59:59.999Z`, {
+      token: owner.token
+    }),
+    request(server, `/api/menu/margins?${query}`, { token: owner.token }),
+    request(server, `/api/menu/engineering-matrix?${query}`, { token: owner.token }),
+    request(server, `/api/menu/recommendations?${query}`, { token: owner.token })
+  ]);
+  const price = await request(server, "/api/menu/price-simulation", {
+    token: owner.token,
+    method: "POST",
+    body: {
+      branchId,
+      itemCode: code,
+      proposedPriceMinor: 5500,
+      from: "2026-08-01T00:00:00.000Z",
+      to: "2026-08-31T23:59:59.999Z",
+      demandChangesBps: [0]
+    }
+  });
+  const cost = await request(server, "/api/menu/cost-simulation", {
+    token: owner.token,
+    method: "POST",
+    body: {
+      branchId,
+      itemCode: code,
+      from: "2026-08-01T00:00:00.000Z",
+      to: "2026-08-31T23:59:59.999Z",
+      scenarios: [{ name: "Recorded quote", proposedFoodCostMinor: 1900, proposedPackagingMinor: 200 }]
+    }
+  });
+
+  assert.ok([costs, margins, matrix, recommendations, price, cost].every((result) => result.status === 200));
+  const margin = margins.payload.items[0];
+  assert.equal(margin.metrics.itemRevenueMinor, 10000);
+  assert.equal(margin.metrics.allocatedFoodCostMinor, 4000);
+  assert.equal(margin.metrics.allocatedPackagingMinor, 400);
+  assert.equal(margin.metrics.deliveryCommissionMinor, 1000);
+  assert.equal(margin.metrics.contributionProfitMinor, 4600);
+  assert.equal(
+    margin.metrics.itemRevenueMinor -
+      margin.metrics.allocatedFoodCostMinor -
+      margin.metrics.allocatedPackagingMinor -
+      margin.metrics.deliveryCommissionMinor,
+    margin.metrics.contributionProfitMinor
+  );
+  assert.equal(costs.payload.items[0].metrics.foodCostMinor, 2000);
+  assert.equal(matrix.payload.items[0].engineering.classification, "STAR");
+  assert.equal(recommendations.payload.recommendations[0].action, "promote_item");
+  assert.equal(recommendations.payload.recommendations[0].projectedImpact, null);
+  assert.equal(price.payload.baseline.observedContributionProfitMinor, 4600);
+  assert.equal(cost.payload.baseline.observedContributionProfitMinor, 4600);
+  assert.equal(cost.payload.scenarios[0].contributionImpactMinor, 200);
+  assert.deepEqual(
+    [costs.payload.scope, margins.payload.scope, matrix.payload.scope, recommendations.payload.scope].map((scope) => [
+      scope.organizationId,
+      scope.restaurantId,
+      scope.branchId
+    ]),
+    Array(4).fill([owner.organization.id, owner.restaurant.id, branchId])
+  );
+});

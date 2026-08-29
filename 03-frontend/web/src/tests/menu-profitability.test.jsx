@@ -98,6 +98,29 @@ describe("menu profitability UI", () => {
     expect(screen.getByText(/التكلفة الناقصة تُستبعد/)).toBeInTheDocument();
     expect(document.documentElement).toHaveAttribute("dir", "rtl");
   });
+
+  it("preserves Chinese content and lets keyboard users close evidence with Escape", async () => {
+    localStorage.setItem("locale", "zh-CN");
+    const user = userEvent.setup();
+    renderPage();
+    expect(await screen.findByRole("heading", { name: "菜单盈利能力" })).toBeInTheDocument();
+    const trigger = (await screen.findAllByRole("button", { name: "证据" }))[0];
+    await user.click(trigger);
+    expect(screen.getByRole("dialog", { name: "证据: 明星菜" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "关闭详情" })).toHaveFocus();
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(trigger).toHaveFocus();
+  });
+
+  it("shows a retryable error state when menu evidence cannot be loaded", async () => {
+    menu.getMenuProfitability.mockRejectedValue(Object.assign(new Error("offline"), { status: 503 }));
+    const user = userEvent.setup();
+    renderPage();
+    expect(await screen.findByRole("alert")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Retry" }));
+    await waitFor(() => expect(menu.getMenuProfitability.mock.calls.length).toBeGreaterThan(1));
+  });
 });
 
 describe("menu profitability ranking", () => {

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowUpRight, BadgeDollarSign, BarChart3, RefreshCw, ShoppingBasket, TrendingDown } from "lucide-react";
 import { Badge } from "../components/ui/Badge.jsx";
@@ -119,6 +119,7 @@ export function MenuProfitabilityPage() {
   const text = copy[locale] || copy.en;
   const [days, setDays] = useState(30);
   const [selected, setSelected] = useState(null);
+  const evidenceTriggerRef = useRef(null);
   const range = useMemo(() => periodRange(days), [days]);
   const filters = useMemo(
     () => ({ branchId: restaurant.selectedBranchId, ...range }),
@@ -140,6 +141,18 @@ export function MenuProfitabilityPage() {
     [text.revenue, rankings.highestRevenue, BarChart3, (item) => money(item.metrics.itemRevenueMinor)],
     [text.volume, rankings.highestVolume, ShoppingBasket, (item) => formatNumber(item.metrics.quantitySold)]
   ];
+
+  useEffect(() => {
+    if (!selected) return undefined;
+    const closeOnEscape = (event) => {
+      if (event.key === "Escape") {
+        setSelected(null);
+        evidenceTriggerRef.current?.focus();
+      }
+    };
+    document.addEventListener("keydown", closeOnEscape);
+    return () => document.removeEventListener("keydown", closeOnEscape);
+  }, [selected]);
 
   return (
     <section className="menu-profitability" aria-labelledby="menu-profitability-title">
@@ -237,7 +250,14 @@ export function MenuProfitabilityPage() {
                           <td>{percent(item.metrics.contributionMarginBps)}</td>
                           <td>{formatNumber(item.metrics.quantitySold)}</td>
                           <td>
-                            <button className="menu-profitability__detail-button" onClick={() => setSelected(item)}>
+                            <button
+                              type="button"
+                              className="menu-profitability__detail-button"
+                              onClick={(event) => {
+                                evidenceTriggerRef.current = event.currentTarget;
+                                setSelected(item);
+                              }}
+                            >
                               {text.evidence}
                               <ArrowUpRight size={14} />
                             </button>
@@ -291,7 +311,16 @@ export function MenuProfitabilityPage() {
           aria-modal="true"
           aria-label={`${text.evidence}: ${selected.name}`}
         >
-          <button onClick={() => setSelected(null)}>{text.close}</button>
+          <button
+            type="button"
+            autoFocus
+            onClick={() => {
+              setSelected(null);
+              evidenceTriggerRef.current?.focus();
+            }}
+          >
+            {text.close}
+          </button>
           <h2>{selected.name}</h2>
           <p>
             {text.sources}: {selected.lineage.sales?.lineCount || 0}
