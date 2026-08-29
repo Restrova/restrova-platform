@@ -7,6 +7,7 @@ import { BranchesPage } from "../pages/BranchesPage.jsx";
 import { LegacyWorkspacePage } from "../pages/LegacyWorkspacePage.jsx";
 import { ImportWizardPage } from "../pages/ImportWizardPage.jsx";
 import { FinancialDashboardPage } from "../pages/FinancialDashboardPage.jsx";
+import { MenuProfitabilityPage } from "../pages/MenuProfitabilityPage.jsx";
 import { LoginPage } from "../pages/LoginPage.jsx";
 import { NotFoundPage } from "../pages/NotFoundPage.jsx";
 import { PlaceholderPage } from "../pages/PlaceholderPage.jsx";
@@ -51,10 +52,14 @@ export function AppRoutes() {
           <Route path="/app/workspace" element={<LegacyWorkspacePage />} />
           <Route path="/app/dashboard" element={<FinancialDashboardPage />} />
           <Route path="/app/imports" element={<ImportWizardPage />} />
+          <Route path="/app/menu-profitability" element={<MenuProfitabilityPage />} />
           <Route path="/app/branches" element={<BranchesPage />} />
           <Route path="/app/team" element={<TeamPage />} />
           {navigationItems
-            .filter((item) => !["dashboard", "workspace", "imports", "branches", "team"].includes(item.id))
+            .filter(
+              (item) =>
+                !["dashboard", "workspace", "imports", "menuProfitability", "branches", "team"].includes(item.id)
+            )
             .map((item) => (
               <Route
                 key={item.path}
