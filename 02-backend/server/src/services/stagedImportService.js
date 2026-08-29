@@ -361,6 +361,46 @@ function hash(value) {
   return crypto.createHash("sha256").update(value).digest("hex");
 }
 
+function evaluateDataset(headers, rows, validation) {
+  let populatedCells = 0;
+  const numericColumns = [];
+  const seenRows = new Set();
+  let duplicateRows = 0;
+
+  for (const header of headers) {
+    const values = rows.map((row) => row[header]).filter((value) => String(value ?? "").trim() !== "");
+    populatedCells += values.length;
+    const numbers = values.map(Number).filter(Number.isFinite);
+    if (values.length > 0 && numbers.length / values.length >= 0.8) {
+      numericColumns.push({
+        column: header,
+        count: numbers.length,
+        minimum: Math.min(...numbers),
+        maximum: Math.max(...numbers),
+        average: Number((numbers.reduce((sum, value) => sum + value, 0) / numbers.length).toFixed(2))
+      });
+    }
+  }
+
+  for (const row of rows) {
+    const fingerprint = JSON.stringify(headers.map((header) => row[header] ?? ""));
+    if (seenRows.has(fingerprint)) duplicateRows += 1;
+    else seenRows.add(fingerprint);
+  }
+
+  const totalCells = headers.length * rows.length;
+  return {
+    rowCount: rows.length,
+    columnCount: headers.length,
+    completenessBps: totalCells ? Math.round((populatedCells * 10000) / totalCells) : 0,
+    duplicateRows,
+    numericColumns,
+    importReady: validation.validationStatus === "ready",
+    missingRequiredFields: validation.summary.missingRequiredMappings,
+    mode: validation.validationStatus === "ready" ? "operational_import" : "analysis_only"
+  };
+}
+
 function newConfirmationToken() {
   return crypto.randomBytes(32).toString("base64url");
 }
@@ -522,6 +562,7 @@ export function previewStagedImport(user, { templateKey, filename, contentType, 
     candidates: []
   };
   const validation = buildValidation(user, template, parsed.rows, mappings);
+  const datasetEvaluation = evaluateDataset(parsed.headers, parsed.rows, validation);
   const confirmationToken = newConfirmationToken();
 
   const jobId = stagedImportRepository.createImportJob({
@@ -587,6 +628,7 @@ export function previewStagedImport(user, { templateKey, filename, contentType, 
   return {
     ...result,
     detection,
+    datasetEvaluation,
     confirmationToken: validation.validationStatus === "ready" ? confirmationToken : null
   };
 }

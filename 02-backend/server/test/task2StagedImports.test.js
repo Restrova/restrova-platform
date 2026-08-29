@@ -392,3 +392,30 @@ test("Smart import asks for a manual type when columns are ambiguous", async (t)
   assert.equal(manual.payload.templateKey, "menu");
   assert.equal(manual.payload.validationStatus, "needs_mapping");
 });
+
+test("Smart import classifies and evaluates analytical restaurant sales datasets", async (t) => {
+  const server = app.listen(0);
+  t.after(() => server.close());
+  const stamp = `${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+  const registration = await registerOwner(server, stamp);
+  const token = registration.payload.token;
+  const csv = [
+    "date,restaurant_id,restaurant_type,menu_item_name,meal_type,key_ingredients_tags,typical_ingredient_cost,observed_market_price,actual_selling_price,quantity_sold,has_promotion,special_event,weather_condition",
+    "1/1/2024,11,Yemeni Street Food,Yemeni Saltah,Lunch,fenugreek,5.86,20.06,20.86,410,FALSE,FALSE,Hot and Sunny",
+    "1/1/2024,7,Traditional Yemeni Restaurant,Lamb Mandi,Dinner,lamb,21.21,80.21,86.28,77,FALSE,FALSE,Hot and Sunny"
+  ].join("\n");
+
+  const preview = await previewAutoCsv(server, token, "yemeni_restaurant_sales_data.csv", csv);
+  assert.equal(preview.status, 201);
+  assert.equal(preview.payload.templateKey, "sales");
+  assert.equal(preview.payload.detection.confidence, "medium");
+  assert.ok(preview.payload.detection.signatureFields.includes("quantity sold"));
+  assert.equal(preview.payload.datasetEvaluation.rowCount, 2);
+  assert.equal(preview.payload.datasetEvaluation.columnCount, 13);
+  assert.equal(preview.payload.datasetEvaluation.completenessBps, 10000);
+  assert.equal(preview.payload.datasetEvaluation.mode, "analysis_only");
+  assert.equal(preview.payload.datasetEvaluation.importReady, false);
+  assert.ok(
+    preview.payload.datasetEvaluation.numericColumns.some((metric) => metric.column === "actual_selling_price")
+  );
+});
