@@ -248,6 +248,8 @@ describe("ImportWizardPage", () => {
     expect(screen.getByText("42.25")).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Review column mapping" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Confirm import" })).not.toBeInTheDocument();
+    expect(screen.getByText("File analysis complete")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Continue to decision center" })).toBeEnabled();
     expect(screen.getByRole("button", { name: "Analyze another file" })).toBeEnabled();
   });
 });
