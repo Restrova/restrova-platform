@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 process.env.NODE_ENV = "test";
 const { db } = await import("../src/db.js");
 const { app } = await import("../src/index.js");
+const { backfillImportedSalesLedger } = await import("../db/salesLedgerBackfill.js");
 
 async function jsonRequest(server, path, { token, method = "GET", body } = {}) {
   const address = server.address();
@@ -266,11 +267,28 @@ test("Task 2.2 validates menu, costs, +08:00 dates, sales references, and duplic
     true
   );
 
-  const salesCsv = `external_order_id,external_line_id,branch_code,created_at,channel,item_code,quantity,gross_sales,discount,refund_amount,delivery_commission\nORD-${stamp},1,GZ-01,2026-08-10T19:30:00+08:00,dine_in,${itemCode},2,97.00,0,0,0`;
+  const salesCsv = `external_order_id,external_line_id,branch_code,created_at,channel,item_code,quantity,gross_sales,discount,refund_amount,delivery_commission\nORD-${stamp},1,GZ-01,2026-08-10T19:30:00+08:00,delivery,${itemCode},2,97.00,5.00,2.00,10.00`;
   const salesPreview = await previewCsv(server, token, "sales", "sales.csv", salesCsv);
   assert.equal(salesPreview.payload.statistics.accepted, 1);
   const salesConfirmed = await confirmJob(server, token, salesPreview.payload);
   assert.equal(salesConfirmed.payload.statistics.imported, 1);
+
+  const ledger = db
+    .prepare(
+      `SELECT category,amount_minor
+       FROM financial_ledger_entries
+       WHERE restaurant_id=? AND source_type='import' AND source_reference=?
+       ORDER BY category`
+    )
+    .all(restaurantId, `ORD-${stamp}`);
+  assert.deepEqual(ledger, [
+    { category: "delivery_commissions", amount_minor: 1000 },
+    { category: "discounts", amount_minor: 500 },
+    { category: "food_costs", amount_minor: 4800 },
+    { category: "packaging", amount_minor: 300 },
+    { category: "refunds", amount_minor: 200 },
+    { category: "sales", amount_minor: 9700 }
+  ]);
 
   const duplicatePreview = await previewCsv(server, token, "sales", "sales-again.csv", salesCsv);
   assert.equal(duplicatePreview.payload.statistics.accepted, 0);
@@ -282,6 +300,25 @@ test("Task 2.2 validates menu, costs, +08:00 dates, sales references, and duplic
       .prepare("SELECT count(*) count FROM sales_lines WHERE restaurant_id=? AND external_order_id=?")
       .get(restaurantId, `ORD-${stamp}`).count,
     1
+  );
+  assert.equal(
+    db
+      .prepare("SELECT count(*) count FROM financial_ledger_entries WHERE restaurant_id=? AND source_reference=?")
+      .get(restaurantId, `ORD-${stamp}`).count,
+    6
+  );
+
+  db.prepare("DELETE FROM financial_ledger_entries WHERE restaurant_id=? AND source_reference=?").run(
+    restaurantId,
+    `ORD-${stamp}`
+  );
+  assert.equal(backfillImportedSalesLedger(db), 6);
+  assert.equal(backfillImportedSalesLedger(db), 0);
+  assert.equal(
+    db
+      .prepare("SELECT count(*) count FROM financial_ledger_entries WHERE restaurant_id=? AND source_reference=?")
+      .get(restaurantId, `ORD-${stamp}`).count,
+    6
   );
 });
 

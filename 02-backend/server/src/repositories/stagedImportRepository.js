@@ -408,3 +408,85 @@ export function insertSalesLine(user, row) {
       row.delivery_commission_minor
     ).changes;
 }
+
+function applicableCost(costs, row) {
+  return costs.find(
+    (cost) =>
+      cost.catalog_item_id === row.catalog_item_id &&
+      (cost.branch_id === row.branch_id || cost.branch_id == null) &&
+      Date.parse(cost.effective_from) <= Date.parse(row.created_at)
+  );
+}
+
+export function insertFinancialLedgerForSalesRows(user, rows) {
+  if (!rows.length) return 0;
+
+  const costs = db
+    .prepare(
+      `SELECT catalog_item_id,branch_id,direct_food_cost_minor,packaging_cost_minor,effective_from
+       FROM item_costs
+       WHERE organization_id=? AND restaurant_id=?
+       ORDER BY catalog_item_id,
+                CASE WHEN branch_id IS NULL THEN 1 ELSE 0 END,
+                julianday(effective_from) DESC,id DESC`
+    )
+    .all(user.organization_id, user.restaurant_id);
+  const orders = new Map();
+
+  for (const row of rows) {
+    const key = `${row.branch_id}:${row.external_order_id}`;
+    const order = orders.get(key) || {
+      branchId: row.branch_id,
+      orderId: row.external_order_id,
+      occurredAt: row.created_at,
+      lineCount: 0,
+      totals: {
+        sales: 0,
+        discounts: 0,
+        refunds: 0,
+        food_costs: 0,
+        packaging: 0,
+        delivery_commissions: 0
+      }
+    };
+    const cost = applicableCost(costs, row);
+    order.occurredAt = order.occurredAt < row.created_at ? order.occurredAt : row.created_at;
+    order.lineCount += 1;
+    order.totals.sales += row.gross_sales_minor;
+    order.totals.discounts += row.discount_minor;
+    order.totals.refunds += row.refund_amount_minor;
+    order.totals.delivery_commissions += row.delivery_commission_minor;
+    order.totals.food_costs += Math.round((cost?.direct_food_cost_minor || 0) * row.quantity);
+    order.totals.packaging += Math.round((cost?.packaging_cost_minor || 0) * row.quantity);
+    orders.set(key, order);
+  }
+
+  const insert = db.prepare(
+    `INSERT OR IGNORE INTO financial_ledger_entries(
+      organization_id,restaurant_id,branch_id,category,amount_minor,currency_code,
+      occurred_at,source_type,source_reference,description,evidence_json,created_by,scope_key
+    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`
+  );
+  let inserted = 0;
+  for (const order of orders.values()) {
+    for (const [category, amountMinor] of Object.entries(order.totals)) {
+      if (!amountMinor) continue;
+      inserted += insert.run(
+        user.organization_id,
+        user.restaurant_id,
+        order.branchId,
+        category,
+        amountMinor,
+        user.currency.toUpperCase(),
+        order.occurredAt,
+        "import",
+        order.orderId,
+        `Imported sales order ${order.orderId}`,
+        JSON.stringify({ source: "sales_lines", externalOrderId: order.orderId, lineCount: order.lineCount }),
+        user.owner_id,
+        `branch:${order.branchId}`
+      ).changes;
+    }
+  }
+  return inserted;
+}
