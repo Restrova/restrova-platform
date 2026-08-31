@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import fs from "node:fs";
 import path from "node:path";
 import { migrate } from "../db/migrate.js";
+import { backfillImportedSalesLedger } from "../db/salesLedgerBackfill.js";
 
 const file = path.resolve(process.env.DATABASE_PATH || "./data/restaurant.db");
 if (process.env.NODE_ENV === "production" && !process.env.DATABASE_PATH) {
@@ -189,3 +190,4 @@ function seed() {
 }
 if (process.env.NODE_ENV !== "production" || process.env.ENABLE_DEMO_SEED === "true") seed();
 ensureAccessRecords();
+backfillImportedSalesLedger(db);

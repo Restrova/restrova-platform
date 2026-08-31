@@ -808,6 +808,7 @@ export function confirmStagedImport(user, jobId, confirmationToken, requestId) {
       throw conflict("Import job is no longer available to confirm.");
     }
 
+    const importedSalesRows = [];
     for (const row of accepted) {
       const data = row.normalized;
       if (job.template_key === "branches") {
@@ -819,8 +820,14 @@ export function confirmStagedImport(user, jobId, confirmationToken, requestId) {
       } else if (job.template_key === "costs") {
         importedRows += stagedImportRepository.insertCost(user, data);
       } else if (job.template_key === "sales") {
-        importedRows += stagedImportRepository.insertSalesLine(user, data);
+        const inserted = stagedImportRepository.insertSalesLine(user, data);
+        importedRows += inserted;
+        if (inserted) importedSalesRows.push(data);
       }
+    }
+
+    if (importedSalesRows.length) {
+      stagedImportRepository.insertFinancialLedgerForSalesRows(user, importedSalesRows);
     }
 
     if (!stagedImportRepository.markImportJobConfirmed(id, importedRows, safeRequestId)) {
