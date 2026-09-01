@@ -1,5 +1,6 @@
 import { db } from "./db.js";
 import { searchKnowledgeBase } from "./knowledge.js";
+import { importedAnalytics } from "./services/importedAnalyticsService.js";
 
 const isoDay = (value = new Date()) => new Date(value).toISOString().slice(0, 10);
 const normalizeContext = (scope) => (typeof scope === "object" ? scope : { restaurantId: scope });
@@ -148,6 +149,8 @@ function totals(orders, refunds = [], labor = 0) {
 export function executeTool(name, args = {}, scope) {
   const context = normalizeContext(scope);
   if (!context.restaurantId) throw new Error("Restaurant scope is required.");
+  const imported = importedAnalytics(name, args, context);
+  if (imported !== null) return imported;
 
   if (name === "get_daily_sales") {
     const date = args.date || isoDay();
@@ -248,6 +251,13 @@ export function executeTool(name, args = {}, scope) {
   if (name === "suggest_staffing") {
     const date = (args.date_time || new Date().toISOString()).slice(0, 10);
     const sales = executeTool("get_daily_sales", { date }, context);
+    if (sales.source === "imports" && !sales.has_sales)
+      return {
+        date_time: args.date_time,
+        expected_orders: null,
+        recommendation: "Staffing cannot be estimated without sales records for the requested day.",
+        basis: "missing_sales"
+      };
     const demand = args.level === "busy" ? Math.max(sales.orders, 40) : sales.orders;
     return {
       date_time: args.date_time,

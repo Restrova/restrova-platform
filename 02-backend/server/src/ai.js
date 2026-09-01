@@ -1,5 +1,6 @@
 import { executeTool } from "./tools.js";
 import { dataConnectionStatus } from "./dataImport.js";
+import { analyticsRequest, formatImportedAnswer, importedQuestionReply } from "./analyticsAnswer.js";
 
 export const SYSTEM_PROMPT = `You are Restrova Decision AI, an expert AI restaurant manager assistant inside Restrova Platform. Your job is to answer like ChatGPT, but specialized for restaurants.
 
@@ -457,6 +458,8 @@ function formatTopDishesPrefinal(items) {
 }
 
 function formatStaffingPrefinal(data) {
+  if (data.expected_orders == null)
+    return "Staffing cannot be estimated without sales records for the requested day. Import that day's sales and staffing data first.";
   if (!data.expected_orders)
     return `Direct answer:
 I cannot recommend staffing confidently because there is no demand signal for the selected period.
@@ -497,9 +500,11 @@ function formatLowPerformancePrefinal(items) {
 
 function formatAttentionPrefinal(scope) {
   const readiness = getDataReadiness(scope);
-  const daily = executeTool("get_daily_sales", { date: new Date().toISOString().slice(0, 10) }, scope);
+  const daily = executeTool("get_daily_sales", {}, scope);
   const inventory = executeTool("get_inventory_status", {}, scope);
   const weak = executeTool("get_low_performance_items", {}, scope);
+  if (daily.source === "imports")
+    return `${formatImportedAnswer("get_daily_sales", daily, false)}\n\n${formatImportedAnswer("get_low_performance_items", weak, false)}\n\n${formatInventoryPrefinal(inventory)}`;
   const topRisk = weak[0];
   const lowNames = inventory.items.filter((item) => item.status === "low").map((item) => item.item_name);
   const priorities = [];
@@ -526,6 +531,10 @@ function demoReplyArabic(text, restaurantId) {
     return "هذا الإجراء سيغيّر بيانات المطعم. يرجى تأكيد الإجراء المحدد بوضوح قبل التنفيذ.";
   if (/(كتاب|دليل|سياسة|وصفة|تدريب|إجراء|معيار|منطقي|بشري|محادثة|حوار|تفكير|استيضاح)/.test(q))
     return formatKnowledgeResults(text, restaurantId, true);
+  if (analyticsRequest(text)?.unsupported)
+    return "حدد الفترة المطلوبة بتاريخ بداية ونهاية، أو اسأل عن اليوم أو أمس أو هذا الأسبوع أو هذا الشهر. لا أستطيع مقارنة هذه الفترة تلقائيًا بعد.";
+  const imported = importedQuestionReply(text, restaurantId);
+  if (imported) return imported;
   if (/(استرداد|مرتجع|مرتجعات|إرجاع)/.test(q)) {
     const range = q.includes("شهر") ? "month" : q.includes("اليوم") ? "today" : "week";
     const data = executeTool("get_refund_summary", { range }, restaurantId);
@@ -539,9 +548,11 @@ function demoReplyArabic(text, restaurantId) {
   if (/(ماذا تستطيع|ماذا يمكنك|ساعدني|مساعدة)/.test(q))
     return "أستطيع مساعدتك في خمسة قرارات:\n\n• تلخيص مبيعات وأرباح اليوم\n• تحديد أفضل وأضعف الأطباق\n• كشف نقص المخزون\n• اقتراح عدد الموظفين حسب الطلب\n• إنشاء تقرير تشغيلي بعد موافقتك\n\nجرّب: «ما الذي يحتاج إلى انتباهي اليوم؟»";
   if (/(انتباه|الأولوية|الاولويه|المشاكل|مشكلة|مهم اليوم)/.test(q) && !/(مخزون|ناقص|ينفد|مكونات)/.test(q)) {
-    const daily = executeTool("get_daily_sales", { date: new Date().toISOString().slice(0, 10) }, restaurantId);
+    const daily = executeTool("get_daily_sales", {}, restaurantId);
     const inventory = executeTool("get_inventory_status", {}, restaurantId);
     const weak = executeTool("get_low_performance_items", {}, restaurantId);
+    if (daily.source === "imports")
+      return `${formatImportedAnswer("get_daily_sales", daily, true)}\n\n${formatImportedAnswer("get_low_performance_items", weak, true)}\n\n${demoReplyArabic("المخزون", restaurantId)}`;
     const risk = weak[0];
     const lowNames = inventory.items
       .filter((item) => item.status === "low")
@@ -551,6 +562,8 @@ function demoReplyArabic(text, restaurantId) {
   }
   if (/(مخزون|ناقص|ينفد|مكونات|إعادة الطلب)/.test(q)) {
     const data = executeTool("get_inventory_status", {}, restaurantId);
+    if (!data.items.length)
+      return "لا توجد بيانات مخزون مسجلة لهذا الفرع. ارفع كميات المخزون وحدود إعادة الطلب حتى أستطيع تقييم حالته.";
     const low = data.items.filter((item) => item.status === "low");
     if (!low.length)
       return "المخزون بحالة جيدة، ولا يوجد أي عنصر تحت حد إعادة الطلب.\n\nالتوصية: استمر على وتيرة التوريد الحالية وراجع المخزون قبل فترة الذروة.";
@@ -575,6 +588,8 @@ function demoReplyArabic(text, restaurantId) {
   if (/(ربح|أرباح|هامش|إيراد|تكلفة|أسبوع|شهر)/.test(q)) {
     const range = q.includes("شهر") ? "month" : q.includes("اليوم") ? "today" : "week";
     const data = executeTool("get_profit_summary", { range }, restaurantId);
+    if (!data.orders)
+      return "لا توجد بيانات مبيعات مسجلة لهذه الفترة. لا يمكن اعتبار غياب السجلات مبيعات أو أرباحًا تساوي صفرًا. ارفع بيانات الفترة المطلوبة أولًا.";
     return `ملخص الربح\n\nالإيرادات: ${money(data.revenue)}\nالتكاليف: ${money(data.cost)}\nالربح: ${money(data.profit)}\nهامش الربح: ${data.margin_percent}%\nالطلبات: ${data.orders}\n\nالتوصية: ابدأ بمراجعة الأطباق منخفضة الهامش لأن تحسين السعر أو تكلفة المكونات سيؤثر سريعاً في الربح.`;
   }
   if (/(موظف|موظفين|عمال|نادل|طباخ|وردية|ازدحام|الليلة)/.test(q)) {
@@ -583,10 +598,14 @@ function demoReplyArabic(text, restaurantId) {
       { level: q.includes("ازدحام") ? "busy" : "auto", date_time: new Date().toISOString() },
       restaurantId
     );
+    if (data.expected_orders == null)
+      return "لا أستطيع تقدير احتياج الموظفين لأن بيانات المبيعات لهذا اليوم غير متوفرة. ارفع بيانات المبيعات والورديات أولًا.";
     return `توقع الاحتياج للموظفين\n\nالطلبات المتوقعة: ${data.expected_orders}\nالقرار: ${data.expected_orders >= 40 ? "أضف نادلاً وطباخ خط إضافياً خلال الذروة." : data.expected_orders >= 25 ? "أضف نادلاً مرناً خلال ساعة الذروة." : "عدد الموظفين المعتاد كافٍ."}\n\nالتوصية: أكّد توفر الفريق مع مسؤول الوردية قبل تعديل الجدول.`;
   }
-  if (/(اليوم|المبيعات|الطلبات|الأداء|ملخص|كيف.*المطعم)/.test(q)) {
-    const data = executeTool("get_daily_sales", { date: new Date().toISOString().slice(0, 10) }, restaurantId);
+  if (/(اليوم|مبيعات|طلبات|الأداء|ملخص|كيف.*المطعم)/.test(q)) {
+    const data = executeTool("get_daily_sales", {}, restaurantId);
+    if (!data.orders)
+      return `لا توجد بيانات مبيعات مسجلة ليوم ${data.date}. هذا لا يعني أن المبيعات الفعلية صفر. ارفع بيانات مبيعات هذا اليوم أو اسأل عن فترة تتوفر لها سجلات.`;
     return `أداء اليوم\n\nالمبيعات: ${money(data.revenue)}\nالطلبات: ${data.orders}\nالربح: ${money(data.profit)}\nهامش الربح: ${data.margin_percent}%\nساعة الذروة: ${data.peak_hour || "غير متوفرة"}\n\nالتوصية: حافظ على جودة الخدمة خلال الذروة وراجع عناصر المخزون المنخفض قبل الوردية القادمة.`;
   }
   return "أريد أن أجيبك اعتماداً على بيانات المطعم، لكن القرار غير واضح. هل تريد تحليل أداء اليوم، ربحية القائمة، المخزون، أم احتياج الموظفين؟";
@@ -623,6 +642,10 @@ export function demoReply(text, restaurantId) {
     return formatKnowledgeResults(text, restaurantId);
   const managerAdvice = formatGeneralManagerAdvice(q);
   if (managerAdvice) return managerAdvice;
+  if (analyticsRequest(text)?.unsupported)
+    return "Please specify the requested dates, or ask for today, yesterday, this week or this month. I cannot automatically compare that period yet.";
+  const imported = importedQuestionReply(text, restaurantId);
+  if (imported) return imported;
   if (/^(hi|hello|hey|good (morning|afternoon|evening))[!. ]*$/.test(q)) {
     return "Hello — I’m ready. Ask me about today’s sales, weekly profit, top dishes, inventory, or staffing.";
   }
@@ -722,11 +745,13 @@ export function inferTools(text) {
   if (/(attention|priority|operational risk|manager brief|انتباه|الأولوية|المشاكل|خطر تشغيلي|موجز المدير)/.test(q))
     return ["get_daily_sales", "get_low_performance_items", "get_inventory_status"];
   if (/(inventory|stock|restock|ingredient|run .*out|مخزون|ناقص|ينفد|مكونات)/.test(q)) return ["get_inventory_status"];
+  if (analyticsRequest(q)?.name === "get_top_dishes") return ["get_top_dishes"];
   if (/(worst|weak|losing|margin|dish|menu|أسوأ|أضعف|هامش|طبق|الأطباق)/.test(q)) return ["get_low_performance_items"];
   if (/(profit|revenue|cost|week|month|ربح|أرباح|إيراد|تكلفة|أسبوع|شهر)/.test(q)) return ["get_profit_summary"];
   if (/(staff|server|cook|shift|tonight|موظف|موظفين|نادل|طباخ|وردية|الليلة)/.test(q))
     return ["get_daily_sales", "suggest_staffing"];
-  if (/(today|sales|orders|performance|summary|اليوم|المبيعات|الطلبات|الأداء|ملخص)/.test(q)) return ["get_daily_sales"];
+  if (/(today|yesterday|sales|orders|performance|summary|اليوم|أمس|امس|مبيعات|طلبات|الأداء|ملخص)/.test(q))
+    return ["get_daily_sales"];
   return [];
 }
 

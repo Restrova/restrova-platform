@@ -224,6 +224,22 @@ export function resolveFinancialPeriodRanges(query, timezone) {
   };
 }
 
+export function resolveFinancialDateRange(date, timezone) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw validationError("Use a YYYY-MM-DD date.");
+  const [year, month, day] = date.split("-").map(Number);
+  if (month < 1 || month > 12 || day < 1 || day > daysInMonth(year, month)) {
+    throw validationError("Invalid calendar date.");
+  }
+  return resolveFinancialPeriodRanges(
+    {
+      period: "today",
+      comparison: "none",
+      anchor: localToInstant({ year, month, day, hour: 12 }, timezone).toISOString()
+    },
+    timezone
+  );
+}
+
 export function calculateFinancialPeriod(user, query) {
   const timezone = user.timezone;
   const ranges = resolveFinancialPeriodRanges(query, timezone);

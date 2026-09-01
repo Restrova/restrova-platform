@@ -470,28 +470,39 @@ function App() {
         </div>
         <nav>
           <b>{stats?.source === "imports" ? "Current month decision brief" : "Today's decision brief"}</b>
+          {stats?.branchName && <p>{stats.branchName}</p>}
           <article>
             <TrendingUp />
             <div>
               <small>NET SALES</small>
-              <strong>{money(stats?.sales?.net_revenue ?? stats?.sales?.revenue, currency)}</strong>
-              <p>{stats?.sales?.orders || 0} orders</p>
+              <strong>
+                {stats?.sales?.has_sales === false
+                  ? "—"
+                  : money(stats?.sales?.net_revenue ?? stats?.sales?.revenue, currency)}
+              </strong>
+              <p>
+                {stats?.sales?.has_sales === false
+                  ? "No sales records for this period"
+                  : `${stats?.sales?.orders || 0} orders`}
+              </p>
             </div>
           </article>
           <article>
             <CircleDollarSign />
             <div>
               <small>EST. PROFIT</small>
-              <strong>{money(stats?.sales?.profit, currency)}</strong>
-              <p>{stats?.sales?.margin_percent || 0}% margin</p>
+              <strong>{stats?.sales?.profit == null ? "—" : money(stats.sales.profit, currency)}</strong>
+              <p>
+                {stats?.sales?.margin_percent == null ? "Margin unavailable" : `${stats.sales.margin_percent}% margin`}
+              </p>
             </div>
           </article>
           <article>
             <Package />
             <div>
               <small>STOCK RISKS</small>
-              <strong>{stats?.inventory?.low_stock_count ?? "-"}</strong>
-              <p>need attention</p>
+              <strong>{stats?.inventory?.items?.length ? stats.inventory.low_stock_count : "—"}</strong>
+              <p>{stats?.inventory?.items?.length ? "need attention" : "Inventory not connected"}</p>
             </div>
           </article>
           <article>
