@@ -46,7 +46,7 @@ export const listUsers = (req, res) => res.json(userService.listUsers(req.user))
 export const updateUserRole = (req, res) =>
   res.json(userService.updateUserRole(req.user, Number(req.params.id), req.body));
 
-export const dashboard = (req, res) => res.json(dashboardService.getDashboard(req.user));
+export const dashboard = (req, res) => res.json(dashboardService.getDashboard(req.user, req.query));
 export const dataStatus = (req, res) => res.json(dataService.getDataStatus(req.user));
 export const listImportTemplates = (_req, res) => res.json(importTemplateService.listImportTemplates());
 export const getImportTemplate = (req, res) => res.json(importTemplateService.getImportTemplate(req.params.key));
@@ -110,9 +110,11 @@ export const knowledgeStatus = (req, res) => res.json(knowledgeService.getKnowle
 export const importKnowledge = (req, res) => res.status(201).json(knowledgeService.importKnowledge(req.user, req.body));
 export const searchKnowledge = (req, res) => res.json(knowledgeService.searchKnowledge(req.user, req.query.q));
 
-export const listChatSessions = (req, res) => res.json(chatService.listChatSessions(req.user));
-export const getChatMessages = (req, res) => res.json(chatService.getChatMessages(req.user, req.params.id));
+export const listChatSessions = (req, res) => res.json(chatService.listChatSessions(req.user, req.query.branchId));
+export const getChatMessages = (req, res) =>
+  res.json(chatService.getChatMessages(req.user, req.params.id, req.query.branchId));
 export const sendChatMessage = async (req, res) => res.json(await chatService.sendChatMessage(req.user, req.body));
-export const confirmAction = (req, res) => res.json(chatService.confirmAction(req.user, req.params.hash));
+export const confirmAction = (req, res) =>
+  res.json(chatService.confirmAction(req.user, req.params.hash, req.body?.branchId));
 export const saveFeedback = (req, res) => res.status(201).json(chatService.saveFeedback(req.user, req.body));
 export const exportTraining = (req, res) => res.json(chatService.exportTrainingFeedback(req.user));

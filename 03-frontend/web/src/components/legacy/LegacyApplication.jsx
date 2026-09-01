@@ -20,6 +20,8 @@ import {
 import { ErrorState } from "../ui/ErrorState.jsx";
 import { api } from "../../lib/api.js";
 import { useAuth } from "../../contexts/AuthContext.jsx";
+import { useRestaurant } from "../../contexts/RestaurantContext.jsx";
+import { WorkspaceDataAvailability } from "./WorkspaceDataAvailability.jsx";
 
 const safeMessage = (message, fallback = "I could not read that response safely. Please try again.") => ({
   role: message?.role === "user" ? "user" : "assistant",
@@ -290,7 +292,7 @@ function ManagementPanel({ onClose, me, onUpdated }) {
   );
 }
 
-function FeedbackCollector() {
+function FeedbackCollector({ branchId }) {
   const [answer, setAnswer] = useState();
   const [correcting, setCorrecting] = useState(false);
   const [correction, setCorrection] = useState("");
@@ -299,6 +301,7 @@ function FeedbackCollector() {
   useEffect(() => {
     const receive = (event) => {
       const detail = safeMessage(event.detail);
+      if (String(event.detail?.branchId) !== String(branchId)) return;
       setAnswer({ ...detail, sessionId: event.detail?.sessionId, question: event.detail?.question });
       setCorrecting(false);
       setCorrection(detail.content);
@@ -306,7 +309,7 @@ function FeedbackCollector() {
     };
     window.addEventListener("answer-ready", receive);
     return () => window.removeEventListener("answer-ready", receive);
-  }, []);
+  }, [branchId]);
 
   if (!answer || saved) return null;
 
@@ -317,6 +320,7 @@ function FeedbackCollector() {
         method: "POST",
         body: JSON.stringify({
           sessionId: answer.sessionId,
+          branchId: Number(branchId),
           messageId: answer.id,
           question: answer.question || "",
           originalAnswer: answer.content,
@@ -368,8 +372,17 @@ function FeedbackCollector() {
   );
 }
 
-function App() {
+function App({ branchId }) {
   const auth = useAuth();
+  const restaurant = useRestaurant();
+  const activeRequest = useRef(true);
+  const dashboardPath = `/dashboard?branchId=${encodeURIComponent(branchId)}`;
+  useEffect(() => {
+    activeRequest.current = true;
+    return () => {
+      activeRequest.current = false;
+    };
+  }, []);
   const initialMessages = useMemo(
     () => [
       {
@@ -405,17 +418,22 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if (!auth.isAuthenticated) return;
+    if (!auth.isAuthenticated || !branchId) return;
     let active = true;
     setWorkspaceError("");
-    Promise.allSettled([api("/dashboard").then(setStats), refreshContext()]).then((results) => {
+    Promise.allSettled([
+      api(dashboardPath).then((data) => {
+        if (active) setStats(data);
+      }),
+      refreshContext()
+    ]).then((results) => {
       if (!active || !results.some((result) => result.status === "rejected") || !localStorage.getItem("token")) return;
       setWorkspaceError("Some live data could not be loaded. Your signed-in session is still active; retry shortly.");
     });
     return () => {
       active = false;
     };
-  }, [auth.isAuthenticated, refreshContext]);
+  }, [auth.isAuthenticated, branchId, dashboardPath, refreshContext]);
   useEffect(() => {
     const node = bottom.current;
     if (node && typeof node.scrollIntoView === "function") node.scrollIntoView();
@@ -424,22 +442,31 @@ function App() {
   const send = async (event, preset) => {
     event?.preventDefault();
     const value = (preset || text).trim();
-    if (!value || loading) return;
+    if (!value || loading || !branchId) return;
     setText("");
     setMessages((items) => [...items, safeMessage({ role: "user", content: value })]);
     setLoading(true);
     try {
-      const data = await api("/chat", { method: "POST", body: JSON.stringify({ message: value, sessionId }) });
+      const data = await api("/chat", {
+        method: "POST",
+        body: JSON.stringify({ message: value, sessionId, branchId: Number(branchId) })
+      });
+      if (!activeRequest.current) return;
       const assistant = safeMessage(data.message);
       setSessionId(data.sessionId);
       setMessages((items) => [...items, assistant]);
       window.dispatchEvent(
-        new CustomEvent("answer-ready", { detail: { ...assistant, sessionId: data.sessionId, question: value } })
+        new CustomEvent("answer-ready", {
+          detail: { ...assistant, sessionId: data.sessionId, question: value, branchId }
+        })
       );
-      api("/dashboard")
-        .then(setStats)
+      api(dashboardPath)
+        .then((data) => {
+          if (activeRequest.current) setStats(data);
+        })
         .catch(() => {});
     } catch (err) {
+      if (!activeRequest.current) return;
       setMessages((items) => [
         ...items,
         safeMessage({ role: "assistant", content: `I couldn't complete that: ${err.message}` })
@@ -510,7 +537,11 @@ function App() {
             <div>
               <small>TOP DISH</small>
               <strong className="dish">{stats?.topDishes?.[0]?.name || "-"}</strong>
-              <p>{money(stats?.topDishes?.[0]?.revenue, currency)} revenue</p>
+              <p>
+                {stats?.topDishes?.length
+                  ? `${money(stats.topDishes[0].revenue, currency)} revenue`
+                  : "No sales records for this period"}
+              </p>
             </div>
           </article>
         </nav>
@@ -544,6 +575,12 @@ function App() {
           </p>
         )}
         <section className="messages">
+          <WorkspaceDataAvailability
+            sales={stats?.sales}
+            onSelectBranch={restaurant.setSelectedBranchId}
+            onAnalyze={(question) => send(null, question)}
+            loading={loading}
+          />
           {messages.map((raw, index) => {
             const message = safeMessage(raw);
             return (
@@ -595,7 +632,7 @@ function App() {
                 }
               }}
             />
-            <button type="submit" disabled={loading || !text.trim()}>
+            <button type="submit" disabled={loading || !text.trim() || !branchId}>
               <Send />
             </button>
           </form>
@@ -607,6 +644,7 @@ function App() {
 }
 
 function Root() {
+  const { selectedBranchId } = useRestaurant();
   const [authenticated, setAuthenticated] = useState(!!localStorage.getItem("token"));
   useEffect(() => {
     const sync = () => setAuthenticated(!!localStorage.getItem("token"));
@@ -622,9 +660,9 @@ function Root() {
           </button>
         </>
       )}
-      <FeedbackCollector />
+      <FeedbackCollector key={selectedBranchId} branchId={selectedBranchId} />
       <ErrorBoundary>
-        <App />
+        <App key={selectedBranchId} branchId={selectedBranchId} />
       </ErrorBoundary>
     </>
   );

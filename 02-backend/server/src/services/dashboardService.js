@@ -2,8 +2,8 @@ import { executeTool } from "../tools.js";
 import { toolScope } from "./branchService.js";
 import { hasFinancialData } from "./importedAnalyticsService.js";
 
-export function getDashboard(user) {
-  const scope = toolScope(user);
+export function getDashboard(user, query = {}) {
+  const scope = toolScope(user, query.branchId);
   const imported = hasFinancialData(scope.restaurantId);
   const sales = executeTool(
     imported ? "get_profit_summary" : "get_daily_sales",

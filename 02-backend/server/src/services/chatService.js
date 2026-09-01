@@ -2,15 +2,15 @@ import { notFound, validationError } from "../errors/appError.js";
 import { getAssistantReply } from "../ai.js";
 import { executeTool } from "../tools.js";
 import * as chatRepository from "../repositories/chatRepository.js";
-import { defaultBranchId, toolScope } from "./branchService.js";
+import { toolScope } from "./branchService.js";
 import { chatSchema, feedbackSchema, validate } from "../validation/schemas.js";
 
-export function listChatSessions(user) {
-  return chatRepository.listSessions(user.restaurant_id, defaultBranchId(user));
+export function listChatSessions(user, requestedBranchId) {
+  return chatRepository.listSessions(user.restaurant_id, toolScope(user, requestedBranchId).branchId);
 }
 
-export function getChatMessages(user, sessionId) {
-  const branchId = defaultBranchId(user);
+export function getChatMessages(user, sessionId, requestedBranchId) {
+  const branchId = toolScope(user, requestedBranchId).branchId;
   const session = chatRepository.findSession(user.restaurant_id, branchId, sessionId);
   if (!session) throw notFound("Session not found");
   return chatRepository.listMessages(session.id);
@@ -19,13 +19,14 @@ export function getChatMessages(user, sessionId) {
 export async function sendChatMessage(user, body) {
   const parsed = validate(chatSchema, body);
   let sessionId = parsed.sessionId;
-  const branchId = defaultBranchId(user);
+  const scope = toolScope(user, parsed.branchId);
+  const branchId = scope.branchId;
   if (sessionId && !chatRepository.findSession(user.restaurant_id, branchId, sessionId))
     throw notFound("Session not found");
   if (!sessionId) sessionId = chatRepository.createSession(user.restaurant_id, branchId, parsed.message.slice(0, 48));
   chatRepository.addMessage(sessionId, "user", parsed.message);
   const history = chatRepository.getRecentHistory(sessionId);
-  const result = await getAssistantReply(history, toolScope(user));
+  const result = await getAssistantReply(history, scope);
   const messageId = chatRepository.addMessage(sessionId, "assistant", result.content);
   return {
     sessionId,
@@ -40,11 +41,12 @@ export async function sendChatMessage(user, body) {
   };
 }
 
-export function confirmAction(user, hash) {
-  const branchId = defaultBranchId(user);
+export function confirmAction(user, hash, requestedBranchId) {
+  const scope = toolScope(user, requestedBranchId);
+  const branchId = scope.branchId;
   const action = chatRepository.findPendingAction(hash, user.restaurant_id, branchId, user.owner_id);
   if (!action) throw notFound("Pending action not found");
-  const result = executeTool(action.tool_name, JSON.parse(action.arguments), toolScope(user));
+  const result = executeTool(action.tool_name, JSON.parse(action.arguments), scope);
   chatRepository.markActionExecuted(action.id);
   return { executed: true, action_hash: action.action_hash, result };
 }
@@ -53,7 +55,7 @@ export function saveFeedback(user, body) {
   const parsed = validate(feedbackSchema, body);
   if (parsed.rating === "needs_correction" && !parsed.correctedAnswer)
     throw validationError("Please provide the corrected answer.");
-  const branchId = defaultBranchId(user);
+  const branchId = toolScope(user, parsed.branchId).branchId;
   const message = chatRepository.findAssistantMessage(user.restaurant_id, branchId, parsed.sessionId, parsed.messageId);
   if (!message) throw notFound("Assistant message not found.");
   const question = chatRepository.findPreviousUserQuestion(parsed.sessionId, parsed.messageId);

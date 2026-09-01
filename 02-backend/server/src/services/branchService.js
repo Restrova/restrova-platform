@@ -1,4 +1,4 @@
-import { notFound } from "../errors/appError.js";
+import { notFound, validationError } from "../errors/appError.js";
 import * as branchRepository from "../repositories/branchRepository.js";
 import { branchCreateSchema, branchUpdateSchema, validate } from "../validation/schemas.js";
 
@@ -20,10 +20,13 @@ export function branchIdFromRequest(user, requestData = {}) {
   return branchId;
 }
 
-export function toolScope(user) {
+export function toolScope(user, requestedBranchId) {
+  const branchId = requestedBranchId === undefined ? defaultBranchId(user) : Number(requestedBranchId);
+  if (!Number.isSafeInteger(branchId) || branchId <= 0) throw validationError("A valid branch is required.");
+  if (!assertBranchAccess(user, branchId)) throw notFound("Branch not found");
   return {
     restaurantId: user.restaurant_id,
-    branchId: defaultBranchId(user),
+    branchId,
     role: user.role,
     ownerId: user.owner_id,
     currency: user.currency,

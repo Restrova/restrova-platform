@@ -289,6 +289,34 @@ textarea {
   gap: 8px;
   cursor: pointer;
 }
+.workspace-data-availability {
+  margin: 0 0 24px;
+  padding: 18px;
+  border: 1px solid #d4dfd8;
+  border-radius: 16px;
+  background: #f0f5f1;
+  color: #1d3d32;
+}
+
+.workspace-data-availability p {
+  margin: 10px 0;
+  line-height: 1.6;
+}
+
+.workspace-data-availability div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.workspace-data-availability button {
+  border: 1px solid #b6cbbd;
+  border-radius: 10px;
+  padding: 10px 14px;
+  background: white;
+  color: #1d3d32;
+}
+
 .chat {
   display: grid;
   grid-template-rows: auto 1fr auto;

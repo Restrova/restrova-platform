@@ -13,6 +13,17 @@ export function hasFinancialData(restaurantId) {
   return Boolean(db.prepare("SELECT 1 FROM financial_ledger_entries WHERE restaurant_id=? LIMIT 1").get(restaurantId));
 }
 
+function availableSalesBranches(context) {
+  return db
+    .prepare(
+      `SELECT b.id,b.name,MIN(e.occurred_at) AS first,MAX(e.occurred_at) AS last
+    FROM financial_ledger_entries e JOIN branches b ON b.id=e.branch_id AND b.restaurant_id=e.restaurant_id
+    WHERE e.restaurant_id=? AND e.category='sales'${context.role === "branch_manager" ? " AND b.id=?" : ""}
+    GROUP BY b.id,b.name ORDER BY b.name,b.id`
+    )
+    .all(...(context.role === "branch_manager" ? [context.restaurantId, context.branchId] : [context.restaurantId]));
+}
+
 export function importedAnalytics(name, args, context) {
   if (
     ![
@@ -76,6 +87,7 @@ export function importedAnalytics(name, args, context) {
     range,
     period: period.current,
     coverage,
+    available_branches: availableSalesBranches(context),
     has_data: financial.completeness.hasData,
     has_sales: financial.completeness.presentCategories.includes("sales"),
     missing_categories: financial.completeness.missingCategories
