@@ -274,8 +274,8 @@ function DatasetEvaluation({ evaluation, locale, onReset, onFinish }) {
         </div>
       </div>
       {evaluation.numericColumns?.length > 0 && (
-        <div className="import-evaluation-columns">
-          <strong>{ar ? "المقاييس الرقمية المكتشفة" : "Detected numeric metrics"}</strong>
+        <details className="import-manual-choice import-evaluation-columns">
+          <summary>{ar ? "عرض الإحصاءات التفصيلية (اختياري)" : "View detailed statistics (optional)"}</summary>
           <div className="import-table-wrap">
             <table className="import-table import-evaluation-table">
               <thead>
@@ -300,7 +300,7 @@ function DatasetEvaluation({ evaluation, locale, onReset, onFinish }) {
               </tbody>
             </table>
           </div>
-        </div>
+        </details>
       )}
       {evaluation.mode === "analysis_only" && (
         <div className="import-analysis-complete">
@@ -393,6 +393,21 @@ function MappingEditor({ job, mappings, onChange, onSave, loading }) {
         </div>
       </Card>
     </section>
+  );
+}
+
+function OptionalMappingEditor({ job, locale, ...props }) {
+  if (!job.mapping?.ready) return <MappingEditor job={job} {...props} />;
+  return (
+    <details key={job.id} className="import-manual-choice">
+      <summary>
+        <span>
+          <strong>{locale === "ar" ? "تمت مطابقة الأعمدة تلقائيًا" : "Columns matched automatically"}</strong>
+          <small>{locale === "ar" ? "عرض أو تعديل المطابقة (اختياري)" : "View or edit mapping (optional)"}</small>
+        </span>
+      </summary>
+      <MappingEditor job={job} {...props} />
+    </details>
   );
 }
 
@@ -829,7 +844,8 @@ export function ImportWizardPage() {
           />
           {job.datasetEvaluation?.mode !== "analysis_only" && (
             <>
-              <MappingEditor
+              <OptionalMappingEditor
+                locale={locale}
                 job={job}
                 mappings={mappings}
                 onChange={changeMapping}

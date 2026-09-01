@@ -433,7 +433,7 @@ test("Smart import identifies branches, menu, costs, and sales from file columns
   const samples = [
     {
       templateKey: "branches",
-      csv: `branch_code,name,city,address,phone,pos_system,operating_day_start,operating_day_end\nAUTO-01,Auto Branch,Guangzhou,,,,09:00,01:00`
+      csv: `branch_code,name,city,address,phone,pos_system,operating_day_start,operating_day_end\n101,Auto Branch,Guangzhou,,966112450101,,09:00,01:00`
     },
     {
       templateKey: "menu",
@@ -457,6 +457,12 @@ test("Smart import identifies branches, menu, costs, and sales from file columns
     assert.equal(preview.payload.detection.templateKey, sample.templateKey);
     assert.equal(preview.payload.detection.confidence, "high");
     assert.ok(preview.payload.detection.matchedFields.length >= 2);
+    assert.equal(
+      preview.payload.datasetEvaluation.numericColumns.some((metric) =>
+        ["phone", "branch_code", "external_line_id"].includes(metric.column)
+      ),
+      false
+    );
   }
 });
 

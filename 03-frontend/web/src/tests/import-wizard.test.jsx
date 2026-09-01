@@ -108,6 +108,9 @@ describe("ImportWizardPage", () => {
     expect(screen.getByText("Ready to confirm")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Confirm import" })).toBeEnabled();
     expect(importsApi.previewImportFile).toHaveBeenCalledWith({ templateKey: undefined, file });
+    expect(screen.getByLabelText("Map Branch Code")).not.toBeVisible();
+    await user.click(screen.getByText("Columns matched automatically"));
+    expect(screen.getByLabelText("Map Branch Code")).toBeVisible();
   });
 
   it("saves a manual mapping when required fields are missing", async () => {
@@ -245,7 +248,9 @@ describe("ImportWizardPage", () => {
 
     expect(await screen.findByRole("heading", { name: "Dataset quality summary" })).toBeInTheDocument();
     expect(screen.getByText("10,000")).toBeInTheDocument();
-    expect(screen.getByText("42.25")).toBeInTheDocument();
+    expect(screen.getByText("42.25")).not.toBeVisible();
+    await user.click(screen.getByText("View detailed statistics (optional)"));
+    expect(screen.getByText("42.25")).toBeVisible();
     expect(screen.queryByRole("heading", { name: "Review column mapping" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Confirm import" })).not.toBeInTheDocument();
     expect(screen.getByText("File analysis complete")).toBeInTheDocument();

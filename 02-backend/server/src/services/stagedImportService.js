@@ -370,6 +370,15 @@ function evaluateDataset(headers, rows, validation) {
   for (const header of headers) {
     const values = rows.map((row) => row[header]).filter((value) => String(value ?? "").trim() !== "");
     populatedCells += values.length;
+    // Identifiers and contact details are not quantities: their averages are meaningless.
+    const mappedField = validation.mappings?.find((mapping) => mapping.sourceColumn === header)?.targetField;
+    const isIdentifier = (field) =>
+      /(^|_)(id|code|phone|telephone|tel|mobile|postcode|postal|zip)(_|$)/i.test(
+        String(field || "")
+          .replace(/([a-z])([A-Z])/g, "$1_$2")
+          .replace(/[\s-]+/g, "_")
+      ) || /هاتف|جوال|معرف|معرّف|رمز|电话|编号/.test(String(field || ""));
+    if (isIdentifier(header) || isIdentifier(mappedField)) continue;
     const numbers = values.map(Number).filter(Number.isFinite);
     if (values.length > 0 && numbers.length / values.length >= 0.8) {
       numericColumns.push({
