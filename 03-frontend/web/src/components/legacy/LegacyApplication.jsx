@@ -9,7 +9,6 @@ import {
   ShieldCheck,
   CircleDollarSign,
   Database,
-  Upload,
   X,
   ThumbsUp,
   ThumbsDown,
@@ -79,127 +78,6 @@ class ErrorBoundary extends React.Component {
       </main>
     );
   }
-}
-
-const importOptions = {
-  orders: "Orders & historical sales",
-  refunds: "Refunds",
-  menu_items: "Menu prices & costs",
-  inventory: "Inventory levels",
-  staff_shifts: "Staff shifts & labor cost"
-};
-
-function DataPanel({ onClose, onImported }) {
-  const [type, setType] = useState("orders");
-  const [file, setFile] = useState();
-  const [status, setStatus] = useState();
-  const [busy, setBusy] = useState(false);
-  const [counts, setCounts] = useState();
-  const [preview, setPreview] = useState();
-
-  useEffect(() => {
-    api("/data/status")
-      .then(setCounts)
-      .catch(() => {});
-  }, []);
-
-  const upload = async (event) => {
-    event.preventDefault();
-    if (!file) return;
-    setBusy(true);
-    setStatus();
-    try {
-      const csv = await file.text();
-      if (!preview) {
-        const nextPreview = await api("/data/import/preview", { method: "POST", body: JSON.stringify({ type, csv }) });
-        setPreview({ ...nextPreview, csv });
-        setStatus({
-          ok: true,
-          text: `Preview ready: ${nextPreview.rows} rows. Click confirm import to write live data.`
-        });
-        return;
-      }
-      const result = await api("/data/import", {
-        method: "POST",
-        body: JSON.stringify({ type, csv: preview.csv, confirm: true })
-      });
-      setStatus({ ok: true, text: `Imported ${result.imported} rows successfully.` });
-      setPreview();
-      setCounts(await api("/data/status"));
-      onImported();
-    } catch (err) {
-      setStatus({ ok: false, text: err.message });
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  return (
-    <div className="modal-backdrop">
-      <section className="data-panel">
-        <header>
-          <div>
-            <small>REAL RESTAURANT DATA</small>
-            <h2>Connect your operations</h2>
-          </div>
-          <button onClick={onClose} aria-label="Close">
-            <X />
-          </button>
-        </header>
-        <p>
-          Upload CSV exports from your POS, inventory, menu, or scheduling system. Every row stays isolated to this
-          restaurant.
-        </p>
-        <div className="connection-grid">
-          {counts &&
-            Object.entries(importOptions).map(([key, label]) => (
-              <article key={key}>
-                <Database />
-                <div>
-                  <b>{label}</b>
-                  <small>{counts[key]} records connected</small>
-                </div>
-              </article>
-            ))}
-        </div>
-        <form onSubmit={upload}>
-          <label>
-            Data type
-            <select value={type} onChange={(event) => setType(event.target.value)}>
-              {Object.entries(importOptions).map(([value, label]) => (
-                <option value={value} key={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            CSV file
-            <input
-              type="file"
-              accept=".csv,text/csv"
-              onChange={(event) => {
-                setFile(event.target.files[0]);
-                setPreview();
-              }}
-            />
-          </label>
-          <small className="csv-help">Required columns are documented in the repository README.</small>
-          {status && <div className={status.ok ? "import-success" : "import-error"}>{status.text}</div>}
-          {preview && (
-            <div className="import-success">
-              Preview confirmed {preview.rows} rows. Duplicate orders/refunds will be skipped by source key or row
-              fingerprint.
-            </div>
-          )}
-          <button className="import-button" disabled={!file || busy}>
-            <Upload />
-            {busy ? "Working..." : preview ? "Confirm import" : "Preview CSV"}
-          </button>
-        </form>
-      </section>
-    </div>
-  );
 }
 
 function ManagementPanel({ onClose, me, onUpdated }) {
@@ -591,7 +469,7 @@ function App() {
           <i>● Data connected</i>
         </div>
         <nav>
-          <b>Today's decision brief</b>
+          <b>{stats?.source === "imports" ? "Current month decision brief" : "Today's decision brief"}</b>
           <article>
             <TrendingUp />
             <div>
@@ -646,7 +524,7 @@ function App() {
             <h1>Decision center</h1>
           </div>
           <span>
-            <i /> Live data ready
+            <i /> {stats?.source === "imports" ? "Imported data connected" : "Live data ready"}
           </span>
         </header>
         {workspaceError && (
@@ -718,7 +596,6 @@ function App() {
 }
 
 function Root() {
-  const [showData, setShowData] = useState(false);
   const [authenticated, setAuthenticated] = useState(!!localStorage.getItem("token"));
   useEffect(() => {
     const sync = () => setAuthenticated(!!localStorage.getItem("token"));
@@ -729,15 +606,10 @@ function Root() {
     <>
       {authenticated && (
         <>
-          <button className="data-fab" onClick={() => setShowData(true)}>
-            <Database /> Connect real data
+          <button className="data-fab" onClick={() => window.location.assign("/app/imports")}>
+            <Database /> Import & manage data
           </button>
         </>
-      )}
-      {showData && (
-        <ErrorBoundary>
-          <DataPanel onClose={() => setShowData(false)} onImported={() => {}} />
-        </ErrorBoundary>
       )}
       <FeedbackCollector />
       <ErrorBoundary>

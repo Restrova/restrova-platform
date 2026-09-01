@@ -322,6 +322,54 @@ test("Task 2.2 validates menu, costs, +08:00 dates, sales references, and duplic
   );
 });
 
+test("confirmed imports feed the current workspace dashboard", async (t) => {
+  const server = app.listen(0);
+  t.after(() => server.close());
+  const stamp = `${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+  const registration = await registerOwner(server, stamp);
+  const token = registration.payload.token;
+  const itemCode = `WORKSPACE-${String(Date.now()).slice(-6)}`;
+  const saleTime = new Date();
+  const effectiveFrom = new Date(saleTime.getTime() - 24 * 60 * 60 * 1000).toISOString();
+
+  const menuPreview = await previewCsv(
+    server,
+    token,
+    "menu",
+    "workspace-menu.csv",
+    `item_code,name,category,selling_price,active\n${itemCode},مندي مساحة العمل,المندي,50.00,true`
+  );
+  await confirmJob(server, token, menuPreview.payload);
+
+  const costPreview = await previewCsv(
+    server,
+    token,
+    "costs",
+    "workspace-costs.csv",
+    `item_code,branch_code,direct_food_cost,packaging_cost,effective_from\n${itemCode},GZ-01,20.00,2.00,${effectiveFrom}`
+  );
+  await confirmJob(server, token, costPreview.payload);
+
+  const salesPreview = await previewCsv(
+    server,
+    token,
+    "sales",
+    "workspace-sales.csv",
+    `external_order_id,external_line_id,branch_code,created_at,channel,item_code,quantity,gross_sales,discount,refund_amount,delivery_commission\nWORKSPACE-${stamp},1,GZ-01,${saleTime.toISOString()},delivery,${itemCode},2,100.00,5.00,3.00,10.00`
+  );
+  await confirmJob(server, token, salesPreview.payload);
+
+  const dashboard = await jsonRequest(server, "/api/dashboard", { token });
+  assert.equal(dashboard.status, 200);
+  assert.equal(dashboard.payload.source, "imports");
+  assert.equal(dashboard.payload.sales.revenue, 100);
+  assert.equal(dashboard.payload.sales.net_revenue, 92);
+  assert.equal(dashboard.payload.sales.profit, 38);
+  assert.equal(dashboard.payload.sales.orders, 1);
+  assert.equal(dashboard.payload.topDishes[0].name, "مندي مساحة العمل");
+  assert.equal(dashboard.payload.topDishes[0].revenue, 92);
+});
+
 test("Task 2.2 rejects empty files, supports basic XLSX, and can cancel before confirmation", async (t) => {
   const server = app.listen(0);
   t.after(() => server.close());
