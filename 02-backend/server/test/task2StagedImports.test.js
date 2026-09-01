@@ -368,6 +368,117 @@ test("confirmed imports feed the current workspace dashboard", async (t) => {
   assert.equal(dashboard.payload.sales.orders, 1);
   assert.equal(dashboard.payload.topDishes[0].name, "مندي مساحة العمل");
   assert.equal(dashboard.payload.topDishes[0].revenue, 92);
+
+  for (const message of ["كم مبيعات اليوم", "مبيعات الشهر", "How much are sales this month?"]) {
+    const reply = await jsonRequest(server, "/api/chat", { token, method: "POST", body: { message } });
+    assert.equal(reply.status, 200);
+    assert.match(reply.payload.message.content, /92\.00/);
+    assert.match(reply.payload.message.content, /38\.00/);
+    assert.match(reply.payload.message.content, /Guangzhou Main/);
+    assert.match(reply.payload.message.content, /Asia\/Shanghai/);
+    assert.doesNotMatch(reply.payload.message.content, /100\.00/);
+  }
+  const top = await jsonRequest(server, "/api/chat", {
+    token,
+    method: "POST",
+    body: { message: "أفضل الأطباق هذا الشهر" }
+  });
+  assert.match(top.payload.message.content, /مندي مساحة العمل/);
+  assert.match(top.payload.message.content, /92\.00/);
+  const refund = await jsonRequest(server, "/api/chat", {
+    token,
+    method: "POST",
+    body: { message: "استردادات الشهر" }
+  });
+  assert.match(refund.payload.message.content, /3\.00/);
+  const empty = await jsonRequest(server, "/api/chat", {
+    token,
+    method: "POST",
+    body: { message: "مبيعات 2020-01-01" }
+  });
+  assert.match(empty.payload.message.content, /لا توجد بيانات مبيعات/);
+  assert.match(empty.payload.message.content, /تواريخ المبيعات المتاحة/);
+  assert.doesNotMatch(empty.payload.message.content, /0\.00/);
+
+  // Another branch must not inflate either the workspace cards or the assistant answer.
+  const branchPreview = await previewCsv(
+    server,
+    token,
+    "branches",
+    "second.csv",
+    "branch_code,name,city\nSECOND,Second Branch,Shenzhen"
+  );
+  await confirmJob(server, token, branchPreview.payload);
+  const otherSales = await previewCsv(
+    server,
+    token,
+    "sales",
+    "second-sales.csv",
+    `external_order_id,external_line_id,branch_code,created_at,channel,item_code,quantity,gross_sales\nOTHER-${stamp},1,SECOND,${saleTime.toISOString()},dine_in,${itemCode},1,9000.00`
+  );
+  const otherConfirmed = await confirmJob(server, token, otherSales.payload);
+  assert.equal(otherConfirmed.status, 200);
+  const scopedDashboard = await jsonRequest(server, "/api/dashboard", { token });
+  assert.equal(scopedDashboard.payload.sales.net_revenue, 92);
+  const scopedReply = await jsonRequest(server, "/api/chat", {
+    token,
+    method: "POST",
+    body: { message: "مبيعات الشهر" }
+  });
+  assert.match(scopedReply.payload.message.content, /92\.00/);
+  assert.doesNotMatch(scopedReply.payload.message.content, /9,?000|9,?092/);
+
+  const { executeTool } = await import("../src/tools.js");
+  const restaurantId = registration.payload.restaurant.id;
+  const secondBranch = db
+    .prepare("SELECT id FROM branches WHERE restaurant_id=? AND code='SECOND'")
+    .get(restaurantId).id;
+  const incomplete = executeTool(
+    "get_profit_summary",
+    { range: "month" },
+    { restaurantId, branchId: secondBranch, role: "branch_manager" }
+  );
+  assert.equal(incomplete.net_revenue, 9000);
+  assert.equal(incomplete.profit, null);
+  assert.equal(incomplete.margin_percent, null);
+  const foreign = await registerOwner(server, `foreign-${stamp}`);
+  const foreignBranch = db
+    .prepare("SELECT id FROM branches WHERE restaurant_id=? LIMIT 1")
+    .get(foreign.payload.restaurant.id).id;
+  assert.throws(
+    () => executeTool("get_daily_sales", {}, { restaurantId, branchId: foreignBranch }),
+    /Branch not found/
+  );
+
+  const organizationId = db
+    .prepare("SELECT organization_id FROM restaurants WHERE id=?")
+    .get(restaurantId).organization_id;
+  db.prepare("UPDATE organizations SET currency='USD' WHERE id=?").run(organizationId);
+  const currencyReply = await jsonRequest(server, "/api/chat", {
+    token,
+    method: "POST",
+    body: { message: "مبيعات الشهر" }
+  });
+  assert.match(currencyReply.payload.message.content, /\$92\.00/);
+  assert.doesNotMatch(currencyReply.payload.message.content, /CN|¥/);
+
+  // Historical imports remain the source even when the current month has no entries.
+  db.prepare("UPDATE financial_ledger_entries SET occurred_at='2020-01-01T10:00:00Z' WHERE restaurant_id=?").run(
+    restaurantId
+  );
+  db.prepare("UPDATE sales_lines SET created_at='2020-01-01T10:00:00Z' WHERE restaurant_id=?").run(restaurantId);
+  const emptyDashboard = await jsonRequest(server, "/api/dashboard", { token });
+  assert.equal(emptyDashboard.payload.source, "imports");
+  assert.equal(emptyDashboard.payload.sales.has_sales, false);
+  assert.equal(emptyDashboard.payload.sales.profit, null);
+  const oldDataReply = await jsonRequest(server, "/api/chat", {
+    token,
+    method: "POST",
+    body: { message: "مبيعات الشهر" }
+  });
+  assert.match(oldDataReply.payload.message.content, /لا توجد بيانات مبيعات/);
+  assert.match(oldDataReply.payload.message.content, /2020-01-01/);
+  assert.doesNotMatch(oldDataReply.payload.message.content, /0\.00/);
 });
 
 test("Task 2.2 rejects empty files, supports basic XLSX, and can cancel before confirmation", async (t) => {
