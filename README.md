@@ -59,6 +59,8 @@ Tasks 1, 2, and 3 are implemented, and Task 4 has started with the deterministic
 - `GET /api/financial/period`
 - `GET /api/financial/dashboard`
 - `GET /api/financial/report`
+- `GET /api/branches/performance`
+- `GET /api/branches/rankings`
 - `GET /api/menu/costs`
 - `GET /api/menu/margins`
 - `GET /api/chat/sessions`

@@ -4,6 +4,12 @@ All notable project changes should be documented here.
 
 This project follows a simple date-based changelog until a formal release process is introduced.
 
+## 2026-09-02
+
+- Added Task 5.2 branch ranking API for best/worst net profit, fastest revenue growth, highest margin and largest recorded food costs.
+- Added category-level eligibility, explicit zero handling, tied leaders, comparison-baseline limits and scoped financial lineage.
+- Added regression coverage for ranking calculations, incomplete evidence, access boundaries and timezone-aware periods.
+
 ## 2026-08-29
 
 - Added a clear analysis completion state with actions to continue to the decision center or analyze another file.
