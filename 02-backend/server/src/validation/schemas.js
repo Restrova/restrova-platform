@@ -204,11 +204,13 @@ export const knowledgeImportSchema = z.object({
 });
 
 export const chatSchema = z.object({
+  branchId: z.number().int().positive().optional(),
   message: z.string().trim().min(1).max(4000),
   sessionId: z.number().int().positive().optional()
 });
 
 export const feedbackSchema = z.object({
+  branchId: z.number().int().positive().optional(),
   sessionId: z.number().int().positive(),
   messageId: z.number().int().positive(),
   rating: z.enum(["approved", "needs_correction"]),

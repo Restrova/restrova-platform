@@ -450,6 +450,122 @@ test("confirmed imports feed the current workspace dashboard", async (t) => {
     /Branch not found/
   );
 
+  // The selected branch controls cards, answers, history, and feedback together.
+  const selectedDashboard = await jsonRequest(server, `/api/dashboard?branchId=${secondBranch}`, { token });
+  assert.equal(selectedDashboard.status, 200);
+  assert.equal(selectedDashboard.payload.sales.net_revenue, 9000);
+  assert.equal(selectedDashboard.payload.branchName, "Second Branch");
+  const selectedReply = await jsonRequest(server, "/api/chat", {
+    token,
+    method: "POST",
+    body: { message: "مبيعات الشهر", branchId: secondBranch }
+  });
+  assert.equal(selectedReply.status, 200);
+  assert.match(selectedReply.payload.message.content, /Second Branch/);
+  assert.match(selectedReply.payload.message.content, /9,?000\.00/);
+  const selectedSession = selectedReply.payload.sessionId;
+  const sessions = await jsonRequest(server, `/api/chat/sessions?branchId=${secondBranch}`, { token });
+  assert.ok(sessions.payload.some((session) => session.id === selectedSession));
+  const messages = await jsonRequest(
+    server,
+    `/api/chat/sessions/${selectedSession}/messages?branchId=${secondBranch}`,
+    { token }
+  );
+  assert.equal(messages.status, 200);
+  const wrongHistory = await jsonRequest(server, `/api/chat/sessions/${selectedSession}/messages`, { token });
+  assert.equal(wrongHistory.status, 404);
+  const wrongSession = await jsonRequest(server, "/api/chat", {
+    token,
+    method: "POST",
+    body: { message: "مبيعات اليوم", sessionId: selectedSession }
+  });
+  assert.equal(wrongSession.status, 404);
+  const feedback = { sessionId: selectedSession, messageId: selectedReply.payload.message.id, rating: "approved" };
+  assert.equal((await jsonRequest(server, "/api/feedback", { token, method: "POST", body: feedback })).status, 404);
+  assert.equal(
+    (
+      await jsonRequest(server, "/api/feedback", {
+        token,
+        method: "POST",
+        body: { ...feedback, branchId: secondBranch }
+      })
+    ).status,
+    201
+  );
+  for (const branchId of [foreignBranch, "invalid"]) {
+    const denied = await jsonRequest(server, `/api/dashboard?branchId=${branchId}`, { token });
+    assert.equal(denied.status, branchId === foreignBranch ? 404 : 400);
+  }
+  assert.equal(
+    (
+      await jsonRequest(server, "/api/chat", {
+        token,
+        method: "POST",
+        body: { message: "مبيعات الشهر", branchId: foreignBranch }
+      })
+    ).status,
+    404
+  );
+
+  // An empty branch points owners to imported branches without claiming zero sales.
+  const emptyBranch = await jsonRequest(server, "/api/branches", {
+    token,
+    method: "POST",
+    body: { name: "Empty Branch", code: "EMPTY", city: "Guangzhou" }
+  });
+  assert.equal(emptyBranch.status, 201);
+  const emptyBranchDashboard = await jsonRequest(server, `/api/dashboard?branchId=${emptyBranch.payload.id}`, {
+    token
+  });
+  assert.equal(emptyBranchDashboard.payload.sales.coverage.first, null);
+  assert.equal(emptyBranchDashboard.payload.sales.has_sales, false);
+  assert.ok(emptyBranchDashboard.payload.sales.available_branches.some((branch) => branch.id === secondBranch));
+  assert.ok(emptyBranchDashboard.payload.sales.available_branches.every((branch) => branch.id !== foreignBranch));
+  const emptyBranchReply = await jsonRequest(server, "/api/chat", {
+    token,
+    method: "POST",
+    body: { message: "مبيعات الشهر", branchId: emptyBranch.payload.id }
+  });
+  assert.match(emptyBranchReply.payload.message.content, /Second Branch/);
+  assert.match(emptyBranchReply.payload.message.content, /الفرع الحالي/);
+  assert.doesNotMatch(emptyBranchReply.payload.message.content, /0\.00/);
+
+  const managerEmail = `workspace-manager-${stamp}@example.test`;
+  const invited = await jsonRequest(server, "/api/users/invite", {
+    token,
+    method: "POST",
+    body: { email: managerEmail, role: "branch_manager", branchId: secondBranch }
+  });
+  assert.equal(invited.status, 201);
+  const manager = await jsonRequest(server, "/api/auth/login", {
+    method: "POST",
+    body: { email: managerEmail, password: invited.payload.temporaryPassword }
+  });
+  assert.equal(manager.status, 200);
+  const managerDashboard = await jsonRequest(server, `/api/dashboard?branchId=${secondBranch}`, {
+    token: manager.payload.token
+  });
+  assert.equal(managerDashboard.payload.sales.net_revenue, 9000);
+  assert.deepEqual(
+    managerDashboard.payload.sales.available_branches.map((branch) => branch.id),
+    [secondBranch]
+  );
+  assert.equal(
+    (await jsonRequest(server, `/api/dashboard?branchId=${emptyBranch.payload.id}`, { token: manager.payload.token }))
+      .status,
+    404
+  );
+  assert.equal(
+    (
+      await jsonRequest(server, "/api/chat", {
+        token: manager.payload.token,
+        method: "POST",
+        body: { message: "مبيعات الشهر", branchId: emptyBranch.payload.id }
+      })
+    ).status,
+    404
+  );
+
   const organizationId = db
     .prepare("SELECT organization_id FROM restaurants WHERE id=?")
     .get(restaurantId).organization_id;

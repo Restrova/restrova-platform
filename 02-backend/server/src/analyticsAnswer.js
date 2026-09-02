@@ -61,7 +61,7 @@ export function formatImportedAnswer(name, data, arabic) {
   const to = localDate(meta.period.to);
   const scope = meta.branch_name || (arabic ? "المطعم" : "Restaurant");
   const heading = arabic
-    ? `الفرع: ${scope}\nالفترة: ${from} — ${to} (${meta.timezone})\nالمصدر: البيانات المستوردة`
+    ? `الفرع: ${scope}\nالفترة: من ${from} إلى ${to} (${meta.timezone})\nالمصدر: البيانات المستوردة`
     : `Scope: ${scope}\nPeriod: ${from} — ${to} (${meta.timezone})\nSource: imported data`;
   const noSales = arabic
     ? "لا توجد بيانات مبيعات مسجلة لهذا الفرع خلال الفترة المطلوبة. هذا لا يعني أن المبيعات الفعلية تساوي صفرًا."
@@ -71,8 +71,14 @@ export function formatImportedAnswer(name, data, arabic) {
       ? `\nتواريخ المبيعات المتاحة: ${localDate(meta.coverage.first)} — ${localDate(meta.coverage.last)}.`
       : `\nAvailable sales dates: ${localDate(meta.coverage.first)} — ${localDate(meta.coverage.last)}.`
     : "";
+  const alternatives =
+    !meta.coverage?.first && meta.available_branches?.length
+      ? arabic
+        ? `\nتوجد بيانات مستوردة للفروع التالية: ${meta.available_branches.map((branch) => branch.name).join("، ")}. اختر أحدها من قائمة «الفرع الحالي» أو من أزرار البيانات المتاحة.`
+        : `\nImported data is available for: ${meta.available_branches.map((branch) => branch.name).join(", ")}. Select one using Current branch or the available-data buttons.`
+      : "";
   if (!meta.has_sales && (name !== "get_refund_summary" || !meta.has_data))
-    return `${heading}\n\n${noSales}${coverage}`;
+    return `${heading}\n\n${noSales}${coverage}${alternatives}`;
   if (Array.isArray(data)) {
     if (!data.length)
       return `${heading}\n\n${arabic ? "لا توجد أطباق مطابقة في السجلات المتاحة لهذه الفترة." : "No matching dishes were found in the available records for this period."}`;
