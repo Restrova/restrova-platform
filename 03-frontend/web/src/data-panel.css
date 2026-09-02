@@ -1,9 +1,6 @@
-.data-fab {
-  position: fixed;
-  z-index: 20;
-  left: 24px;
-  bottom: 58px;
-  width: 262px;
+.workspace-import-link {
+  flex: 0 1 auto;
+  text-decoration: none;
   border: 1px solid #ffffff1c;
   border-radius: 11px;
   padding: 11px 14px;
@@ -17,7 +14,8 @@
   font-weight: 700;
   cursor: pointer;
 }
-.data-fab svg {
+.workspace-import-link svg {
+  flex-shrink: 0;
   width: 17px;
 }
 .modal-backdrop {
@@ -154,11 +152,6 @@
   width: 18px;
 }
 @media (max-width: 800px) {
-  .data-fab {
-    left: 16px;
-    bottom: 90px;
-    width: auto;
-  }
   .connection-grid {
     grid-template-columns: 1fr;
   }

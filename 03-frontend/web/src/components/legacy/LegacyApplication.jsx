@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import {
   Bot,
   Send,
@@ -338,7 +339,7 @@ function FeedbackCollector({ branchId }) {
 
   return (
     <aside className="feedback-card">
-      <button className="feedback-close" onClick={() => setSaved(true)}>
+      <button className="feedback-close" aria-label="Dismiss feedback" onClick={() => setSaved(true)}>
         <X />
       </button>
       <b>Was this manager answer correct?</b>
@@ -407,7 +408,7 @@ function App({ branchId }) {
   });
   const [showManage, setShowManage] = useState(false);
   const [workspaceError, setWorkspaceError] = useState("");
-  const bottom = useRef();
+  const messageList = useRef();
   const currency = stats?.currency || me?.organization?.currency || "CNY";
 
   const refreshContext = useCallback(async () => {
@@ -435,8 +436,8 @@ function App({ branchId }) {
     };
   }, [auth.isAuthenticated, branchId, dashboardPath, refreshContext]);
   useEffect(() => {
-    const node = bottom.current;
-    if (node && typeof node.scrollIntoView === "function") node.scrollIntoView();
+    const node = messageList.current;
+    if (node) node.scrollTop = node.scrollHeight;
   }, [messages, loading]);
 
   const send = async (event, preset) => {
@@ -559,7 +560,7 @@ function App({ branchId }) {
           <LogOut size={16} /> Sign out
         </button>
       </aside>
-      <main className="chat">
+      <section className="chat" aria-label="Decision assistant">
         <header>
           <div>
             <small>AI DECISION COPILOT</small>
@@ -569,12 +570,12 @@ function App({ branchId }) {
             <i /> {stats?.source === "imports" ? "Imported data connected" : "Live data ready"}
           </span>
         </header>
-        {workspaceError && (
-          <p className="quiet-note" role="status">
-            {workspaceError}
-          </p>
-        )}
-        <section className="messages">
+        <section className="messages" ref={messageList} aria-label="Conversation" tabIndex={0}>
+          {workspaceError && (
+            <p className="quiet-note" role="status">
+              {workspaceError}
+            </p>
+          )}
           <WorkspaceDataAvailability
             sales={stats?.sales}
             onSelectBranch={restaurant.setSelectedBranchId}
@@ -605,19 +606,24 @@ function App({ branchId }) {
               </div>
             </div>
           )}
-          <div ref={bottom} />
+          <FeedbackCollector branchId={branchId} />
         </section>
         <footer>
-          <div className="prompts">
-            {[
-              "Give me today's business summary",
-              "Which dishes hurt my profit?",
-              "What inventory needs attention?"
-            ].map((prompt) => (
-              <button type="button" onClick={() => send(null, prompt)} key={prompt}>
-                {prompt}
-              </button>
-            ))}
+          <div className="workspace-actions">
+            <div className="prompts">
+              {[
+                "Give me today's business summary",
+                "Which dishes hurt my profit?",
+                "What inventory needs attention?"
+              ].map((prompt) => (
+                <button type="button" onClick={() => send(null, prompt)} key={prompt}>
+                  {prompt}
+                </button>
+              ))}
+            </div>
+            <Link className="workspace-import-link" to="/app/imports">
+              <Database /> Import & manage data
+            </Link>
           </div>
           <form onSubmit={send}>
             <textarea
@@ -632,39 +638,23 @@ function App({ branchId }) {
                 }
               }}
             />
-            <button type="submit" disabled={loading || !text.trim() || !branchId}>
+            <button type="submit" aria-label="Send message" disabled={loading || !text.trim() || !branchId}>
               <Send />
             </button>
           </form>
           <small>AI recommends. You approve. Every number comes from restaurant data.</small>
         </footer>
-      </main>
+      </section>
     </div>
   );
 }
 
 function Root() {
   const { selectedBranchId } = useRestaurant();
-  const [authenticated, setAuthenticated] = useState(!!localStorage.getItem("token"));
-  useEffect(() => {
-    const sync = () => setAuthenticated(!!localStorage.getItem("token"));
-    window.addEventListener("auth-change", sync);
-    return () => window.removeEventListener("auth-change", sync);
-  }, []);
   return (
-    <>
-      {authenticated && (
-        <>
-          <button className="data-fab" onClick={() => window.location.assign("/app/imports")}>
-            <Database /> Import & manage data
-          </button>
-        </>
-      )}
-      <FeedbackCollector key={selectedBranchId} branchId={selectedBranchId} />
-      <ErrorBoundary>
-        <App key={selectedBranchId} branchId={selectedBranchId} />
-      </ErrorBoundary>
-    </>
+    <ErrorBoundary>
+      <App key={selectedBranchId} branchId={selectedBranchId} />
+    </ErrorBoundary>
   );
 }
 
