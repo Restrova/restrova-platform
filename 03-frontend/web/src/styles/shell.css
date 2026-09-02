@@ -1,6 +1,9 @@
 .app-shell {
   display: grid;
-  min-block-size: 100vh;
+  block-size: 100vh;
+  block-size: 100dvh;
+  overflow: hidden;
+  grid-template-rows: minmax(0, 1fr);
   grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
   background: radial-gradient(circle at 78% 0%, rgb(203 226 217 / 0.22), transparent 28rem), var(--color-background);
 }
@@ -14,18 +17,20 @@
 }
 
 .app-shell__content {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-block-size: 0;
   min-inline-size: 0;
 }
 
 .app-sidebar {
-  position: sticky;
-  inset-block-start: 0;
   display: flex;
-  block-size: 100vh;
+  min-block-size: 0;
   min-inline-size: 0;
   flex-direction: column;
   gap: var(--space-4);
   overflow-y: auto;
+  overscroll-behavior-y: contain;
   border-inline-end: 0;
   background: linear-gradient(180deg, #103b31, #0d3028 62%, #0a2821);
   color: #edf7f3;
@@ -209,25 +214,30 @@
 }
 
 .app-topbar {
-  position: sticky;
-  inset-block-start: 0;
+  position: relative;
   z-index: var(--z-sticky);
   display: flex;
   min-block-size: var(--topbar-height);
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
   border-block-end: 1px solid var(--color-border);
-  background: rgb(255 255 255 / 0.86);
-  backdrop-filter: blur(18px);
+  background: var(--color-surface);
+  padding-block: var(--space-2);
   padding-inline: var(--space-6);
 }
 
 .app-topbar__title {
   display: flex;
+  flex: 1 1 12rem;
   min-inline-size: 0;
   align-items: center;
   gap: var(--space-3);
+}
+
+.app-topbar__title > div {
+  min-inline-size: 0;
 }
 
 .app-topbar__title h1 {
@@ -249,19 +259,41 @@
 
 .app-topbar__controls {
   display: flex;
+  max-inline-size: 100%;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--space-3);
 }
 
+.app-topbar .shell-switcher {
+  color: var(--color-text-secondary);
+}
+
+.app-topbar .shell-switcher select {
+  max-inline-size: 14rem;
+  border-color: var(--color-input-border);
+  background: var(--color-input-background);
+  color: var(--color-text-primary);
+}
+
+.app-topbar .user-menu__identity {
+  max-inline-size: 12rem;
+  color: var(--color-text-primary);
+}
+
 .app-main {
+  inline-size: 100%;
   max-inline-size: var(--content-max-width);
-  min-block-size: calc(100vh - var(--topbar-height));
+  min-block-size: 0;
+  min-inline-size: 0;
+  overflow-y: auto;
   margin-inline: auto;
   padding: clamp(var(--space-5), 2.5vw, var(--space-10));
 }
 
 .app-main--full-bleed {
   max-inline-size: none;
+  overflow: hidden;
   padding: 0;
 }
 
@@ -269,6 +301,7 @@
   .app-shell,
   .app-shell.is-sidebar-collapsed {
     grid-template-columns: minmax(0, 1fr);
+    padding-block-end: calc(var(--mobile-navigation-height) + env(safe-area-inset-bottom));
   }
 
   .app-sidebar {
@@ -281,10 +314,6 @@
 
   .app-topbar {
     padding-inline: var(--space-4);
-  }
-
-  .app-main {
-    padding-block-end: calc(var(--mobile-navigation-height) + var(--space-6) + env(safe-area-inset-bottom));
   }
 
   .app-topbar__controls .branch-switcher,
@@ -305,7 +334,6 @@
 
   .app-main--full-bleed {
     padding: 0;
-    padding-block-end: calc(var(--mobile-navigation-height) + env(safe-area-inset-bottom));
   }
 }
 

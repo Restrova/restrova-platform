@@ -47,6 +47,23 @@ describe("workspace branch selection", () => {
     vi.unstubAllGlobals();
   });
 
+  it("scrolls new replies inside the conversation without moving the surrounding page", async () => {
+    const onChat = vi.fn(async () => response({ sessionId: 22, message: { id: 23, content: "Latest reply" } }));
+    renderWorkspace(onChat);
+    await screen.findByRole("button", { name: "Night Branch" });
+    const conversation = screen.getByRole("region", { name: "Conversation" });
+    Object.defineProperty(conversation, "scrollHeight", { configurable: true, value: 1800 });
+    const main = document.querySelector("#main-content");
+    main.scrollTop = 0;
+    conversation.scrollTop = 0;
+    submitQuestion("Show this month's sales");
+    expect(await screen.findByText("Latest reply")).toBeInTheDocument();
+    expect(conversation.scrollTop).toBe(1800);
+    expect(main.scrollTop).toBe(0);
+    expect(within(conversation).getByRole("button", { name: "Approve" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Import & manage data" })).toHaveAttribute("href", "/app/imports");
+  });
+
   it("opens imported branches and analyzes their available dates with scoped feedback", async () => {
     const onChat = vi.fn(async () => response({ sessionId: 22, message: { id: 23, content: "Night branch sales" } }));
     const { fetchMock } = renderWorkspace(onChat);

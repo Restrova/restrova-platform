@@ -11,6 +11,7 @@ html {
 
 body {
   min-block-size: 100vh;
+  min-block-size: 100dvh;
   margin: 0;
   background: var(--color-background);
   color: var(--color-text-primary);
@@ -62,6 +63,7 @@ table {
 
 #root {
   min-block-size: 100vh;
+  min-block-size: 100dvh;
 }
 
 h1,

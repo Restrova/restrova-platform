@@ -1,9 +1,7 @@
 .feedback-card {
-  position: fixed;
-  z-index: 40;
-  right: 24px;
-  bottom: 24px;
-  width: min(390px, calc(100vw - 32px));
+  position: relative;
+  width: min(390px, 100%);
+  margin: 0 auto;
   padding: 18px;
   background: white;
   border: 1px solid #dfe2dc;
