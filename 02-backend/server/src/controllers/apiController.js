@@ -20,6 +20,7 @@ import * as priceSimulationService from "../services/priceSimulationService.js";
 import * as costSimulationService from "../services/costSimulationService.js";
 import * as menuRecommendationService from "../services/menuRecommendationService.js";
 import * as branchPerformanceService from "../services/branchPerformanceService.js";
+import * as branchRankingService from "../services/branchRankingService.js";
 
 export const health = (_req, res) => res.json(healthService.getHealth());
 export const ready = (_req, res) => res.json(healthService.getReadiness());
@@ -105,6 +106,7 @@ export const getMenuRecommendations = (req, res) =>
   res.json(menuRecommendationService.getMenuRecommendations(req.user, req.query));
 export const getBranchPerformance = (req, res) =>
   res.json(branchPerformanceService.getBranchPerformance(req.user, req.query));
+export const getBranchRankings = (req, res) => res.json(branchRankingService.getBranchRankings(req.user, req.query));
 
 export const knowledgeStatus = (req, res) => res.json(knowledgeService.getKnowledgeStatus(req.user));
 export const importKnowledge = (req, res) => res.status(201).json(knowledgeService.importKnowledge(req.user, req.body));

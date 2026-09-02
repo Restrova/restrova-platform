@@ -24,3 +24,5 @@ Growth includes current value, comparison value, absolute change, and basis-poin
 Restaurant-level costs without a branch remain unallocated. They are not distributed across branches because no evidence-backed allocation rule exists.
 
 Arabic, Chinese, and English restaurant/branch names pass through unchanged. Currency is never converted.
+
+The [branch ranking endpoint](branch-ranking.md) uses this model with metric-specific evidence requirements, stable ties and explicit exclusion reasons.
