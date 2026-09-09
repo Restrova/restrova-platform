@@ -1,4 +1,7 @@
 import { executeTool } from "./tools.js";
+import { groundedReply } from "./groundedAssistant.js";
+import { getAiRuntimeStatus, createLocalResponse } from "./localModel.js";
+export { getAiRuntimeStatus } from "./localModel.js";
 import { dataConnectionStatus } from "./dataImport.js";
 import { analyticsRequest, formatImportedAnswer, importedQuestionReply } from "./analyticsAnswer.js";
 
@@ -24,7 +27,7 @@ Before answering, do a private quality pass:
 - Is the final answer direct, useful, and specific enough to act on?
 
 Response style:
-- Reply in the same language as the owner. If they write Arabic, use clear professional Modern Standard Arabic with natural restaurant terminology.
+- Reply in the same language as the owner. If they write Arabic, use professional Saudi Arabic: natural, respectful wording such as «بناءً على بياناتك»، «خلال هالفترة»، and «أنصحك تبدأ بـ». Avoid exaggerated slang, forced greetings and unsupported praise.
 - Preserve menu and inventory item names exactly as stored, even when the rest of the answer is Arabic.
 - Use plain business language, helpful short sections, and at most five key figures.
 - Explain why a number matters; do not merely repeat tool output.
@@ -53,64 +56,6 @@ const money = (value) =>
   );
 const isArabic = (text) => /[\u0600-\u06FF]/.test(text);
 const normalizeScope = (scope) => (typeof scope === "object" ? scope : { restaurantId: scope });
-const DEFAULT_OPENAI_MODEL = "gpt-5.6";
-const OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses";
-
-export function getAiRuntimeStatus() {
-  const aiConfigured = Boolean(process.env.OPENAI_API_KEY);
-  return {
-    aiConfigured,
-    mode: aiConfigured ? "openai" : "demo",
-    model: aiConfigured ? process.env.OPENAI_MODEL || DEFAULT_OPENAI_MODEL : "built-in"
-  };
-}
-
-function logAiEvent(event, details = {}) {
-  const safe = {
-    event,
-    mode: details.mode,
-    model: details.model,
-    success: details.success,
-    status: details.status,
-    errorType: details.errorType
-  };
-  const compact = Object.fromEntries(Object.entries(safe).filter(([, value]) => value !== undefined));
-  const line = JSON.stringify({ source: "restrova-platform", ...compact });
-  if (details.success === false || event === "openai_request_failed") console.warn(line);
-  else console.info(line);
-}
-
-function sanitizeOpenAiError(error, status) {
-  if (status) return `http_${status}`;
-  if (error?.name) return error.name;
-  return "request_error";
-}
-
-function extractResponseText(payload) {
-  if (typeof payload?.output_text === "string" && payload.output_text.trim()) return payload.output_text.trim();
-  const blocks = Array.isArray(payload?.output) ? payload.output : [];
-  return blocks
-    .flatMap((item) => (Array.isArray(item.content) ? item.content : []))
-    .map((content) => content.text || content?.content?.text || "")
-    .filter(Boolean)
-    .join("\n")
-    .trim();
-}
-
-function openAiOptionsFromEnv() {
-  const body = {
-    model: process.env.OPENAI_MODEL || DEFAULT_OPENAI_MODEL,
-    store: false
-  };
-  if (process.env.OPENAI_MAX_OUTPUT_TOKENS) {
-    const maxOutputTokens = Number(process.env.OPENAI_MAX_OUTPUT_TOKENS);
-    if (Number.isFinite(maxOutputTokens) && maxOutputTokens > 0) body.max_output_tokens = maxOutputTokens;
-  }
-  if (process.env.OPENAI_REASONING_EFFORT) body.reasoning = { effort: process.env.OPENAI_REASONING_EFFORT };
-  if (process.env.OPENAI_TEXT_VERBOSITY) body.text = { verbosity: process.env.OPENAI_TEXT_VERBOSITY };
-  return body;
-}
-
 function getDataReadiness(scope) {
   const context = normalizeScope(scope);
   try {
@@ -543,8 +488,8 @@ function demoReplyArabic(text, restaurantId) {
     return `مراجعة الاستردادات\n\nعدد العمليات: ${data.refunds}\nالقيمة المستردة: ${money(data.refunded_amount)}\nأهم الأسباب: ${data.top_reasons.map((item) => `${item.reason} (${item.count})`).join("، ") || "غير محدد"}\n\nالتوصية: ابدأ بالتحقيق في السبب الأكثر تكراراً وقارنه بالأطباق أو الورديات المتأثرة.`;
   }
   if (/(مرحبا|مرحباً|السلام عليكم|اهلا|أهلا)/.test(q))
-    return "مرحباً، أنا جاهز. اسألني عن مبيعات اليوم، أرباح الأسبوع، أداء الأطباق، المخزون، أو احتياج الموظفين.";
-  if (/(شكرا|شكراً|ممتاز)/.test(q)) return "على الرحب والسعة. ما القرار الذي تريد تحليله الآن؟";
+    return "حيّاك، جاهز أساعدك. اسألني عن مبيعاتك، ربحية الأصناف، أو المخزون، وبأوضح لك وش تقوله البيانات ووش الخطوة المقترحة.";
+  if (/(شكرا|شكراً|ممتاز)/.test(q)) return "العفو، وش القرار اللي تبي نراجعه الحين؟";
   if (/(ماذا تستطيع|ماذا يمكنك|ساعدني|مساعدة)/.test(q))
     return "أستطيع مساعدتك في خمسة قرارات:\n\n• تلخيص مبيعات وأرباح اليوم\n• تحديد أفضل وأضعف الأطباق\n• كشف نقص المخزون\n• اقتراح عدد الموظفين حسب الطلب\n• إنشاء تقرير تشغيلي بعد موافقتك\n\nجرّب: «ما الذي يحتاج إلى انتباهي اليوم؟»";
   if (/(انتباه|الأولوية|الاولويه|المشاكل|مشكلة|مهم اليوم)/.test(q) && !/(مخزون|ناقص|ينفد|مكونات)/.test(q)) {
@@ -608,7 +553,7 @@ function demoReplyArabic(text, restaurantId) {
       return `لا توجد بيانات مبيعات مسجلة ليوم ${data.date}. هذا لا يعني أن المبيعات الفعلية صفر. ارفع بيانات مبيعات هذا اليوم أو اسأل عن فترة تتوفر لها سجلات.`;
     return `أداء اليوم\n\nالمبيعات: ${money(data.revenue)}\nالطلبات: ${data.orders}\nالربح: ${money(data.profit)}\nهامش الربح: ${data.margin_percent}%\nساعة الذروة: ${data.peak_hour || "غير متوفرة"}\n\nالتوصية: حافظ على جودة الخدمة خلال الذروة وراجع عناصر المخزون المنخفض قبل الوردية القادمة.`;
   }
-  return "أريد أن أجيبك اعتماداً على بيانات المطعم، لكن القرار غير واضح. هل تريد تحليل أداء اليوم، ربحية القائمة، المخزون، أم احتياج الموظفين؟";
+  return "عشان أجاوبك بدقة، وش تبي نراجع: المبيعات، ربحية الأصناف، أو المخزون؟ تقدر تقول «حلل البيانات اللي استوردتها».";
 }
 
 export function demoReply(text, restaurantId) {
@@ -755,109 +700,41 @@ export function inferTools(text) {
   return [];
 }
 
-async function createOpenAIResponse(question, context, toolsUsed, toolBackedDraft) {
-  const runtime = getAiRuntimeStatus();
-  const body = {
-    ...openAiOptionsFromEnv(),
-    instructions: `${SYSTEM_PROMPT}
-
-You are connected to a backend restaurant application. The backend already computed a tool-backed draft answer using restaurant-scoped data and deterministic tools.
-
-Rules for this request:
-- Answer naturally like ChatGPT, in the same language as the owner.
-- Use the tool-backed draft as the source of truth for all restaurant numbers.
-- Do not invent business figures, order counts, menu margins, inventory quantities, staff counts, or refunds.
-- If the draft says data is missing, clearly explain what is missing and what to import.
-- If the owner asks a general management concept, explain the concept, then connect it to the missing or available restaurant data.
-- Keep the answer practical and concise.`,
-    input: [
-      {
-        role: "user",
-        content: [
-          {
-            type: "input_text",
-            text: `Owner question:
-${question}
-
-Detected tools:
-${JSON.stringify(toolsUsed)}
-
-Tool-backed draft answer:
-${toolBackedDraft}`
-          }
-        ]
-      }
-    ]
-  };
-
-  logAiEvent("openai_request_started", { mode: runtime.mode, model: runtime.model });
-  const response = await fetch(OPENAI_RESPONSES_URL, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(body)
-  });
-  if (!response.ok) {
-    let errorType = `http_${response.status}`;
-    try {
-      const payload = await response.json();
-      errorType = payload?.error?.type || payload?.error?.code || errorType;
-    } catch {
-      // Keep the sanitized HTTP status if the error payload is not JSON.
-    }
-    logAiEvent("openai_request_failed", {
-      mode: runtime.mode,
-      model: runtime.model,
-      success: false,
-      status: response.status,
-      errorType
-    });
-    const error = new Error("OpenAI request failed");
-    error.status = response.status;
-    error.errorType = errorType;
-    throw error;
-  }
-  const payload = await response.json();
-  const content = extractResponseText(payload);
-  if (!content) {
-    const error = new Error("OpenAI response missing text");
-    error.errorType = "empty_response";
-    throw error;
-  }
-  logAiEvent("openai_request_succeeded", {
-    mode: runtime.mode,
-    model: runtime.model,
-    success: true,
-    status: response.status
-  });
-  return content;
-}
-
 export async function getAssistantReply(messages, scope) {
   const context = normalizeScope(scope);
   const question = messages.at(-1)?.content || "";
+  let grounded;
+  try {
+    grounded = groundedReply(question, context, messages);
+  } catch (error) {
+    if (error.code !== "VALIDATION_ERROR") throw error;
+    return {
+      content: isArabic(question)
+        ? "الفترة اللي كتبتها غير صالحة. اكتب تاريخ البداية والنهاية بصيغة YYYY-MM-DD، وتأكد أن تاريخ النهاية بعد البداية أو يساويه."
+        : "The requested period is invalid. Use valid YYYY-MM-DD dates with the end on or after the start.",
+      toolsUsed: [],
+      aiMode: "builtin"
+    };
+  }
+  if (grounded) return grounded;
   const toolsUsed = inferTools(question);
-  const toolBackedDraft = demoReply(question, context);
+  const content = demoReply(question, context);
   const runtime = getAiRuntimeStatus();
-  if (!runtime.aiConfigured) {
-    logAiEvent("demo_mode_active", { mode: runtime.mode, model: runtime.model, success: true });
-    return { content: toolBackedDraft, toolsUsed, aiMode: "demo" };
+  // Financial facts, knowledge excerpts and action confirmations stay deterministic.
+  // A language model cannot rewrite, swap or invent the computed business figures.
+  if (
+    !runtime.aiConfigured ||
+    toolsUsed.length ||
+    /(confirm|authorized|private|missing|required data|cannot|تأكيد|بيانات|لا أستطيع|لا توجد)/i.test(content)
+  ) {
+    return { content, toolsUsed, aiMode: "builtin" };
   }
   try {
-    const content = await createOpenAIResponse(question, context, toolsUsed, toolBackedDraft);
-    return { content, toolsUsed, aiMode: "openai", model: runtime.model };
-  } catch (error) {
-    logAiEvent("openai_fallback_to_demo", {
-      mode: runtime.mode,
-      model: runtime.model,
-      success: false,
-      status: error.status,
-      errorType: error.errorType || sanitizeOpenAiError(error, error.status)
-    });
+    const answer = await createLocalResponse(messages, SYSTEM_PROMPT);
+    return { content: answer, toolsUsed: [], aiMode: "ollama", model: runtime.model };
+  } catch {
     return {
-      content: `I could not complete the configured OpenAI request, so I’m using the built-in restaurant assistant for this answer.\n\n${toolBackedDraft}`,
+      content: `${isArabic(question) ? "تعذّر الوصول للمساعد اللغوي حاليًا. هذا الرد من المساعد المدمج:" : "The language assistant is unavailable. Here is the built-in assistant's answer:"}\n\n${content}`,
       toolsUsed,
       aiMode: "fallback",
       model: runtime.model

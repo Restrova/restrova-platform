@@ -118,8 +118,8 @@ describe("AppShell", () => {
       </QueryClientProvider>
     );
 
-    expect(await screen.findByText("AI DECISION COPILOT")).toBeInTheDocument();
-    expect(screen.getByPlaceholderText("Ask for a decision about sales, menu profit, or stock...")).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "مساعد Restrova" })).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: /اسأل عن مبيعاتك/ })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "مساحة العمل الحالية" })).toBeInTheDocument();
   });
 
@@ -159,8 +159,8 @@ describe("AppShell", () => {
       </QueryClientProvider>
     );
 
-    expect(await screen.findByText("AI DECISION COPILOT")).toBeInTheDocument();
-    expect(await screen.findByRole("status")).toHaveTextContent(/signed-in session is still active/i);
-    expect(screen.getByPlaceholderText("Ask for a decision about sales, menu profit, or stock...")).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "مساعد Restrova" })).toBeInTheDocument();
+    expect(await screen.findByRole("status")).toHaveTextContent(/تعذّر تحميل بعض البيانات/);
+    expect(screen.getByRole("textbox", { name: /اسأل عن مبيعاتك/ })).toBeInTheDocument();
   });
 });

@@ -385,6 +385,21 @@ test("confirmed imports feed the current workspace dashboard", async (t) => {
   });
   assert.match(top.payload.message.content, /مندي مساحة العمل/);
   assert.match(top.payload.message.content, /92\.00/);
+  for (const message of ["حلل البيانات اللي استوردتها", "وش إيجابيات وسلبيات بياناتي؟", "Analyze my imported data"]) {
+    const analysis = await jsonRequest(server, "/api/chat", { token, method: "POST", body: { message } });
+    assert.equal(analysis.status, 200);
+    assert.match(analysis.payload.message.content, /92\.00/);
+    assert.match(analysis.payload.message.content, /38\.00/);
+    assert.match(analysis.payload.message.content, /مندي مساحة العمل/);
+    assert.equal(analysis.payload.message.evidence.source, "imports");
+    assert.equal(analysis.payload.message.aiMode, "builtin");
+    assert.deepEqual(analysis.payload.message.toolsUsed, [
+      "get_profit_summary",
+      "get_top_dishes",
+      "get_low_performance_items"
+    ]);
+    if (message.includes("البيانات")) assert.match(analysis.payload.message.content, /أنصحك/);
+  }
   const refund = await jsonRequest(server, "/api/chat", {
     token,
     method: "POST",
@@ -595,6 +610,79 @@ test("confirmed imports feed the current workspace dashboard", async (t) => {
   assert.match(oldDataReply.payload.message.content, /لا توجد بيانات مبيعات/);
   assert.match(oldDataReply.payload.message.content, /2020-01-01/);
   assert.doesNotMatch(oldDataReply.payload.message.content, /0\.00/);
+  const available = await jsonRequest(server, "/api/chat", {
+    token,
+    method: "POST",
+    body: { message: "حلل البيانات اللي استوردتها" }
+  });
+  assert.match(available.payload.message.content, /\$92\.00/);
+  assert.match(available.payload.message.content, /2020-01-01/);
+  assert.doesNotMatch(available.payload.message.content, /9000|9,000|CN|¥/);
+  const attentionToday = await jsonRequest(server, "/api/chat", {
+    token,
+    method: "POST",
+    body: { message: "وش يحتاج انتباهي اليوم؟" }
+  });
+  assert.match(attentionToday.payload.message.content, /لا توجد بيانات مبيعات/);
+  assert.doesNotMatch(attentionToday.payload.message.content, /92\.00/);
+  const attentionHistory = await jsonRequest(server, "/api/chat", {
+    token,
+    method: "POST",
+    body: { message: "وش يحتاج انتباهي من 2020-01-01 إلى 2020-01-01؟" }
+  });
+  assert.match(attentionHistory.payload.message.content, /92\.00/);
+  // Even a configured model cannot overwrite computed figures or execute imported text as instructions.
+  const { getAssistantReply } = await import("../src/ai.js");
+  const keys = ["AI_PROVIDER", "OLLAMA_BASE_URL", "OLLAMA_MODEL"];
+  const originalEnv = Object.fromEntries(keys.map((key) => [key, process.env[key]]));
+  const originalFetch = globalThis.fetch;
+  let modelCalls = 0;
+  try {
+    process.env.AI_PROVIDER = "ollama";
+    process.env.OLLAMA_BASE_URL = "http://localhost:11434";
+    process.env.OLLAMA_MODEL = "test-saudi";
+    globalThis.fetch = async () => {
+      modelCalls += 1;
+      return { ok: true, json: async () => ({ message: { content: "Fabricated profit: 999999" } }) };
+    };
+    const branchId = db
+      .prepare("SELECT id FROM branches WHERE restaurant_id=? ORDER BY id LIMIT 1")
+      .get(restaurantId).id;
+    const guarded = await getAssistantReply([{ role: "user", content: "حلل بياناتي الفعلية" }], {
+      restaurantId,
+      branchId,
+      role: "owner"
+    });
+    assert.equal(modelCalls, 0);
+    assert.equal(guarded.aiMode, "builtin");
+    assert.match(guarded.content, /92\.00/);
+    assert.doesNotMatch(guarded.content, /999999/);
+  } finally {
+    globalThis.fetch = originalFetch;
+    for (const key of keys) {
+      if (originalEnv[key] === undefined) delete process.env[key];
+      else process.env[key] = originalEnv[key];
+    }
+  }
+  const historical = await jsonRequest(server, "/api/chat", {
+    token,
+    method: "POST",
+    body: { message: "مبيعات 2020-01-01" }
+  });
+  const followup = await jsonRequest(server, "/api/chat", {
+    token,
+    method: "POST",
+    body: { message: "وش تنصحني؟", sessionId: historical.payload.sessionId }
+  });
+  assert.match(followup.payload.message.content, /\$92\.00/);
+  assert.deepEqual(followup.payload.message.evidence.period, historical.payload.message.evidence.period);
+  const invalidDate = await jsonRequest(server, "/api/chat", {
+    token,
+    method: "POST",
+    body: { message: "مبيعات 2026-02-30" }
+  });
+  assert.equal(invalidDate.status, 200);
+  assert.match(invalidDate.payload.message.content, /غير صالحة/);
 });
 
 test("Task 2.2 rejects empty files, supports basic XLSX, and can cancel before confirmation", async (t) => {

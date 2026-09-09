@@ -30,6 +30,11 @@ test("Arabic analytics distinguish today, month, yesterday, explicit dates and u
   });
   assert.equal(analyticsRequest("قارن مبيعات الشهر الماضي").unsupported, true);
   assert.equal(analyticsRequest("ما الأولوية اليوم؟"), null);
+  assert.deepEqual(analyticsRequest("مبيعات من ٢٠٢٦-٠٨-٠١ إلى ٢٠٢٦-٠٨-٢٠"), {
+    name: "get_profit_summary",
+    args: { fromDate: "2026-08-01", toDate: "2026-08-20" }
+  });
+  assert.equal(analyticsRequest("وش أكثر الأصناف مبيعًا؟").name, "get_top_dishes");
 });
 
 test("missing period records are distinct from recorded zero sales and missing costs", () => {

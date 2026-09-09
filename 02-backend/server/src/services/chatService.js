@@ -36,7 +36,8 @@ export async function sendChatMessage(user, body) {
       content: result.content,
       toolsUsed: result.toolsUsed,
       aiMode: result.aiMode,
-      model: result.model
+      model: result.model,
+      evidence: result.evidence
     }
   };
 }
