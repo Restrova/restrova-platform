@@ -5,7 +5,7 @@
   overflow: hidden;
   grid-template-rows: minmax(0, 1fr);
   grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
-  background: radial-gradient(circle at 78% 0%, rgb(203 226 217 / 0.22), transparent 28rem), var(--color-background);
+  background: var(--color-background);
 }
 
 [dir="rtl"] .app-shell {
@@ -32,7 +32,7 @@
   overflow-y: auto;
   overscroll-behavior-y: contain;
   border-inline-end: 0;
-  background: linear-gradient(180deg, #103b31, #0d3028 62%, #0a2821);
+  background: var(--color-brand-ink);
   color: #edf7f3;
   padding: var(--space-5) var(--space-4);
   box-shadow: 8px 0 32px rgb(13 48 40 / 0.08);
@@ -64,8 +64,8 @@
   justify-content: center;
   flex: 0 0 auto;
   border-radius: var(--radius-lg);
-  background: linear-gradient(145deg, #d7a66d, #b8753f);
-  color: var(--color-text-inverse);
+  background: var(--color-brand-accent);
+  color: var(--color-brand-ink);
   text-decoration: none;
   font-weight: var(--font-weight-bold);
 }
@@ -81,7 +81,7 @@
 .app-sidebar__product small,
 .user-menu small {
   display: block;
-  color: #91afa5;
+  color: var(--color-sidebar-muted);
   font-size: var(--font-size-xs);
 }
 
@@ -126,7 +126,7 @@
 
 .sidebar-nav__group h2 {
   margin: 0;
-  color: #77998e;
+  color: var(--color-sidebar-muted);
   font-size: var(--font-size-xs);
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -357,12 +357,37 @@
   box-shadow: var(--shadow-lg);
 }
 
+.mobile-drawer .shell-switcher,
+.mobile-drawer .user-menu__identity {
+  color: var(--color-text-primary);
+}
+
+.mobile-drawer .shell-switcher select {
+  border-color: var(--color-input-border);
+  background: var(--color-input-background);
+  color: var(--color-text-primary);
+}
+
+.mobile-drawer .sidebar-nav__group h2,
+.mobile-drawer .user-menu small {
+  color: var(--color-text-secondary);
+}
+
+.mobile-drawer .sidebar-nav__item {
+  color: var(--color-text-secondary);
+}
+
+.mobile-drawer .sidebar-nav__item:is(:hover, :focus-visible, .is-active) {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
 [dir="ltr"] .mobile-drawer__panel {
   margin-inline-end: auto;
 }
 
 [dir="rtl"] .mobile-drawer__panel {
-  margin-inline-start: auto;
+  margin-inline-end: auto;
 }
 
 .mobile-drawer__header {

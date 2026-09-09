@@ -15,7 +15,7 @@ Open the `Local` URL printed by Vite (normally `http://localhost:5173`), choose 
 
 The app uses its built-in prefinal restaurant assistant mode by default. It answers supported restaurant operations questions with deterministic business logic, restaurant-scoped tools, and data-readiness checks. No OpenAI API key or external model is required.
 
-Important: the built-in assistant is rules-based. It can analyze connected restaurant data for supported questions, explain missing data, and avoid fake “healthy” conclusions, but it is not an open-ended language model. To enable real OpenAI model responses, set `OPENAI_API_KEY` on the backend service only.
+Important: the built-in assistant is rules-based. It can analyze connected restaurant data for supported questions, explain missing data, and avoid fake “healthy” conclusions, but it is not an open-ended language model. Imported-data answers use professional Saudi Arabic and deterministic, branch-scoped figures. For optional general conversation, connect your own Ollama model on the backend; no OpenAI account or key is required.
 
 ## Architecture
 
@@ -172,26 +172,25 @@ Render free web services cannot attach persistent disks, so preview accounts and
 
 During setup, no AI provider key is needed. `/api/health` reports the non-secret AI status, including `aiConfigured`, `mode`, `model`, and `version: "prefinal"`. `/api/ready` checks runtime readiness without returning secrets.
 
-### Optional OpenAI model mode
+### Saudi Arabic assistant and optional local model
 
-OpenAI calls are made only from `02-backend/server/src/ai.js`. Never put an OpenAI key in frontend JavaScript, `VITE_*` variables, GitHub, screenshots, logs, or API responses.
+The built-in assistant reads confirmed imports from the same financial ledger as the dashboards. Ask «حلل البيانات اللي استوردتها» for the available sales period, «وش أكثر الأصناف مبيعًا؟» for item rankings, or supply explicit dates. It explains the source, branch, dates, missing costs and a recommended next action. Short follow-up questions can retain the previous explicit dates within that branch's conversation.
 
-Supported backend environment variables:
+Financial answers are deterministic: a language model cannot rewrite the figures or turn missing costs into zero. They are computed when each question is asked, so new confirmed imports are included without training a model on private data. Recommendations are suggestions only; existing action confirmation and branch permissions still apply.
 
-| Variable                   | Purpose                                                                    |
-| -------------------------- | -------------------------------------------------------------------------- |
-| `OPENAI_API_KEY`           | Enables OpenAI mode when present. Leave empty for deterministic demo mode. |
-| `OPENAI_MODEL`             | Model name used by the Responses API. Defaults to `gpt-5.6`.               |
-| `OPENAI_REASONING_EFFORT`  | Optional Responses API reasoning effort.                                   |
-| `OPENAI_TEXT_VERBOSITY`    | Optional Responses API text verbosity.                                     |
-| `OPENAI_MAX_OUTPUT_TOKENS` | Optional response length cap.                                              |
+Optional general conversation uses the [native Ollama chat API](https://docs.ollama.com/api/chat), configured only on the backend:
 
-Runtime behavior:
+| Variable          | Purpose                                                                                        |
+| ----------------- | ---------------------------------------------------------------------------------------------- |
+| `AI_PROVIDER`     | `builtin` by default. Set to `ollama` to enable your own model.                                |
+| `OLLAMA_BASE_URL` | Reachable address of your Ollama service, such as `http://127.0.0.1:11434` on the same host.   |
+| `OLLAMA_MODEL`    | Exact name of a model already installed on that service. No model is downloaded automatically. |
+| `OLLAMA_API_KEY`  | Optional authentication token for a protected service.                                         |
+| `AI_TIMEOUT_MS`   | Request timeout, default 20000 ms, capped at 60000 ms.                                         |
 
-- If `OPENAI_API_KEY` is missing, the app uses deterministic built-in responses.
-- If `OPENAI_API_KEY` is present, the backend sends the owner question and tool-backed draft to the OpenAI Responses API.
-- If the OpenAI request fails, the server logs a sanitized failure and returns an explicit built-in fallback answer instead of pretending the model succeeded.
-- Logs include only mode, selected model, success/failure, HTTP status, and sanitized error type.
+Use a model with Arabic support; response quality depends on the selected model. Saudi tone instructions are prompting, not fine-tuning. The application does not contact OpenAI, even if an old `OPENAI_API_KEY` remains in its environment. `/api/health` exposes only configuration status and model name, not endpoint credentials or a claim that the model is reachable. A failed optional model request returns an explicit localized fallback. Imported-data analysis continues independently.
+
+The workspace shares the application's design tokens and self-hosted Noto Sans Arabic fonts (license in `03-frontend/web/public/fonts/OFL.txt`), with Arabic, English and Chinese interface labels. Import confirmation remains explicit; previews alone do not enter analytics.
 
 ### Railway alternative
 

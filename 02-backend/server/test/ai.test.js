@@ -28,48 +28,52 @@ function ensureCurrentMonthMenuFixture() {
 
 ensureCurrentMonthMenuFixture();
 
-test("AI runtime status never exposes secrets", () => {
-  const originalKey = process.env.OPENAI_API_KEY;
-  const originalModel = process.env.OPENAI_MODEL;
-  delete process.env.OPENAI_API_KEY;
-  delete process.env.OPENAI_MODEL;
-  assert.deepEqual(getAiRuntimeStatus(), { aiConfigured: false, mode: "demo", model: "built-in" });
-  process.env.OPENAI_API_KEY = "test-secret-value";
-  process.env.OPENAI_MODEL = "configured-test-model";
+test("AI runtime is local, explicit and never exposes secrets", (t) => {
+  const keys = ["AI_PROVIDER", "OLLAMA_BASE_URL", "OLLAMA_MODEL", "OLLAMA_API_KEY", "OPENAI_API_KEY"];
+  const original = Object.fromEntries(keys.map((key) => [key, process.env[key]]));
+  t.after(() => {
+    for (const key of keys) {
+      if (original[key] === undefined) delete process.env[key];
+      else process.env[key] = original[key];
+    }
+  });
+  for (const key of keys) delete process.env[key];
+  process.env.OPENAI_API_KEY = "must-never-trigger-a-request";
+  assert.deepEqual(getAiRuntimeStatus(), { aiConfigured: false, mode: "builtin", model: "built-in" });
+  process.env.AI_PROVIDER = "ollama";
+  process.env.OLLAMA_BASE_URL = "http://localhost:11434";
+  process.env.OLLAMA_MODEL = "restaurant-saudi";
+  process.env.OLLAMA_API_KEY = "test-secret-value";
   const status = getAiRuntimeStatus();
-  assert.deepEqual(status, { aiConfigured: true, mode: "openai", model: "configured-test-model" });
-  assert.doesNotMatch(JSON.stringify(status), /test-secret-value/);
-  if (originalKey === undefined) delete process.env.OPENAI_API_KEY;
-  else process.env.OPENAI_API_KEY = originalKey;
-  if (originalModel === undefined) delete process.env.OPENAI_MODEL;
-  else process.env.OPENAI_MODEL = originalModel;
+  assert.deepEqual(status, { aiConfigured: true, mode: "ollama", model: "restaurant-saudi" });
+  assert.doesNotMatch(JSON.stringify(status), /test-secret|localhost|must-never/);
 });
 
-test("assistant uses explicit fallback when OpenAI request fails", async () => {
-  const originalKey = process.env.OPENAI_API_KEY;
-  const originalModel = process.env.OPENAI_MODEL;
+test("local model failures return a localized built-in answer", async (t) => {
+  const keys = ["AI_PROVIDER", "OLLAMA_BASE_URL", "OLLAMA_MODEL"];
+  const original = Object.fromEntries(keys.map((key) => [key, process.env[key]]));
   const originalFetch = globalThis.fetch;
-  process.env.OPENAI_API_KEY = "test-secret-value";
-  process.env.OPENAI_MODEL = "configured-test-model";
-  globalThis.fetch = async (_url, options) => {
-    assert.doesNotMatch(options.body, /test-secret-value/);
-    return {
-      ok: false,
-      status: 404,
-      async json() {
-        return { error: { type: "model_not_found" } };
-      }
-    };
+  t.after(() => {
+    globalThis.fetch = originalFetch;
+    for (const key of keys) {
+      if (original[key] === undefined) delete process.env[key];
+      else process.env[key] = original[key];
+    }
+  });
+  process.env.AI_PROVIDER = "ollama";
+  process.env.OLLAMA_BASE_URL = "http://localhost:11434";
+  process.env.OLLAMA_MODEL = "restaurant-saudi";
+  globalThis.fetch = async (url, options) => {
+    assert.equal(String(url), "http://localhost:11434/api/chat");
+    assert.equal(JSON.parse(options.body).stream, false);
+    assert.ok(options.signal);
+    return { ok: false, status: 503 };
   };
-  const result = await getAssistantReply([{ role: "user", content: "hello" }], restaurantId);
+  const result = await getAssistantReply([{ role: "user", content: "شكرا" }], restaurantId);
   assert.equal(result.aiMode, "fallback");
-  assert.equal(result.model, "configured-test-model");
-  assert.match(result.content, /configured OpenAI request/i);
-  if (originalKey === undefined) delete process.env.OPENAI_API_KEY;
-  else process.env.OPENAI_API_KEY = originalKey;
-  if (originalModel === undefined) delete process.env.OPENAI_MODEL;
-  else process.env.OPENAI_MODEL = originalModel;
-  globalThis.fetch = originalFetch;
+  assert.match(result.content, /تعذّر الوصول/);
+  assert.match(result.content, /العفو/);
+  assert.doesNotMatch(result.content, /OpenAI|I could/);
 });
 
 test("greeting receives a conversational response without fabricated figures", () => {
@@ -212,7 +216,7 @@ test("Arabic profit question returns real figures in Arabic", () => {
 
 test("Arabic ambiguous question asks for clarification", () => {
   const reply = demoReply("حلل هذا", restaurantId);
-  assert.match(reply, /القرار غير واضح/);
+  assert.match(reply, /وش تبي نراجع/);
   assert.doesNotMatch(reply, /\$\d/);
 });
 

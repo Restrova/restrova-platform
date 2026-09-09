@@ -20,6 +20,8 @@ body {
   line-height: var(--line-height-body);
   text-rendering: optimizeLegibility;
   overflow-wrap: anywhere;
+  font-synthesis: none;
+  -webkit-font-smoothing: antialiased;
 }
 
 button,
@@ -73,6 +75,15 @@ h4,
 h5,
 h6 {
   line-height: var(--line-height-heading);
+}
+
+[dir="rtl"] :is(h1, h2, h3, h4, h5, h6, button, label, small, a) {
+  letter-spacing: normal;
+}
+
+:is(input, select, textarea) {
+  max-inline-size: 100%;
+  min-inline-size: 0;
 }
 
 @media (prefers-reduced-motion: reduce) {

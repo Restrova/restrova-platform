@@ -1,8 +1,7 @@
-@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Noto+Sans+Arabic:wght@400;500;600;700&family=Playfair+Display:ital,wght@1,600&display=swap");
 :root {
-  font-family: "Noto Sans Arabic", "DM Sans", sans-serif;
-  color: #18201d;
-  background: #f5f4ef;
+  font-family: var(--font-family-sans);
+  color: var(--color-text-primary);
+  background: var(--color-background);
   font-synthesis: none;
 }
 * {
@@ -82,8 +81,9 @@ textarea {
   letter-spacing: 0;
 }
 .login h1 em {
-  font-family: "Playfair Display";
-  color: #b86c37;
+  font-family: inherit;
+  font-style: normal;
+  color: var(--color-primary);
   font-weight: 600;
 }
 .login p {
@@ -105,7 +105,7 @@ textarea {
 .login label {
   display: block;
   color: #263d35;
-  font-size: 13px;
+  font-size: var(--font-size-sm);
   font-weight: 600;
   letter-spacing: 0.01em;
   margin: 15px 0;

@@ -1,12 +1,26 @@
 import { executeTool } from "./tools.js";
 
+export function normalizeQuestion(text) {
+  return text
+    .toLowerCase()
+    .normalize("NFKC")
+    .replace(/[\u064B-\u065F\u0670\u0640]/g, "")
+    .replace(/[أإآ]/g, "ا")
+    .replace(/[٠-٩۰-۹]/g, (digit) =>
+      String("٠١٢٣٤٥٦٧٨٩".includes(digit) ? "٠١٢٣٤٥٦٧٨٩".indexOf(digit) : "۰۱۲۳۴۵۶۷۸۹".indexOf(digit))
+    );
+}
+
 export function analyticsRequest(text) {
-  const q = text.toLowerCase().replace(/[أإآ]/g, "ا");
+  const q = normalizeQuestion(text);
   let name;
   if (/(refund|استرداد|مرتجع|ارجاع)/.test(q)) name = "get_refund_summary";
   else if (/(worst|weak|low.?margin|hurt.*profit|اسوا|اضعف|يخسر|خسارة|هامش منخفض|يضر.*الربح)/.test(q))
     name = "get_low_performance_items";
-  else if (/(top|best|popular|افضل|الاكثر مبيع)/.test(q) && /(dish|item|menu|selling|طبق|اطباق|مبيع)/.test(q))
+  else if (
+    /(top|best|popular|افضل|الاكثر مبيع|اكثر.*(بيع|مبيع))/.test(q) &&
+    /(dish|item|menu|selling|طبق|اطباق|صنف|اصناف|مبيع|بيع)/.test(q)
+  )
     name = "get_top_dishes";
   else if (
     /(sales|revenue|profit|margin|orders|cost|performance|summary|مبيعات|ايراد|ارباح|ربح|هامش|طلبات|تكلفة|اداء|ملخص)/.test(
@@ -16,6 +30,21 @@ export function analyticsRequest(text) {
     name = "get_profit_summary";
   else return null;
   if (/(inventory|stock|staff|attention|priority|مخزون|موظف|وردية|انتباه|الاولوية|المشاكل)/.test(q)) return null;
+  const period = analyticsPeriod(q, ["get_top_dishes", "get_low_performance_items"].includes(name) ? "month" : "today");
+  if (period.unsupported) return period;
+  const { args } = period;
+  if (
+    name === "get_profit_summary" &&
+    !args.fromDate &&
+    (args.date || args.range === "today" || args.range === "yesterday") &&
+    !/(profit|margin|cost|ارباح|ربح|هامش|تكلفة)/.test(q)
+  )
+    name = "get_daily_sales";
+  return { name, args };
+}
+
+export function analyticsPeriod(text, defaultRange = "today") {
+  const q = normalizeQuestion(text);
   const range = /(month|شهر)/.test(q)
     ? "month"
     : /(week|اسبوع)/.test(q)
@@ -24,9 +53,7 @@ export function analyticsRequest(text) {
         ? "yesterday"
         : /(today|اليوم)/.test(q)
           ? "today"
-          : ["get_top_dishes", "get_low_performance_items"].includes(name)
-            ? "month"
-            : "today";
+          : defaultRange;
   const dates = q.match(/\b\d{4}-\d{2}-\d{2}\b/g) || [];
   if (dates.length > 2) return { unsupported: true };
   const date = dates.length === 1 ? dates[0] : null;
@@ -37,14 +64,7 @@ export function analyticsRequest(text) {
     (/(last|previous|الماضي|السابق|منذ|\b\d{4}\b)/.test(q) && !dates.length)
   )
     return { unsupported: true };
-  if (
-    name === "get_profit_summary" &&
-    dates.length < 2 &&
-    (date || range === "today" || range === "yesterday") &&
-    !/(profit|margin|cost|ارباح|ربح|هامش|تكلفة)/.test(q)
-  )
-    name = "get_daily_sales";
-  return { name, args };
+  return { args };
 }
 
 export function formatImportedAnswer(name, data, arabic) {
@@ -101,10 +121,32 @@ export function formatImportedAnswer(name, data, arabic) {
   if (name === "get_refund_summary")
     return `${heading}\n\n${arabic ? "المبلغ المسترد المسجل" : "Recorded refunds"}: ${money(data.refunded_amount)}\n${arabic ? "أسباب الاسترداد غير متوفرة في البيانات المستوردة." : "Refund reasons are not available in the imported data."}${!meta.has_data ? `\n${noSales}${coverage}` : ""}`;
   const title = arabic ? "ملخص الفترة المطلوبة" : "Requested period summary";
+  const conclusion = arabic
+    ? !data.cost_complete
+      ? "الخلاصة: المبيعات واضحة في السجلات، لكن ما نقدر نحكم على الربحية قبل اكتمال التكاليف."
+      : data.profit < 0
+        ? "الخلاصة: التكاليف المسجلة أعلى من صافي المبيعات خلال هالفترة؛ نحتاج نراجع أسباب الخسارة."
+        : data.profit > 0
+          ? "الخلاصة: صافي المبيعات يغطي التكاليف المسجلة ويحقق فائضًا خلال هالفترة. هذا مؤشر إيجابي، لكنه ما يثبت اكتمال صافي الربح."
+          : "الخلاصة: صافي المبيعات يعادل التكاليف المسجلة خلال هالفترة."
+    : !data.cost_complete
+      ? "Sales are recorded, but profitability cannot be assessed until costs are complete."
+      : data.profit < 0
+        ? "Recorded costs exceed net sales for this period. Review the causes of the loss."
+        : "Net sales cover recorded costs for this period; unrecorded expenses may change the result.";
   const caveat = arabic
     ? "الربح تقديري بعد التكاليف المسجلة فقط؛ قد تنقص بيانات مثل الأجور والإيجار والمصروفات الأخرى."
     : "Profit is an estimate after recorded costs only; labor, rent and other expenses may be incomplete.";
-  return `${heading}\n\n${title}\n${arabic ? "صافي المبيعات" : "Net sales"}: ${money(data.net_revenue)}\n${arabic ? "الطلبات" : "Orders"}: ${data.orders}\n${arabic ? "التكاليف المسجلة" : "Recorded costs"}: ${money(data.cost)}\n${arabic ? "الربح التقديري" : "Estimated profit"}: ${money(data.profit)}\n${arabic ? "هامش الربح" : "Profit margin"}: ${data.margin_percent == null ? (arabic ? "غير متاح" : "Unavailable") : `${data.margin_percent}%`}\n\n${data.cost_complete ? caveat : arabic ? "لا يمكن حساب الربح والهامش لأن بيانات التكلفة غير مكتملة." : "Profit and margin are unavailable because cost records are incomplete."}`;
+  const nextAction = arabic
+    ? !data.cost_complete
+      ? "أنصحك تبدأ برفع تكلفة الأصناف للفترة نفسها، وبعدها نراجع الأجور والإيجار والمصروفات قبل اتخاذ قرار تسعير."
+      : data.profit < 0
+        ? "أنصحك تبدأ بمراجعة تكلفة الحصة والعمولات والمصروفات، وتقارنها بأسعار البيع قبل أي خصم جديد."
+        : "أنصحك تراجع الأصناف الأعلى مبيعًا مع هامش مساهمتها قبل زيادة الترويج؛ المبيعات العالية لحالها ما تكفي."
+    : !data.cost_complete
+      ? "Import item costs for the same dates, then review labor, rent and operating expenses before a pricing decision."
+      : "Review item contribution margins and recorded expenses before changing prices or running promotions.";
+  return `${conclusion}\n\n${heading}\n\n${title}\n${arabic ? "صافي المبيعات" : "Net sales"}: ${money(data.net_revenue)}\n${arabic ? "الطلبات" : "Orders"}: ${data.orders}\n${arabic ? "التكاليف المسجلة" : "Recorded costs"}: ${money(data.cost)}\n${arabic ? "الربح التقديري" : "Estimated profit"}: ${money(data.profit)}\n${arabic ? "هامش الربح" : "Profit margin"}: ${data.margin_percent == null ? (arabic ? "غير متاح" : "Unavailable") : `${data.margin_percent}%`}\n\n${data.cost_complete ? caveat : arabic ? "لا يمكن حساب الربح والهامش لأن بيانات التكلفة غير مكتملة." : "Profit and margin are unavailable because cost records are incomplete."}\n\n${arabic ? "الخطوة المقترحة" : "Recommended next action"}: ${nextAction}`;
 }
 
 export function importedQuestionReply(text, context) {

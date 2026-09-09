@@ -17,7 +17,7 @@ const labels = {
     noData: "No sales records are available for this branch.",
     question: (from, to) => `Sales summary from ${from} to ${to}`
   },
-  zh: {
+  "zh-CN": {
     title: "已导入的数据",
     empty: "当前分店没有导入的销售记录，请选择有数据的分店：",
     period: "此分店的数据日期范围",

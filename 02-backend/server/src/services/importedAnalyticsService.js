@@ -50,7 +50,16 @@ export function importedAnalytics(name, args, context) {
     currency: restaurant.currency,
     timezone: restaurant.timezone
   };
+  const coverage = db
+    .prepare(
+      `SELECT MIN(occurred_at) AS first,MAX(occurred_at) AS last FROM financial_ledger_entries WHERE restaurant_id=? AND category='sales'${context.branchId ? " AND branch_id=?" : ""}`
+    )
+    .get(...(context.branchId ? [context.restaurantId, context.branchId] : [context.restaurantId]));
   const range = args.range || (name === "get_daily_sales" ? "today" : "month");
+  const localDate = (value) => new Intl.DateTimeFormat("en-CA", { timeZone: user.timezone }).format(new Date(value));
+  if (range === "available" && coverage.first) {
+    args = { ...args, fromDate: localDate(coverage.first), toDate: localDate(coverage.last) };
+  }
   const period =
     args.fromDate && args.toDate
       ? resolveFinancialPeriodRanges(
@@ -65,7 +74,11 @@ export function importedAnalytics(name, args, context) {
       : args.date
         ? resolveFinancialDateRange(args.date, user.timezone)
         : resolveFinancialPeriodRanges(
-            { period: range, comparison: "none", ...(args.anchor ? { anchor: args.anchor } : {}) },
+            {
+              period: range === "available" ? "month" : range,
+              comparison: "none",
+              ...(args.anchor ? { anchor: args.anchor } : {})
+            },
             user.timezone
           );
   const filters = { ...(context.branchId ? { branchId: context.branchId } : {}), ...period.current };
@@ -73,11 +86,6 @@ export function importedAnalytics(name, args, context) {
   const branch = context.branchId
     ? db.prepare("SELECT name FROM branches WHERE restaurant_id=? AND id=?").get(context.restaurantId, context.branchId)
     : null;
-  const coverage = db
-    .prepare(
-      `SELECT MIN(occurred_at) AS first,MAX(occurred_at) AS last FROM financial_ledger_entries WHERE restaurant_id=? AND category='sales'${context.branchId ? " AND branch_id=?" : ""}`
-    )
-    .get(...(context.branchId ? [context.restaurantId, context.branchId] : [context.restaurantId]));
   const metadata = {
     source: "imports",
     currency: user.currency,

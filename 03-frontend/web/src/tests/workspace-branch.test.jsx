@@ -35,7 +35,7 @@ function renderWorkspace(onChat) {
 }
 
 function submitQuestion(message) {
-  const input = screen.getByPlaceholderText(/Ask for a decision/);
+  const input = screen.getByRole("textbox", { name: /اسأل عن مبيعاتك/ });
   fireEvent.change(input, { target: { value: message } });
   fireEvent.submit(input.closest("form"));
 }
@@ -51,7 +51,7 @@ describe("workspace branch selection", () => {
     const onChat = vi.fn(async () => response({ sessionId: 22, message: { id: 23, content: "Latest reply" } }));
     renderWorkspace(onChat);
     await screen.findByRole("button", { name: "Night Branch" });
-    const conversation = screen.getByRole("region", { name: "Conversation" });
+    const conversation = screen.getByRole("region", { name: "المحادثة" });
     Object.defineProperty(conversation, "scrollHeight", { configurable: true, value: 1800 });
     const main = document.querySelector("#main-content");
     main.scrollTop = 0;
@@ -60,8 +60,8 @@ describe("workspace branch selection", () => {
     expect(await screen.findByText("Latest reply")).toBeInTheDocument();
     expect(conversation.scrollTop).toBe(1800);
     expect(main.scrollTop).toBe(0);
-    expect(within(conversation).getByRole("button", { name: "Approve" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Import & manage data" })).toHaveAttribute("href", "/app/imports");
+    expect(within(conversation).getByRole("button", { name: "مفيدة" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "استيراد وإدارة البيانات" })).toHaveAttribute("href", "/app/imports");
   });
 
   it("opens imported branches and analyzes their available dates with scoped feedback", async () => {
@@ -73,7 +73,7 @@ describe("workspace branch selection", () => {
     fireEvent.click(await screen.findByRole("button", { name: "حلّل الفترة المتوفرة" }));
     expect(await screen.findByText("Night branch sales")).toBeInTheDocument();
     expect(onChat).toHaveBeenCalledWith({ message: "حلل المبيعات من 2025-09-01 إلى 2026-08-31", branchId: 102 });
-    fireEvent.click(screen.getByRole("button", { name: "Approve" }));
+    fireEvent.click(screen.getByRole("button", { name: "مفيدة" }));
     await waitFor(() =>
       expect(
         fetchMock.mock.calls.some(
@@ -81,8 +81,8 @@ describe("workspace branch selection", () => {
         )
       ).toBe(true)
     );
-    const topDish = within(screen.getByText("TOP DISH").closest("article"));
-    expect(topDish.getByText("No sales records for this period")).toBeInTheDocument();
+    const topDish = within(screen.getByText("الصنف الأعلى مبيعًا").closest("article"));
+    expect(topDish.getByText("لا توجد سجلات للفترة الحالية")).toBeInTheDocument();
   });
 
   it("discards late replies when changing branches and starts a fresh conversation", async () => {
@@ -108,7 +108,7 @@ describe("workspace branch selection", () => {
     );
     expect(screen.queryByText("Stale branch answer")).not.toBeInTheDocument();
     expect(screen.queryByText("Old question")).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Approve" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "مفيدة" })).not.toBeInTheDocument();
     submitQuestion("New question");
     expect(await screen.findByText("Selected branch answer")).toBeInTheDocument();
     expect(onChat.mock.calls[1][0]).toEqual({ message: "New question", branchId: 102 });
@@ -118,5 +118,44 @@ describe("workspace branch selection", () => {
     submitQuestion("Back to main");
     expect(await screen.findByText("Main branch answer")).toBeInTheDocument();
     expect(onChat.mock.calls[2][0]).toEqual({ message: "Back to main", branchId: 101 });
+  });
+  it("keeps failed feedback editable and saves only after a successful retry", async () => {
+    const { fetchMock } = renderWorkspace(async () =>
+      response({ sessionId: 22, message: { id: 23, content: "A useful answer" } })
+    );
+    await screen.findByRole("button", { name: "Night Branch" });
+    submitQuestion("حلل بياناتي");
+    await screen.findByText("A useful answer");
+    fetchMock.mockImplementationOnce(async () => ({
+      ok: false,
+      status: 503,
+      text: async () => JSON.stringify({ error: "unavailable" })
+    }));
+    fireEvent.click(screen.getByRole("button", { name: "مفيدة" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("ما قدرنا نحفظ ملاحظتك");
+    expect(screen.getByRole("button", { name: "مفيدة" })).toBeEnabled();
+    fireEvent.click(screen.getByRole("button", { name: "مفيدة" }));
+    await waitFor(() => expect(screen.queryByRole("button", { name: "مفيدة" })).not.toBeInTheDocument());
+  });
+
+  it("prevents duplicate sends and does not submit during IME composition", async () => {
+    let complete;
+    const onChat = vi.fn(
+      () =>
+        new Promise((resolve) => {
+          complete = resolve;
+        })
+    );
+    renderWorkspace(onChat);
+    await screen.findByRole("button", { name: "Night Branch" });
+    const input = screen.getByRole("textbox", { name: /اسأل عن مبيعاتك/ });
+    fireEvent.change(input, { target: { value: "تحليل" } });
+    fireEvent.keyDown(input, { key: "Enter", isComposing: true });
+    expect(onChat).not.toHaveBeenCalled();
+    fireEvent.submit(input.closest("form"));
+    fireEvent.submit(input.closest("form"));
+    expect(onChat).toHaveBeenCalledTimes(1);
+    await act(async () => complete(response({ sessionId: 22, message: { id: 23, content: "Completed once" } })));
+    expect(await screen.findByText("Completed once")).toBeInTheDocument();
   });
 });
