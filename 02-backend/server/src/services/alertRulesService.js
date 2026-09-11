@@ -1,3 +1,4 @@
+import { severityFor } from "./anomalyService.js";
 import { getBranchOperations } from "./branchOperationsService.js";
 import { alertRulesQuerySchema, validate } from "../validation/schemas.js";
 
@@ -169,6 +170,7 @@ export function getAlertRules(user, query) {
       result.status = measured.n * 10000n > BigInt(result.thresholdBps) * measured.d ? "triggered" : "not_triggered";
     }
   }
+  for (const item of evaluations) Object.assign(item, severityFor(item));
   evaluations.sort((a, b) => a.branchId - b.branchId || a.type.localeCompare(b.type));
   return {
     rulesVersion: "6.1-v1",

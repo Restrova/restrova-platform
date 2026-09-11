@@ -1,3 +1,5 @@
+import { AlertCenterPage } from "../pages/AlertCenterPage.jsx";
+import { ForecastPage } from "../pages/ForecastPage.jsx";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { AuthBoundary } from "../components/auth/AuthBoundary.jsx";
 import { AppShell } from "../components/layout/AppShell.jsx";
@@ -56,6 +58,8 @@ export function AppRoutes() {
           <Route path="/app/menu-profitability" element={<MenuProfitabilityPage />} />
           <Route path="/app/branches" element={<BranchesPage />} />
           <Route path="/app/sales-comparison" element={<BranchOperationsPage />} />
+          <Route path="/app/alerts" element={<AlertCenterPage />} />
+          <Route path="/app/forecasts" element={<ForecastPage />} />
           <Route path="/app/team" element={<TeamPage />} />
           {navigationItems
             .filter(
@@ -67,7 +71,9 @@ export function AppRoutes() {
                   "menuProfitability",
                   "branches",
                   "team",
-                  "salesComparison"
+                  "salesComparison",
+                  "alerts",
+                  "forecasts"
                 ].includes(item.id)
             )
             .map((item) => (

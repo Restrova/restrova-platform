@@ -6,16 +6,18 @@
     "start": "node src/index.js",
     "test": "pnpm run test:unit && pnpm run eval",
     "test:unit": "node scripts/run-unit-tests.js",
-    "eval": "node ../../04-data-ai/evals/run-evals.js"
+    "eval": "node ../../04-data-ai/evals/run-evals.js",
+    "alerts:dispatch": "node scripts/dispatch-alert-notifications.js"
   },
   "dependencies": {
-    "better-sqlite3": "^12.2.0",
     "bcryptjs": "^3.0.2",
+    "better-sqlite3": "^12.2.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.2",
     "express": "^5.1.0",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
+    "web-push": "^3.6.7",
     "zod": "^4.1.5"
   }
 }

@@ -78,6 +78,14 @@ export const navigationGroups = [
         requiredRoles: allRoles
       },
       {
+        id: "forecasts",
+        translationKey: "navigation.forecasts",
+        titleKey: "navigation.forecasts",
+        path: "/app/forecasts",
+        icon: GitCompare,
+        requiredRoles: allRoles
+      },
+      {
         id: "recommendations",
         translationKey: "navigation.recommendations",
         titleKey: "navigation.recommendations",

@@ -26,3 +26,5 @@ createRoot(document.getElementById("root")).render(
     </Providers>
   </React.StrictMode>
 );
+
+import "./styles/intelligence.css";

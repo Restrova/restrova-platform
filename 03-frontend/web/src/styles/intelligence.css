@@ -1,0 +1,151 @@
+.intelligence-page {
+  display: grid;
+  gap: 1.25rem;
+  max-width: 90rem;
+  margin-inline: auto;
+  font-size: 1rem;
+  line-height: 1.65;
+  min-width: 0;
+}
+.intelligence-page h1 {
+  font-size: 1.8rem;
+  margin: 0;
+}
+.intelligence-page h2 {
+  font-size: 1.15rem;
+  margin: 0;
+}
+.intelligence-page p {
+  margin: 0.5rem 0;
+  color: var(--color-text-secondary);
+}
+.intelligence-heading,
+.intelligence-alert-title,
+.intelligence-toolbar,
+.intelligence-results {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.intelligence-toolbar {
+  justify-content: flex-start;
+  padding: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+}
+.intelligence-page label {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+  min-width: 0;
+}
+.intelligence-page input:not([type="checkbox"]),
+.intelligence-page select,
+.intelligence-page textarea {
+  font: inherit;
+  min-height: 2.75rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  max-width: 100%;
+  min-width: 0;
+}
+.intelligence-page input[type="checkbox"] {
+  inline-size: 1.15rem;
+  block-size: 1.15rem;
+  accent-color: var(--color-primary);
+}
+.intelligence-alert {
+  border-inline-start: 4px solid #1976a3;
+}
+.intelligence-alert--WARNING {
+  border-inline-start-color: #ad6800;
+}
+.intelligence-alert--CRITICAL {
+  border-inline-start-color: #c63939;
+}
+.intelligence-severity {
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+.intelligence-page details {
+  padding: 0.75rem 0;
+  overflow-wrap: anywhere;
+}
+.intelligence-page summary {
+  cursor: pointer;
+  font-weight: 600;
+  min-height: 2.5rem;
+}
+.intelligence-page summary:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+}
+.intelligence-facts,
+.intelligence-metrics,
+.intelligence-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+  gap: 1rem;
+}
+.intelligence-facts dd {
+  margin: 0;
+  font-weight: 700;
+}
+.intelligence-metrics strong {
+  display: block;
+  font-size: 1.3rem;
+}
+.intelligence-checks {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-block: 1rem;
+}
+.intelligence-checks label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.intelligence-preferences {
+  border-top: 1px solid var(--color-border);
+}
+.intelligence-preferences fieldset {
+  border: 0;
+  padding: 0;
+  display: grid;
+  gap: 1rem;
+}
+.intelligence-actions {
+  display: grid;
+  gap: 0.75rem;
+  max-width: 40rem;
+}
+.intelligence-results {
+  justify-content: flex-start;
+  padding: 0.75rem;
+  background: var(--color-surface);
+}
+@media (max-width: 600px) {
+  .intelligence-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .intelligence-toolbar {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+  .intelligence-page {
+    gap: 1rem;
+  }
+  .intelligence-alert-title {
+    align-items: flex-start;
+  }
+  .intelligence-page h1 {
+    font-size: 1.5rem;
+  }
+}
