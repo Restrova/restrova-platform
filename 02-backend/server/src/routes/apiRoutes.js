@@ -90,6 +90,7 @@ router.get("/financial/dashboard", auth, asyncHandler(controller.getFinancialDas
 router.get("/branches/performance", auth, asyncHandler(controller.getBranchPerformance));
 router.get("/branches/rankings", auth, asyncHandler(controller.getBranchRankings));
 router.get("/branches/operations", auth, asyncHandler(controller.getBranchOperations));
+router.get("/alerts/evaluate", auth, asyncHandler(controller.getAlertRules));
 router.get("/menu/costs", auth, asyncHandler(controller.getMenuCosts));
 router.get("/menu/margins", auth, asyncHandler(controller.getMenuMargins));
 router.get("/menu/engineering-matrix", auth, asyncHandler(controller.getMenuEngineeringMatrix));

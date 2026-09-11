@@ -22,6 +22,7 @@ import * as menuRecommendationService from "../services/menuRecommendationServic
 import * as branchPerformanceService from "../services/branchPerformanceService.js";
 import * as branchRankingService from "../services/branchRankingService.js";
 import { getBranchOperations as branchOperations } from "../services/branchOperationsService.js";
+import { getAlertRules as alertRules } from "../services/alertRulesService.js";
 
 export const health = (_req, res) => res.json(healthService.getHealth());
 export const ready = (_req, res) => res.json(healthService.getReadiness());
@@ -113,6 +114,7 @@ export const getBranchPerformance = (req, res) =>
   res.json(branchPerformanceService.getBranchPerformance(req.user, req.query));
 export const getBranchRankings = (req, res) => res.json(branchRankingService.getBranchRankings(req.user, req.query));
 export const getBranchOperations = (req, res) => res.json(branchOperations(req.user, req.query));
+export const getAlertRules = (req, res) => res.set("Cache-Control", "no-store").json(alertRules(req.user, req.query));
 
 export const knowledgeStatus = (req, res) => res.json(knowledgeService.getKnowledgeStatus(req.user));
 export const importKnowledge = (req, res) => res.status(201).json(knowledgeService.importKnowledge(req.user, req.body));
