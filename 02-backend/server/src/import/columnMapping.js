@@ -12,6 +12,7 @@ const COMMON_ALIASES = {
   selling_price: ["selling_price", "selling price", "sale price", "price", "menu price"],
   active: ["active", "is active", "enabled"],
   direct_food_cost: ["direct_food_cost", "direct food cost", "food cost", "ingredient cost", "unit food cost"],
+  supplier_name: ["supplier_name", "supplier", "supplier name", "المورد", "اسم المورد", "供应商"],
   packaging_cost: ["packaging_cost", "packaging cost", "package cost"],
   effective_from: ["effective_from", "effective from", "effective date", "start date"],
   external_order_id: ["external_order_id", "external order id", "order id", "order number"],

@@ -1,3 +1,4 @@
+import { ImportDataBridge } from "../components/ImportDataBridge.jsx";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from "../contexts/AuthContext.jsx";
@@ -19,6 +20,7 @@ export function Providers({ children }) {
       <LocaleProvider>
         <AuthProvider>
           <RestaurantProvider>
+            <ImportDataBridge />
             <BrowserRouter>{children}</BrowserRouter>
           </RestaurantProvider>
         </AuthProvider>

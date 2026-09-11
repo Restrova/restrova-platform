@@ -4,8 +4,23 @@ import { auth, requireOwner, requireRole, requireManagerWrite } from "../middlew
 import { authRateLimit, importActionRateLimit, importPreviewRateLimit } from "../middleware/security.js";
 import { config } from "../config/appConfig.js";
 
+import * as decisions from "../controllers/decisionController.js";
 const router = Router();
-const asyncHandler = (handler) => (req, res, next) => Promise.resolve(handler(req, res, next)).catch(next);
+const asyncHandler = (handler) => (req, res, next) =>
+  Promise.resolve()
+    .then(() => handler(req, res, next))
+    .catch(next);
+router.get("/data/revision", auth, asyncHandler(decisions.dataRevision));
+router.get("/decisions", auth, asyncHandler(decisions.decisionList));
+router.post("/decisions/scenario", auth, requireManagerWrite, asyncHandler(decisions.decisionScenario));
+router.get("/decisions/actions", auth, asyncHandler(decisions.decisionActions));
+router.post("/decisions/actions", auth, requireManagerWrite, asyncHandler(decisions.decisionRecord));
+router.patch("/decisions/actions/:id", auth, requireManagerWrite, asyncHandler(decisions.decisionTransition));
+router.post("/forecasts/snapshots", auth, requireManagerWrite, asyncHandler(decisions.forecastSave));
+router.get("/forecasts/accuracy", auth, asyncHandler(decisions.forecastScores));
+router.get("/seasons", auth, asyncHandler(decisions.seasonList));
+router.post("/seasons", auth, requireManagerWrite, asyncHandler(decisions.seasonCreate));
+
 const stagedImportBody = express.raw({
   limit: config.imports.maxFileSizeBytes,
   type: [

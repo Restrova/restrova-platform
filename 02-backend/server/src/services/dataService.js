@@ -1,3 +1,4 @@
+import { recordDataRevision } from "./dataRevisionService.js";
 import { notFound } from "../errors/appError.js";
 import { dataConnectionStatus, importRestaurantData, previewRestaurantData } from "../dataImport.js";
 import { branchIdFromRequest, defaultBranchId } from "./branchService.js";
@@ -16,5 +17,9 @@ export function confirmImport(user, body) {
   const parsed = validate(importConfirmSchema, body);
   const branchId = branchIdFromRequest(user, { body });
   if (!branchId) throw notFound("Branch not found");
-  return importRestaurantData(parsed.type, parsed.csv, user.restaurant_id, { branchId, confirm: parsed.confirm });
+  const result = importRestaurantData(parsed.type, parsed.csv, user.restaurant_id, {
+    branchId,
+    confirm: parsed.confirm
+  });
+  return { ...result, dataRevision: recordDataRevision(user) };
 }

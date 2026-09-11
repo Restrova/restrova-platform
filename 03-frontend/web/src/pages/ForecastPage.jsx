@@ -1,3 +1,4 @@
+import { ForecastTracking } from "./ForecastTracking.jsx";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "../components/ui/Button.jsx";
@@ -199,6 +200,13 @@ export function ForecastPage() {
           ))}
         </>
       )}
+      <ForecastTracking
+        filters={filters}
+        locale={locale}
+        money={money}
+        branchId={context.selectedBranchId}
+        branches={query.data?.branches || []}
+      />
     </section>
   );
 }

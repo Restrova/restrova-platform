@@ -18,6 +18,19 @@ function getInitialState() {
 export function AuthProvider({ children }) {
   const [state, setState] = useState(getInitialState);
 
+  const refreshDataSession = useCallback(async () => {
+    const requestToken = getToken();
+    if (!requestToken) return;
+    try {
+      const session = await restoreSessionRequest();
+      setState((current) =>
+        current.status === "authenticated" && getToken() === requestToken ? { ...current, session } : current
+      );
+    } catch {
+      /* API authentication errors are handled globally; keep the committed import visible. */
+    }
+  }, []);
+
   const restore = useCallback(async () => {
     if (!getToken()) {
       setState({ status: "unauthenticated", session: null, error: null });
@@ -97,9 +110,10 @@ export function AuthProvider({ children }) {
       login,
       logout,
       register,
-      restore
+      restore,
+      refreshDataSession
     }),
-    [login, logout, register, restore, state]
+    [login, logout, register, restore, refreshDataSession, state]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

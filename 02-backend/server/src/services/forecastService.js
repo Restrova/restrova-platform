@@ -1,3 +1,6 @@
+import { predictionInterval } from "./forecastConfidenceService.js";
+import { seasonalEvents, seasonalBaseline } from "./seasonalService.js";
+import { getDataRevision } from "./dataRevisionService.js";
 import { forecastQuerySchema, validate } from "../validation/schemas.js";
 import { getHistoricalSeries, dayOffset, weekday, median, sum, rounded, safe } from "./historicalSeriesService.js";
 import { financialCategories, financialAssumptions } from "./financialService.js";
@@ -25,6 +28,7 @@ export function getForecast(user, query) {
   const dates = Array.from({ length: parsed.horizon }, (_, i) => dayOffset(history.today, i + 1));
   const branches = history.branches.map((branch) => {
     const observed = branch.days.filter((day) => day.observed);
+    const events = seasonalEvents({ ...user, restaurant_id: branch.restaurantId }, branch.branchId);
     const categoryTotals = Object.fromEntries(
       financialCategories.map(({ key }) => [
         key,
@@ -46,12 +50,18 @@ export function getForecast(user, query) {
       historyRevenue > 0 &&
       ledgerRevenue === historyRevenue;
     const daily = dates.map((date) => {
-      const baseline = observed.filter((day) => weekday(day.date) === weekday(date));
+      const seasonal = seasonalBaseline(
+        observed.filter((day) => weekday(day.date) === weekday(date)),
+        date,
+        events
+      );
+      const baseline = seasonal.days;
       const row = {
         date,
         ...Object.fromEntries(fields.map((key) => [key, null])),
         status: "insufficient_data",
         reason: null,
+        seasonalContext: seasonal.events,
         baselineDates: baseline.map((day) => day.date)
       };
       if (
@@ -69,6 +79,33 @@ export function getForecast(user, query) {
       row.grossSalesMinor = median(baseline.map((day) => day.grossSalesMinor));
       row.revenueMinor = median(baseline.map((day) => day.revenueMinor));
       row.orderCount = median(baseline.map((day) => day.orderCount));
+      row.intervals = {
+        revenueMinor: predictionInterval(
+          seasonalBaseline(observed, date, events).days,
+          row.revenueMinor,
+          "revenueMinor"
+        ),
+        grossSalesMinor: predictionInterval(
+          seasonalBaseline(observed, date, events).days,
+          row.grossSalesMinor,
+          "grossSalesMinor"
+        )
+      };
+      if (seasonal.events.length)
+        row.intervals = {
+          revenueMinor: {
+            status: "unavailable",
+            reason: "season_specific_calibration_required",
+            lower: null,
+            upper: null
+          },
+          grossSalesMinor: {
+            status: "unavailable",
+            reason: "season_specific_calibration_required",
+            lower: null,
+            upper: null
+          }
+        };
       row.status = "sales_ready";
       if (!costReady || row.revenueMinor < 0) {
         row.reason = "costs_require_complete_reconciled_positive_revenue_history";
@@ -110,7 +147,8 @@ export function getForecast(user, query) {
   if (history.hasUnallocatedLedger) for (const day of daily) for (const key of fields.slice(3)) day[key] = null;
   return {
     hasUnallocatedLedger: history.hasUnallocatedLedger,
-    version: "7.4-v1",
+    version: "7.5-v1",
+    dataRevision: getDataRevision(user),
     language: parsed.language,
     horizon: parsed.horizon,
     scope: history.scope,
@@ -135,7 +173,7 @@ export function getForecast(user, query) {
       aggregation:
         "Group values are null if any authorized branch lacks that metric; partial branch totals are never presented as a complete group forecast.",
       limitations: [
-        "No future actuals, missing-day zero filling, holiday or annual seasonal adjustment. No calibrated confidence claim.",
+        "No future actuals or missing-day zero filling. Operator-recorded seasons restrict same-weekday comparisons; sparse seasons withhold forecasts. Empirical revenue bands have nominal 80% coverage, not guaranteed calibration. Cost/profit and group intervals are unavailable.",
         "Recorded days do not prove every transaction was imported. Forecasts assume continued historical mix and operating costs.",
         ...financialAssumptions
       ]

@@ -369,8 +369,8 @@ export function insertCost(user, row) {
     .prepare(
       `INSERT OR IGNORE INTO item_costs(
         organization_id,restaurant_id,branch_id,catalog_item_id,scope_key,
-        direct_food_cost_minor,packaging_cost_minor,effective_from
-      ) VALUES (?,?,?,?,?,?,?,?)`
+        direct_food_cost_minor,packaging_cost_minor,effective_from,supplier_name
+      ) VALUES (?,?,?,?,?,?,?,?,?)`
     )
     .run(
       user.organization_id,
@@ -380,7 +380,8 @@ export function insertCost(user, row) {
       row.scope_key,
       row.direct_food_cost_minor,
       row.packaging_cost_minor,
-      row.effective_from
+      row.effective_from,
+      row.supplier_name || null
     ).changes;
 }
 
