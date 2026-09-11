@@ -1,3 +1,4 @@
+import { recordDataRevision, getDataRevision } from "./dataRevisionService.js";
 import crypto from "node:crypto";
 import { config } from "../config/appConfig.js";
 import { conflict, forbidden, notFound, validationError } from "../errors/appError.js";
@@ -205,6 +206,7 @@ function validateCostRow(user, row, seen) {
         required: false,
         defaultMinor: 0
       }),
+      supplier_name: optionalText(row, "supplier_name", 120, errors) || null,
       effective_from: effectiveFrom
     }
   };
@@ -853,6 +855,7 @@ export function confirmStagedImport(user, jobId, confirmationToken, requestId) {
     if (!stagedImportRepository.markImportJobConfirmed(id, importedRows, safeRequestId)) {
       throw conflict("Import job is no longer available to confirm.");
     }
+    if (importedRows) recordDataRevision(user);
     const confirmed = stagedImportRepository.findImportJobInScope(user, id);
     recordAudit(user, confirmed, "import_confirmed", safeRequestId, { importedRows });
     recordAudit(user, confirmed, "import_completed", safeRequestId, {
@@ -861,7 +864,7 @@ export function confirmStagedImport(user, jobId, confirmationToken, requestId) {
     });
   });
 
-  return getStagedImportJob(user, id);
+  return { ...getStagedImportJob(user, id), dataRevision: getDataRevision(user) };
 }
 
 export function cancelStagedImport(user, jobId, requestId) {

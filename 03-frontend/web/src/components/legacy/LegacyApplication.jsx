@@ -1,3 +1,4 @@
+import { dataChangedEvent } from "../../lib/dataRefresh.js";
 import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -143,6 +144,11 @@ function Workspace({ branchId }) {
   const [dataError, setDataError] = useState(false);
   const [sendError, setSendError] = useState(false);
   const [refresh, setRefresh] = useState(0);
+  useEffect(() => {
+    const changed = () => setRefresh((value) => value + 1);
+    window.addEventListener(dataChangedEvent, changed);
+    return () => window.removeEventListener(dataChangedEvent, changed);
+  }, []);
   const active = useRef(false);
   const requestLock = useRef(false);
   const messageList = useRef();

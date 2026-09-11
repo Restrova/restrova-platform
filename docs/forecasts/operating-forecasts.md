@@ -33,4 +33,4 @@ Responses include group daily/period totals, every branch projection, baseline d
 
 Automated coverage includes all three horizons, daily/period arithmetic, all cost/profit definitions, complete group aggregation, unallocated costs, missing categories/dates, source mismatch, deterministic anchors and organization/restaurant/role boundaries. The UI covers localized labels, unavailable states, horizon changes and errors. `pnpm validate` and GitHub CI are required before merge.
 
-Calibrated confidence (#58), accuracy tracking (#59) and additional seasonal intelligence (#60) are intentionally separate issues. No accuracy percentage or guaranteed business outcome is claimed.
+Version `7.5-v1` adds empirical confidence bands (#58), recorded accuracy tracking (#59) and operator-sourced seasonal context (#60). See [import-connected forecasts and decisions](../decisions/import-connected-decisions.md) for the current methods, scope, uncertainty and governance. No guaranteed business outcome is claimed.

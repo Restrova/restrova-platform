@@ -1,5 +1,11 @@
+import { lazy, Suspense } from "react";
+const RecommendationsPage = lazy(() =>
+  import("../pages/RecommendationsPage.jsx").then((module) => ({ default: module.RecommendationsPage }))
+);
 import { AlertCenterPage } from "../pages/AlertCenterPage.jsx";
-import { ForecastPage } from "../pages/ForecastPage.jsx";
+const ForecastPage = lazy(() =>
+  import("../pages/ForecastPage.jsx").then((module) => ({ default: module.ForecastPage }))
+);
 import { Navigate, Route, Routes } from "react-router-dom";
 import { AuthBoundary } from "../components/auth/AuthBoundary.jsx";
 import { AppShell } from "../components/layout/AppShell.jsx";
@@ -59,7 +65,22 @@ export function AppRoutes() {
           <Route path="/app/branches" element={<BranchesPage />} />
           <Route path="/app/sales-comparison" element={<BranchOperationsPage />} />
           <Route path="/app/alerts" element={<AlertCenterPage />} />
-          <Route path="/app/forecasts" element={<ForecastPage />} />
+          <Route
+            path="/app/recommendations"
+            element={
+              <Suspense fallback={<p role="status">…</p>}>
+                <RecommendationsPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/app/forecasts"
+            element={
+              <Suspense fallback={<p role="status">…</p>}>
+                <ForecastPage />
+              </Suspense>
+            }
+          />
           <Route path="/app/team" element={<TeamPage />} />
           {navigationItems
             .filter(
@@ -73,7 +94,8 @@ export function AppRoutes() {
                   "team",
                   "salesComparison",
                   "alerts",
-                  "forecasts"
+                  "forecasts",
+                  "recommendations"
                 ].includes(item.id)
             )
             .map((item) => (

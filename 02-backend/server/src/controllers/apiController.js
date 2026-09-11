@@ -1,3 +1,4 @@
+import { afterConfirmedImport } from "../services/importDecisionService.js";
 import * as authService from "../services/authService.js";
 import * as branchService from "../services/branchService.js";
 import * as chatService from "../services/chatService.js";
@@ -64,7 +65,8 @@ export const downloadImportTemplate = (req, res) => {
   return res.send(file.body);
 };
 export const previewImport = (req, res) => res.json(dataService.previewImport(req.body));
-export const confirmImport = (req, res) => res.status(201).json(dataService.confirmImport(req.user, req.body));
+export const confirmImport = (req, res) =>
+  res.status(201).json(afterConfirmedImport(req.user, dataService.confirmImport(req.user, req.body)));
 
 export const previewStagedImport = (req, res) =>
   res.status(201).json(
@@ -85,7 +87,10 @@ export const updateStagedImportMapping = (req, res) =>
   res.json(stagedImportService.updateStagedImportMapping(req.user, req.params.id, req.body?.mappings, req.requestId));
 export const confirmStagedImport = (req, res) =>
   res.json(
-    stagedImportService.confirmStagedImport(req.user, req.params.id, req.body?.confirmationToken, req.requestId)
+    afterConfirmedImport(
+      req.user,
+      stagedImportService.confirmStagedImport(req.user, req.params.id, req.body?.confirmationToken, req.requestId)
+    )
   );
 export const cancelStagedImport = (req, res) =>
   res.json(stagedImportService.cancelStagedImport(req.user, req.params.id, req.requestId));

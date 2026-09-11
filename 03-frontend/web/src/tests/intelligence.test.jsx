@@ -1,3 +1,4 @@
+import { MemoryRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -73,9 +74,11 @@ function mount(Page, locale = "en") {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
   return render(
     <QueryClientProvider client={client}>
-      <LocaleProvider>
-        <Page />
-      </LocaleProvider>
+      <MemoryRouter>
+        <LocaleProvider>
+          <Page />
+        </LocaleProvider>
+      </MemoryRouter>
     </QueryClientProvider>
   );
 }
@@ -97,6 +100,8 @@ beforeEach(() => {
     if (path === "/alerts/refresh")
       return { created: 1, evaluations: [{ status: "triggered" }, { status: "insufficient_data" }] };
     if (path.startsWith("/alerts?")) return { items: [structuredClone(alert)], nextBefore: null };
+    if (path.startsWith("/forecasts/accuracy")) return { groups: [], points: [] };
+    if (path.startsWith("/seasons")) return { events: [] };
     if (path.startsWith("/forecasts?")) return structuredClone(forecast);
     return {};
   });

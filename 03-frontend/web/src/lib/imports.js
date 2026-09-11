@@ -61,11 +61,13 @@ export function updateImportMapping(jobId, mappings) {
   });
 }
 
-export function confirmImportJob(jobId, confirmationToken) {
-  return api(`/data/import-jobs/${encodeURIComponent(jobId)}/confirm`, {
+export async function confirmImportJob(jobId, confirmationToken) {
+  const result = await api(`/data/import-jobs/${encodeURIComponent(jobId)}/confirm`, {
     method: "POST",
     body: JSON.stringify({ confirmationToken })
   });
+
+  return result;
 }
 
 export function cancelImportJob(jobId) {

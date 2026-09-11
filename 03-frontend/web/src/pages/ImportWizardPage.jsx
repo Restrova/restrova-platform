@@ -1,3 +1,4 @@
+import { decisionCopy } from "./decisionCopy.js";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertTriangle,
@@ -616,6 +617,8 @@ function ConfirmPanel({ job, template, onConfirm, onCancel, confirming, cancelli
 }
 
 function Completion({ job, onReset }) {
+  const { locale } = useLocale(),
+    c = decisionCopy[locale === "zh-CN" ? "zh" : locale] || decisionCopy.en;
   const cancelled = job.status === "cancelled";
   return (
     <section className="import-completion">
@@ -627,6 +630,24 @@ function Completion({ job, onReset }) {
           ? "No staged data was written. You can start another import whenever you are ready."
           : `${job.statistics?.imported ?? 0} rows were imported successfully.`}
       </p>
+      {!cancelled && (
+        <>
+          <p>{c.connected}</p>
+          <p>
+            {c.revision}: {job.dataRevision?.revision ?? "—"}
+          </p>
+          {job.alertEvaluation?.status === "failed" && (
+            <p role="alert">
+              {c.error} <a href="/app/alerts">{c.alerts}</a>
+            </p>
+          )}
+          <nav className="decision-links">
+            <a href="/app/recommendations">{c.title}</a>
+            <a href="/app/forecasts">{c.forecast}</a>
+            <a href="/app/alerts">{c.alerts}</a>
+          </nav>
+        </>
+      )}
       <div className="import-actions">
         <Button leadingIcon={<RefreshCcw size={16} />} onClick={onReset}>
           Import another file

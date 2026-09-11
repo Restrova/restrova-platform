@@ -27,3 +27,16 @@ export const alertHistory = (req, res) => send(res, getAlertHistory(req.user, re
 export const patchAlert = (req, res) => send(res, updateAlert(req.user, req.params.id, req.body));
 export const alertDeliveryStatus = (req, res) => send(res, deliveryStatus(req.user));
 export const queueAlertNotifications = (req, res) => send(res, queueNotifications(req.user));
+
+export {
+  decisionList,
+  decisionScenario,
+  decisionActions,
+  decisionRecord,
+  decisionTransition,
+  forecastSave,
+  forecastScores,
+  seasonList,
+  seasonCreate,
+  dataRevision
+} from "./decisionController.js";

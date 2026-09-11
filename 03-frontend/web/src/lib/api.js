@@ -1,3 +1,4 @@
+import { announceDataChange } from "./dataRefresh.js";
 import { clearAuthStorage, getToken } from "./storage.js";
 
 export class ApiError extends Error {
@@ -43,5 +44,7 @@ export async function api(path, options = {}) {
     });
   }
 
+  if (options.method === "POST" && (path === "/data/import" || /^\/data\/import-jobs\/[^/]+\/confirm$/.test(path)))
+    announceDataChange(body?.dataRevision);
   return body;
 }
