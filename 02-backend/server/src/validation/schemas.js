@@ -162,6 +162,23 @@ export const branchOperationsQuerySchema = financialReportQuerySchema.extend({
   toDate: z.iso.date().optional()
 });
 
+const alertThreshold = (maximum, fallback) =>
+  z
+    .union([z.number(), z.string().regex(/^\d+$/).transform(Number)])
+    .pipe(z.number().int().min(0).max(maximum))
+    .default(fallback);
+
+export const alertRulesQuerySchema = branchOperationsQuerySchema
+  .extend({
+    language: z.enum(["ar", "en", "zh"]).optional(),
+    foodCostTargetBps: alertThreshold(100000, 3500),
+    salesDropBps: alertThreshold(10000, 1000),
+    profitMarginDropBps: alertThreshold(100000, 300),
+    refundRateIncreaseBps: alertThreshold(10000, 200),
+    discountRateIncreaseBps: alertThreshold(10000, 300)
+  })
+  .strict();
+
 export const menuCostQuerySchema = z.object({
   branchId: z.coerce.number().int().positive().optional(),
   itemCode: z.string().trim().min(1).max(100).optional(),
