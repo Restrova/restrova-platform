@@ -40,3 +40,7 @@ Common aliases include `Order ID`, `Line ID`, `Branch Name`, `Menu Item`, and `Q
 | Unsafe formula                 | Replace formula-like text with its plain data value                          |
 
 Arabic, Chinese, and English are preserved as UTF-8 through upload, mapping, validation, preview, persistence, and history.
+
+## Sales template version 2
+
+The optional `aggregator_name` column records a delivery platform name (maximum 120 characters). It is valid only when `channel` is `delivery`; leave it empty for direct/unspecified delivery. Existing CSV headers remain accepted. The [branch operations dashboard](../operations/branch-operations.md) separates platform sales without guessing names for historical rows.

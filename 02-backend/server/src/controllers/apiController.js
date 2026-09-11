@@ -21,11 +21,16 @@ import * as costSimulationService from "../services/costSimulationService.js";
 import * as menuRecommendationService from "../services/menuRecommendationService.js";
 import * as branchPerformanceService from "../services/branchPerformanceService.js";
 import * as branchRankingService from "../services/branchRankingService.js";
+import { getBranchOperations as branchOperations } from "../services/branchOperationsService.js";
 
 export const health = (_req, res) => res.json(healthService.getHealth());
 export const ready = (_req, res) => res.json(healthService.getReadiness());
 
 export const register = (req, res) => res.status(201).json(authService.register(req.body));
+export const checkEmailAvailability = (req, res) => {
+  res.setHeader("Cache-Control", "no-store");
+  return res.json(authService.checkEmailAvailability(req.body));
+};
 export const login = (req, res) => res.json(authService.login(req.body));
 export const logout = (_req, res) => res.json({ ok: true });
 export const me = (req, res) => res.json(authService.serializeMe(req.user));
@@ -107,6 +112,7 @@ export const getMenuRecommendations = (req, res) =>
 export const getBranchPerformance = (req, res) =>
   res.json(branchPerformanceService.getBranchPerformance(req.user, req.query));
 export const getBranchRankings = (req, res) => res.json(branchRankingService.getBranchRankings(req.user, req.query));
+export const getBranchOperations = (req, res) => res.json(branchOperations(req.user, req.query));
 
 export const knowledgeStatus = (req, res) => res.json(knowledgeService.getKnowledgeStatus(req.user));
 export const importKnowledge = (req, res) => res.status(201).json(knowledgeService.importKnowledge(req.user, req.body));

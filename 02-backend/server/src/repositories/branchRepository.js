@@ -1,5 +1,17 @@
 import { db } from "../db.js";
 
+export function getLifecycle(branchId) {
+  return db.prepare("SELECT * FROM branch_lifecycle WHERE branch_id=?").get(branchId) || {};
+}
+
+export function saveLifecycle(user, branchId, { openedOn, closedOn }) {
+  db.prepare(
+    `INSERT INTO branch_lifecycle(branch_id,opened_on,closed_on,updated_by) VALUES (?,?,?,?)
+    ON CONFLICT(branch_id) DO UPDATE SET opened_on=excluded.opened_on,closed_on=excluded.closed_on,
+    updated_by=excluded.updated_by,updated_at=CURRENT_TIMESTAMP`
+  ).run(branchId, openedOn, closedOn, user.owner_id);
+}
+
 export function findBranchInScope(user, branchId) {
   return db
     .prepare("SELECT * FROM branches WHERE id=? AND organization_id=? AND restaurant_id=?")
@@ -17,7 +29,9 @@ export function listBranchesForUser(user) {
   return db
     .prepare(
       `
-    SELECT id,name,code,city,address,phone,pos_system,operating_day_start,operating_day_end
+    SELECT id,name,code,city,address,phone,pos_system,operating_day_start,operating_day_end,
+      (SELECT opened_on FROM branch_lifecycle WHERE branch_id=branches.id) AS opened_on,
+      (SELECT closed_on FROM branch_lifecycle WHERE branch_id=branches.id) AS closed_on
     FROM branches
     WHERE organization_id=? AND restaurant_id=?
       AND (? <> 'branch_manager' OR id=?)

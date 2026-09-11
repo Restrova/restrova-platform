@@ -231,6 +231,16 @@ function validateSalesRow(user, row, seen) {
     errors.push(rowIssue("channel", "invalid_channel", "channel must be dine_in, takeaway, or delivery."));
   }
   const createdAt = parseDateTime(row.created_at, "created_at", errors);
+  const aggregatorName = String(row.aggregator_name ?? "").trim();
+  if (aggregatorName.length > 120 || (aggregatorName && channel !== "delivery")) {
+    errors.push(
+      rowIssue(
+        "aggregator_name",
+        "invalid_aggregator",
+        "Use a platform name up to 120 characters for delivery sales only."
+      )
+    );
+  }
   const duplicateKey = `${branch?.id || branchCode.toLowerCase()}|${orderId}|${lineId}`;
   let duplicate = false;
   if (branch && orderId && lineId) {
@@ -250,6 +260,7 @@ function validateSalesRow(user, row, seen) {
       branch_id: branch?.id || null,
       created_at: createdAt,
       channel,
+      aggregator_name: aggregatorName || null,
       item_code: itemCode,
       catalog_item_id: item?.id || null,
       quantity: parsePositiveNumber(row.quantity, "quantity", errors),

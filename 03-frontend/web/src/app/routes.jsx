@@ -4,6 +4,7 @@ import { AppShell } from "../components/layout/AppShell.jsx";
 import { navigationItems } from "./navigation.js";
 import { DesignSystemPage } from "../pages/DesignSystemPage.jsx";
 import { BranchesPage } from "../pages/BranchesPage.jsx";
+import { BranchOperationsPage } from "../pages/BranchOperationsPage.jsx";
 import { LegacyWorkspacePage } from "../pages/LegacyWorkspacePage.jsx";
 import { ImportWizardPage } from "../pages/ImportWizardPage.jsx";
 import { FinancialDashboardPage } from "../pages/FinancialDashboardPage.jsx";
@@ -54,11 +55,20 @@ export function AppRoutes() {
           <Route path="/app/imports" element={<ImportWizardPage />} />
           <Route path="/app/menu-profitability" element={<MenuProfitabilityPage />} />
           <Route path="/app/branches" element={<BranchesPage />} />
+          <Route path="/app/sales-comparison" element={<BranchOperationsPage />} />
           <Route path="/app/team" element={<TeamPage />} />
           {navigationItems
             .filter(
               (item) =>
-                !["dashboard", "workspace", "imports", "menuProfitability", "branches", "team"].includes(item.id)
+                ![
+                  "dashboard",
+                  "workspace",
+                  "imports",
+                  "menuProfitability",
+                  "branches",
+                  "team",
+                  "salesComparison"
+                ].includes(item.id)
             )
             .map((item) => (
               <Route

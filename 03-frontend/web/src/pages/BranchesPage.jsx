@@ -16,6 +16,8 @@ const emptyBranch = {
   address: "",
   phone: "",
   posSystem: "",
+  openedOn: "",
+  closedOn: "",
   operatingDayStart: "10:00",
   operatingDayEnd: "02:00"
 };
@@ -28,6 +30,8 @@ function editableBranch(branch) {
     address: branch.address || "",
     phone: branch.phone || "",
     posSystem: branch.pos_system || "",
+    openedOn: branch.opened_on || "",
+    closedOn: branch.closed_on || "",
     operatingDayStart: branch.operating_day_start || "10:00",
     operatingDayEnd: branch.operating_day_end || "02:00"
   };
@@ -81,6 +85,13 @@ function BranchFields({ value, onChange }) {
           />
         )}
       </FormField>
+      {["openedOn", "closedOn"].map((field) => (
+        <FormField key={field} label={t(`branches.${field}`)} optional>
+          {({ id, describedBy }) => (
+            <Input id={id} aria-describedby={describedBy} type="date" value={value[field]} onChange={set(field)} />
+          )}
+        </FormField>
+      ))}
       <FormField label={t("branches.dayEnd")} required>
         {({ id, describedBy }) => (
           <Input
@@ -138,7 +149,7 @@ export function BranchesPage() {
     }
     setSaving(true);
     try {
-      await createBranch(form);
+      await createBranch({ ...form, openedOn: form.openedOn || null, closedOn: form.closedOn || null });
       setForm(emptyBranch);
       await load();
       await auth.restore();
@@ -156,7 +167,11 @@ export function BranchesPage() {
     setNotice("");
     setSaving(true);
     try {
-      await updateBranch(editingId, editing);
+      await updateBranch(editingId, {
+        ...editing,
+        openedOn: editing.openedOn || null,
+        closedOn: editing.closedOn || null
+      });
       setEditingId(null);
       await load();
       await auth.restore();

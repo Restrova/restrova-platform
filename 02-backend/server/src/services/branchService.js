@@ -1,6 +1,16 @@
 import { notFound, validationError } from "../errors/appError.js";
 import * as branchRepository from "../repositories/branchRepository.js";
 import { branchCreateSchema, branchUpdateSchema, validate } from "../validation/schemas.js";
+import { db } from "../db.js";
+
+function lifecycleInput(parsed, current = {}) {
+  const openedOn = parsed.openedOn === undefined ? (current.opened_on ?? null) : parsed.openedOn;
+  const closedOn = parsed.closedOn === undefined ? (current.closed_on ?? null) : parsed.closedOn;
+  if (closedOn && (!openedOn || closedOn <= openedOn)) {
+    throw validationError("Closing date must be after opening date.");
+  }
+  return { openedOn, closedOn };
+}
 
 export function assertBranchAccess(user, branchId) {
   const branch = branchRepository.findBranchInScope(user, branchId);
@@ -39,10 +49,24 @@ export function listBranches(user) {
 }
 
 export function createBranch(user, body) {
-  return branchRepository.createBranch(user, validate(branchCreateSchema, body));
+  const parsed = validate(branchCreateSchema, body);
+  const lifecycle = lifecycleInput(parsed);
+  return db.transaction(() => {
+    const branch = branchRepository.createBranch(user, parsed);
+    branchRepository.saveLifecycle(user, branch.id, lifecycle);
+    return { ...branch, opened_on: lifecycle.openedOn, closed_on: lifecycle.closedOn };
+  })();
 }
 
 export function updateBranch(user, branchId, body) {
   if (!assertBranchAccess(user, branchId)) throw notFound("Branch not found");
-  return branchRepository.updateBranch(branchId, validate(branchUpdateSchema, body));
+  const parsed = validate(branchUpdateSchema, body);
+  const lifecycle = lifecycleInput(parsed, branchRepository.getLifecycle(branchId));
+  return db.transaction(() => {
+    const branch = branchRepository.updateBranch(branchId, parsed);
+    if (parsed.openedOn !== undefined || parsed.closedOn !== undefined) {
+      branchRepository.saveLifecycle(user, branchId, lifecycle);
+    }
+    return { ...branch, opened_on: lifecycle.openedOn, closed_on: lifecycle.closedOn };
+  })();
 }

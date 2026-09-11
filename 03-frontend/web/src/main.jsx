@@ -17,6 +17,7 @@ import "./decision.css";
 import "./data-panel.css";
 import "./feedback.css";
 import "./styles/workspace.css";
+import "./styles/operations.css";
 
 createRoot(document.getElementById("root")).render(
   <React.StrictMode>
