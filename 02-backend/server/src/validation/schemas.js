@@ -9,9 +9,12 @@ export function validate(schema, data) {
   return result.data;
 }
 
+export const emailSchema = z.string().trim().max(254).email().toLowerCase();
+export const emailAvailabilitySchema = z.object({ email: emailSchema });
+
 export const registerSchema = z.object({
   name: z.string().trim().min(1).max(120),
-  email: z.string().email(),
+  email: emailSchema,
   password: z.string().min(8).max(200),
   organizationName: z.string().trim().min(1).max(160),
   restaurantName: z.string().trim().min(1).max(160),
@@ -26,7 +29,7 @@ export const registerSchema = z.object({
 });
 
 export const loginSchema = z.object({
-  email: z.string().email(),
+  email: emailSchema,
   password: z.string().min(8),
   organizationId: z.number().int().positive().optional(),
   restaurantId: z.number().int().positive().optional()
@@ -45,6 +48,8 @@ export const restaurantSchema = z.object({
 });
 
 export const branchCreateSchema = z.object({
+  openedOn: z.iso.date().nullable().optional(),
+  closedOn: z.iso.date().nullable().optional(),
   name: z.string().trim().min(1).max(160),
   code: z.string().trim().min(1).max(40),
   city: z.string().trim().min(1).max(120),
@@ -56,6 +61,8 @@ export const branchCreateSchema = z.object({
 });
 
 export const branchUpdateSchema = z.object({
+  openedOn: z.iso.date().nullable().optional(),
+  closedOn: z.iso.date().nullable().optional(),
   name: z.string().trim().min(1).max(160).optional(),
   code: z.string().trim().min(1).max(40).optional(),
   city: z.string().trim().min(1).max(120).optional(),
@@ -67,7 +74,7 @@ export const branchUpdateSchema = z.object({
 });
 
 export const inviteUserSchema = z.object({
-  email: z.string().email(),
+  email: emailSchema,
   name: z.string().trim().max(120).optional(),
   role: z.enum(["branch_manager", "viewer"]),
   branchId: z.number().int().positive().optional()
@@ -149,6 +156,10 @@ export const financialPeriodQuerySchema = z.object({
 export const financialReportQuerySchema = financialPeriodQuerySchema.extend({
   scope: z.enum(["organization", "restaurant", "branch"]).optional(),
   restaurantId: z.coerce.number().int().positive().optional()
+});
+export const branchOperationsQuerySchema = financialReportQuerySchema.extend({
+  fromDate: z.iso.date().optional(),
+  toDate: z.iso.date().optional()
 });
 
 export const menuCostQuerySchema = z.object({

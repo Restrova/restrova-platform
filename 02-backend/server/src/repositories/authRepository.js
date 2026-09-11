@@ -37,7 +37,7 @@ export function getAuthContext(ownerId, organizationId, restaurantId) {
 }
 
 export function findOwnerByEmail(email) {
-  return db.prepare("SELECT * FROM owners WHERE email=?").get(email);
+  return db.prepare("SELECT * FROM owners WHERE lower(email)=lower(?)").get(email);
 }
 
 export function isEmailRegistered(email) {

@@ -5,7 +5,7 @@ import { config } from "../config/appConfig.js";
 import { authRequired, conflict, forbidden, validationError } from "../errors/appError.js";
 import * as authRepository from "../repositories/authRepository.js";
 import { listBranchesForUser } from "../repositories/branchRepository.js";
-import { loginSchema, registerSchema, validate } from "../validation/schemas.js";
+import { emailAvailabilitySchema, loginSchema, registerSchema, validate } from "../validation/schemas.js";
 
 export const roleRank = { viewer: 1, branch_manager: 2, owner: 3 };
 
@@ -60,6 +60,11 @@ export function authenticateBearerHeader(authHeader = "") {
   const context = authRepository.getAuthContext(token.ownerId, token.organizationId, token.restaurantId);
   if (!context) throw authRequired();
   return context;
+}
+
+export function checkEmailAvailability(body) {
+  const { email } = validate(emailAvailabilitySchema, body);
+  return { available: !authRepository.isEmailRegistered(email) };
 }
 
 export function register(body) {

@@ -53,7 +53,7 @@ test("authenticated users can list the four Task 2 import templates", async (t) 
     ["branches", "costs", "menu", "sales"]
   );
   assert.equal(
-    response.payload.every((template) => template.version === 1),
+    response.payload.every((template) => template.version === (template.key === "sales" ? 2 : 1)),
     true
   );
   assert.equal(

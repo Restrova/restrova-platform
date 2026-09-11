@@ -389,8 +389,8 @@ export function insertSalesLine(user, row) {
     .prepare(
       `INSERT OR IGNORE INTO sales_lines(
         organization_id,restaurant_id,branch_id,catalog_item_id,external_order_id,external_line_id,
-        created_at,channel,quantity,gross_sales_minor,discount_minor,refund_amount_minor,delivery_commission_minor
-      ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`
+        created_at,channel,quantity,gross_sales_minor,discount_minor,refund_amount_minor,delivery_commission_minor,aggregator_name
+      ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
     )
     .run(
       user.organization_id,
@@ -405,7 +405,8 @@ export function insertSalesLine(user, row) {
       row.gross_sales_minor,
       row.discount_minor,
       row.refund_amount_minor,
-      row.delivery_commission_minor
+      row.delivery_commission_minor,
+      row.aggregator_name || null
     ).changes;
 }
 

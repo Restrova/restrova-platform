@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
   Bot,
@@ -15,6 +15,7 @@ import {
 import { LanguageSwitcher } from "../components/layout/LanguageSwitcher.jsx";
 import { useAuth } from "../contexts/AuthContext.jsx";
 import { useLocale } from "../contexts/LocaleContext.jsx";
+import { checkEmailAvailabilityRequest } from "../lib/auth.js";
 
 const defaultProfile = {
   name: "Restaurant Owner",
@@ -47,6 +48,7 @@ export function LoginPage({ mode = "login" }) {
   const [step, setStep] = useState(0);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const pending = useRef(false);
   const isRegister = mode === "register";
   const next = workspaceDestination(searchParams.get("next"));
   const steps = useMemo(
@@ -64,20 +66,34 @@ export function LoginPage({ mode = "login" }) {
 
   const submit = async (event) => {
     event.preventDefault();
+    if (pending.current) return;
     setError("");
-    if (isRegister && step < steps.length - 1) {
-      setStep((current) => current + 1);
-      return;
-    }
-
+    pending.current = true;
     setBusy(true);
     try {
+      if (isRegister && step < steps.length - 1) {
+        if (step === 0) {
+          const result = await checkEmailAvailabilityRequest(email.trim());
+          if (!result.available) {
+            setError(t("auth.emailInUse"));
+            return;
+          }
+        }
+        setStep((current) => current + 1);
+        return;
+      }
       if (isRegister) await auth.register({ ...profile, email, password });
       else await auth.login({ email, password });
       navigate(next, { replace: true });
     } catch (requestError) {
-      setError(requestError.message || t("auth.unable"));
+      if (isRegister && requestError.status === 409) {
+        setStep(0);
+        setError(t("auth.emailInUse"));
+      } else if (isRegister && step === 0) {
+        setError(t(requestError.status === 400 ? "auth.invalidEmail" : "auth.emailCheckFailed"));
+      } else setError(requestError.message || t("auth.unable"));
     } finally {
+      pending.current = false;
       setBusy(false);
     }
   };
@@ -131,7 +147,7 @@ export function LoginPage({ mode = "login" }) {
           )}
 
           {(!isRegister || step === 0) && (
-            <fieldset className="onboarding-fieldset">
+            <fieldset className="onboarding-fieldset" disabled={busy}>
               {isRegister && <legend>{t("auth.accountTitle")}</legend>}
               {isRegister && (
                 <label>
@@ -141,7 +157,17 @@ export function LoginPage({ mode = "login" }) {
               )}
               <label>
                 {t("auth.email")}
-                <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} required />
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(event) => {
+                    setEmail(event.target.value);
+                    setError("");
+                  }}
+                  maxLength={254}
+                  autoComplete="email"
+                  required
+                />
               </label>
               <label>
                 {t("auth.password")}
@@ -307,6 +333,7 @@ export function LoginPage({ mode = "login" }) {
               <button
                 type="button"
                 className="secondary"
+                disabled={busy}
                 onClick={() => {
                   setStep((current) => current - 1);
                   setError("");

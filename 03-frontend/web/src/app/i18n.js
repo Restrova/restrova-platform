@@ -99,6 +99,9 @@ export const dictionaries = {
       createOrganization: "إنشاء المؤسسة",
       openDecisionCenter: "فتح مركز القرار",
       unable: "تعذر إكمال الطلب",
+      emailInUse: "هذا البريد مسجل مسبقًا. سجّل دخولك أو استخدم بريدًا آخر.",
+      invalidEmail: "أدخل بريدًا إلكترونيًا صحيحًا.",
+      emailCheckFailed: "تعذر التحقق من البريد. حاول مرة أخرى قبل المتابعة.",
       quote: "ما الذي يستحق انتباهي الليلة؟",
       nextMove: "أفضل خطوة تالية",
       sampleAnswer: "هناك عنصران في المخزون تحت الحد. راجعهما قبل خدمة العشاء.",
@@ -127,7 +130,9 @@ export const dictionaries = {
       phone: "الهاتف",
       posSystem: "نظام نقاط البيع",
       dayStart: "بداية يوم التشغيل",
-      dayEnd: "نهاية يوم التشغيل"
+      dayEnd: "نهاية يوم التشغيل",
+      openedOn: "تاريخ الافتتاح الفعلي",
+      closedOn: "تاريخ الإغلاق (أول يوم بدون تشغيل)"
     },
     financialDashboard: {
       badge: "بيانات مالية موثوقة",
@@ -396,6 +401,9 @@ export const dictionaries = {
       createOrganization: "Create organization",
       openDecisionCenter: "Open decision center",
       unable: "Unable to complete request",
+      emailInUse: "This email is already registered. Sign in or use another email.",
+      invalidEmail: "Enter a valid email address.",
+      emailCheckFailed: "Unable to check this email. Please retry before continuing.",
       quote: "What deserves my attention tonight?",
       nextMove: "Your next best move",
       sampleAnswer: "Two inventory items are below threshold. Review them before dinner service.",
@@ -430,7 +438,9 @@ export const dictionaries = {
       phone: "Phone",
       posSystem: "POS system",
       dayStart: "Operating day start",
-      dayEnd: "Operating day end"
+      dayEnd: "Operating day end",
+      openedOn: "Actual opening date",
+      closedOn: "Closing date (first day without operations)"
     },
     financialDashboard: {
       badge: "Trustworthy financials",
@@ -699,6 +709,9 @@ export const dictionaries = {
       createOrganization: "创建组织",
       openDecisionCenter: "打开决策中心",
       unable: "无法完成请求",
+      emailInUse: "此邮箱已注册，请登录或使用其他邮箱。",
+      invalidEmail: "请输入有效的电子邮箱地址。",
+      emailCheckFailed: "无法验证邮箱，请重试后再继续。",
       quote: "今晚什么最值得我关注？",
       nextMove: "下一步最佳行动",
       sampleAnswer: "两项库存低于阈值，请在晚餐服务前检查。",
@@ -727,7 +740,9 @@ export const dictionaries = {
       phone: "电话",
       posSystem: "POS 系统",
       dayStart: "营业日开始",
-      dayEnd: "营业日结束"
+      dayEnd: "营业日结束",
+      openedOn: "实际开业日期",
+      closedOn: "关闭日期（首个不营业日）"
     },
     financialDashboard: {
       badge: "可信财务数据",

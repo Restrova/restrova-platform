@@ -1,0 +1,191 @@
+.operations-page {
+  display: grid;
+  gap: 1.25rem;
+  min-width: 0;
+}
+.operations-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.operations-header h1 {
+  margin: 0 0 0.4rem;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+}
+.operations-header p,
+.operations-footnote,
+.operations-period {
+  color: var(--color-text-secondary);
+}
+.operations-header p {
+  margin: 0;
+}
+.operations-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.85rem;
+  background: var(--color-surface);
+}
+.operations-filters label {
+  display: grid;
+  gap: 0.4rem;
+  font-size: 0.875rem;
+  flex: 1 1 10rem;
+  min-width: 0;
+}
+.operations-filters select,
+.operations-filters input {
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.55rem 0.75rem;
+  color: var(--color-text-primary);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  font: inherit;
+}
+.operations-period {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+  margin: 0;
+  font-size: 0.875rem;
+}
+.operations-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+}
+.operations-metric .ui-card__content {
+  display: grid;
+  gap: 0.6rem;
+}
+.operations-metric svg {
+  color: var(--color-primary);
+}
+.operations-metric span {
+  font-size: 0.875rem;
+}
+.operations-metric strong {
+  font-size: clamp(1.2rem, 2vw, 1.7rem);
+  font-variant-numeric: tabular-nums;
+}
+.operations-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.operations-tabs button {
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.65rem;
+  color: var(--color-text-primary);
+  background: var(--color-surface);
+  font: inherit;
+  cursor: pointer;
+}
+.operations-tabs button[aria-pressed="true"] {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
+  font-weight: 700;
+}
+.operations-table-scroll {
+  overflow-x: auto;
+  max-width: 100%;
+}
+.operations-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: start;
+  font-size: 0.875rem;
+}
+.operations-table th,
+.operations-table td {
+  padding: 0.85rem;
+  border-bottom: 1px solid var(--color-border);
+  text-align: start;
+  vertical-align: top;
+  font-variant-numeric: tabular-nums;
+}
+.operations-table td {
+  white-space: nowrap;
+}
+.operations-table thead th {
+  color: var(--color-text-secondary);
+  font-weight: 600;
+}
+.operations-table small {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  margin-top: 0.35rem;
+}
+.operations-page summary {
+  cursor: pointer;
+  padding-block: 0.6rem;
+  font-size: 0.875rem;
+}
+.operations-page details ul {
+  max-height: 18rem;
+  overflow: auto;
+  padding-inline-start: 1.5rem;
+  font-weight: 400;
+}
+.operations-evidence {
+  margin-top: 0.3rem;
+  font-weight: 400;
+}
+.operations-columns,
+.operations-opportunities {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+.operations-notice {
+  border-inline-start: 3px solid var(--color-primary);
+  padding: 1rem;
+  background: var(--color-primary-soft);
+  border-radius: 0.5rem;
+}
+.operations-opportunities h3 {
+  font-size: 1.125rem;
+  margin-block: 0.4rem;
+}
+.operations-footnote {
+  font-size: 0.875rem;
+  margin-block: 0.5rem;
+}
+.operations-date-lists {
+  max-height: 12rem;
+  overflow: auto;
+  font-size: 0.875rem;
+}
+@media (max-width: 900px) {
+  .operations-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .operations-columns,
+  .operations-opportunities {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 520px) {
+  .operations-header {
+    flex-direction: column;
+  }
+  .operations-metrics {
+    gap: 0.6rem;
+  }
+  .operations-filters {
+    padding: 0.75rem;
+  }
+  .operations-table th,
+  .operations-table td {
+    padding: 0.65rem;
+  }
+}

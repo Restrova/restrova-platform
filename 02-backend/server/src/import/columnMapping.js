@@ -27,6 +27,7 @@ const COMMON_ALIASES = {
     "transaction time"
   ],
   channel: ["channel", "sales channel", "order channel", "source channel"],
+  aggregator_name: ["aggregator_name", "aggregator", "delivery platform", "platform", "منصة التوصيل", "外卖平台"],
   quantity: ["quantity", "quantity sold", "qty", "units", "units sold"],
   gross_sales: ["gross_sales", "gross sales", "sales amount", "gross amount", "line total"],
   discount: ["discount", "discount amount"],

@@ -6,6 +6,7 @@ Operations documentation belongs here when it affects production readiness.
 
 - [Branch performance model](branch-performance-model.md): recorded branch economics and period growth.
 - [Branch ranking](branch-ranking.md): evidence requirements, leader definitions, ties and access scope.
+- [Branch operations](branch-operations.md): same-store comparison, scorecards, time/channel analysis and opportunities (Tasks 5.3–5.7).
 
 ## Required production practices
 

@@ -21,6 +21,7 @@ router.get("/health", controller.health);
 router.get("/ready", controller.ready);
 
 router.post("/auth/register", authRateLimit, asyncHandler(controller.register));
+router.post("/auth/email-availability", authRateLimit, asyncHandler(controller.checkEmailAvailability));
 router.post("/auth/login", authRateLimit, asyncHandler(controller.login));
 router.post("/auth/logout", controller.logout);
 router.get("/auth/me", auth, controller.me);
@@ -88,6 +89,7 @@ router.get("/financial/report", auth, asyncHandler(controller.getFinancialReport
 router.get("/financial/dashboard", auth, asyncHandler(controller.getFinancialDashboard));
 router.get("/branches/performance", auth, asyncHandler(controller.getBranchPerformance));
 router.get("/branches/rankings", auth, asyncHandler(controller.getBranchRankings));
+router.get("/branches/operations", auth, asyncHandler(controller.getBranchOperations));
 router.get("/menu/costs", auth, asyncHandler(controller.getMenuCosts));
 router.get("/menu/margins", auth, asyncHandler(controller.getMenuMargins));
 router.get("/menu/engineering-matrix", auth, asyncHandler(controller.getMenuEngineeringMatrix));

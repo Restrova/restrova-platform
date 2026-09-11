@@ -71,7 +71,7 @@ describe("full-stack restaurant onboarding", () => {
     await user.type(screen.getByLabelText("Password"), "full-stack-password-123");
     await user.click(screen.getByRole("button", { name: /Continue/ }));
 
-    await user.clear(screen.getByLabelText("Organization"));
+    await user.clear(await screen.findByLabelText("Organization"));
     await user.type(screen.getByLabelText("Organization"), `QA Organization ${stamp}`);
     await user.selectOptions(screen.getByLabelText("Currency"), "SAR");
     await user.selectOptions(screen.getByLabelText("Timezone"), "Asia/Riyadh");
