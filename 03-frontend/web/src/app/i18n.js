@@ -37,6 +37,8 @@ export const dictionaries = {
       menuProfitability: "ربحية القائمة",
       salesComparison: "مقارنة المبيعات",
       alerts: "التنبيهات",
+
+      forecasts: "التوقعات",
       recommendations: "التوصيات",
       reports: "التقارير اليومية",
       assistant: "مساعد AI",
@@ -339,6 +341,8 @@ export const dictionaries = {
       menuProfitability: "Menu Profitability",
       salesComparison: "Sales Comparison",
       alerts: "Alerts",
+
+      forecasts: "Forecasts",
       recommendations: "Recommendations",
       reports: "Daily Reports",
       assistant: "AI Assistant",
@@ -647,6 +651,8 @@ export const dictionaries = {
       menuProfitability: "菜单盈利能力",
       salesComparison: "销售对比",
       alerts: "提醒",
+
+      forecasts: "预测",
       recommendations: "建议",
       reports: "每日报告",
       assistant: "AI 助手",

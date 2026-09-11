@@ -1,6 +1,6 @@
 import express, { Router } from "express";
 import * as controller from "../controllers/apiController.js";
-import { auth, requireOwner, requireRole } from "../middleware/auth.js";
+import { auth, requireOwner, requireRole, requireManagerWrite } from "../middleware/auth.js";
 import { authRateLimit, importActionRateLimit, importPreviewRateLimit } from "../middleware/security.js";
 import { config } from "../config/appConfig.js";
 
@@ -91,6 +91,17 @@ router.get("/branches/performance", auth, asyncHandler(controller.getBranchPerfo
 router.get("/branches/rankings", auth, asyncHandler(controller.getBranchRankings));
 router.get("/branches/operations", auth, asyncHandler(controller.getBranchOperations));
 router.get("/alerts/evaluate", auth, asyncHandler(controller.getAlertRules));
+router.get("/alerts/anomalies", auth, asyncHandler(controller.anomalies));
+router.get("/forecasts", auth, asyncHandler(controller.forecast));
+router.get("/alerts/preferences", auth, asyncHandler(controller.alertPreferences));
+router.put("/alerts/preferences", auth, asyncHandler(controller.putAlertPreferences));
+router.post("/alerts/refresh", auth, requireManagerWrite, asyncHandler(controller.alertRefresh));
+router.get("/alerts", auth, asyncHandler(controller.alertList));
+router.get("/alerts/notifications", auth, asyncHandler(controller.alertDeliveryStatus));
+router.post("/alerts/notifications/queue", auth, asyncHandler(controller.queueAlertNotifications));
+router.get("/alerts/:id/history", auth, asyncHandler(controller.alertHistory));
+router.patch("/alerts/:id", auth, requireManagerWrite, asyncHandler(controller.patchAlert));
+
 router.get("/menu/costs", auth, asyncHandler(controller.getMenuCosts));
 router.get("/menu/margins", auth, asyncHandler(controller.getMenuMargins));
 router.get("/menu/engineering-matrix", auth, asyncHandler(controller.getMenuEngineeringMatrix));

@@ -245,3 +245,20 @@ export const feedbackSchema = z.object({
   correctedAnswer: z.string().trim().max(12000).optional(),
   correctTools: z.array(z.string().min(1).max(80)).max(12).default([])
 });
+
+export const historicalQuerySchema = z
+  .object({
+    scope: z.enum(["organization", "restaurant", "branch"]).optional(),
+    restaurantId: z.coerce.number().int().positive().optional(),
+    branchId: z.coerce.number().int().positive().optional(),
+    anchor: financialTimestampSchema.optional(),
+    historyDays: z.coerce.number().int().min(29).max(365).default(57),
+    language: z.enum(["ar", "en", "zh"]).default("ar")
+  })
+  .strict();
+export const forecastQuerySchema = historicalQuerySchema.extend({
+  horizon: z.coerce
+    .number()
+    .pipe(z.union([z.literal(1), z.literal(7), z.literal(30)]))
+    .default(7)
+});

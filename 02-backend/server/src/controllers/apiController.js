@@ -128,3 +128,16 @@ export const confirmAction = (req, res) =>
   res.json(chatService.confirmAction(req.user, req.params.hash, req.body?.branchId));
 export const saveFeedback = (req, res) => res.status(201).json(chatService.saveFeedback(req.user, req.body));
 export const exportTraining = (req, res) => res.json(chatService.exportTrainingFeedback(req.user));
+
+export {
+  anomalies,
+  forecast,
+  alertPreferences,
+  putAlertPreferences,
+  alertRefresh,
+  alertList,
+  alertHistory,
+  patchAlert,
+  alertDeliveryStatus,
+  queueAlertNotifications
+} from "./intelligenceController.js";
