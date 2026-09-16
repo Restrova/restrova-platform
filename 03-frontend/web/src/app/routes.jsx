@@ -2,6 +2,10 @@ import { lazy, Suspense } from "react";
 const RecommendationsPage = lazy(() =>
   import("../pages/RecommendationsPage.jsx").then((module) => ({ default: module.RecommendationsPage }))
 );
+const CopilotPage = lazy(() => import("../pages/CopilotPage.jsx").then((module) => ({ default: module.CopilotPage })));
+const DailyReportPage = lazy(() =>
+  import("../pages/CopilotPage.jsx").then((module) => ({ default: module.DailyReportPage }))
+);
 import { AlertCenterPage } from "../pages/AlertCenterPage.jsx";
 const ForecastPage = lazy(() =>
   import("../pages/ForecastPage.jsx").then((module) => ({ default: module.ForecastPage }))
@@ -81,6 +85,22 @@ export function AppRoutes() {
               </Suspense>
             }
           />
+          <Route
+            path="/app/assistant"
+            element={
+              <Suspense fallback={<p role="status">…</p>}>
+                <CopilotPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/app/reports"
+            element={
+              <Suspense fallback={<p role="status">…</p>}>
+                <DailyReportPage />
+              </Suspense>
+            }
+          />
           <Route path="/app/team" element={<TeamPage />} />
           {navigationItems
             .filter(
@@ -95,7 +115,9 @@ export function AppRoutes() {
                   "salesComparison",
                   "alerts",
                   "forecasts",
-                  "recommendations"
+                  "recommendations",
+                  "assistant",
+                  "reports"
                 ].includes(item.id)
             )
             .map((item) => (

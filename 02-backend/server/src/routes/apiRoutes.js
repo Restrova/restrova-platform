@@ -1,3 +1,4 @@
+import * as copilot from "../controllers/copilotController.js";
 import express, { Router } from "express";
 import * as controller from "../controllers/apiController.js";
 import { auth, requireOwner, requireRole, requireManagerWrite } from "../middleware/auth.js";
@@ -10,6 +11,12 @@ const asyncHandler = (handler) => (req, res, next) =>
   Promise.resolve()
     .then(() => handler(req, res, next))
     .catch(next);
+router.get("/copilot/context", auth, asyncHandler(copilot.context));
+router.post("/copilot/ask", auth, asyncHandler(copilot.ask));
+router.get("/copilot/threads", auth, asyncHandler(copilot.threads));
+router.get("/copilot/threads/:id", auth, asyncHandler(copilot.thread));
+router.get("/copilot/threads/:id/turns/:turnId/evidence/:sourceId", auth, asyncHandler(copilot.evidence));
+router.get("/reports/daily", auth, asyncHandler(copilot.report));
 router.get("/data/revision", auth, asyncHandler(decisions.dataRevision));
 router.get("/decisions", auth, asyncHandler(decisions.decisionList));
 router.post("/decisions/scenario", auth, requireManagerWrite, asyncHandler(decisions.decisionScenario));
