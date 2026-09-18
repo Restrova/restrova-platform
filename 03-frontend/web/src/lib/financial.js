@@ -27,12 +27,14 @@ export function ratioBps(numerator, denominator) {
 
 export function buildFinancialDashboardQuery({
   scope,
+  throughNow,
   restaurantId,
   branchId,
   period = "today",
   comparison = "previous_period"
 }) {
   const parameters = new URLSearchParams({ scope, period, comparison });
+  if (throughNow) parameters.set("throughNow", "true");
   if (scope === "restaurant" && restaurantId) parameters.set("restaurantId", restaurantId);
   if (scope === "branch" && branchId) parameters.set("branchId", branchId);
   return parameters.toString();

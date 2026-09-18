@@ -130,3 +130,16 @@ it("missing evidence is explicit and saved answers show import staleness", async
   expect(await screen.findByText(copilotUiCopy.en.noData)).toBeInTheDocument();
   expect(screen.getByText(copilotUiCopy.en.stale)).toBeInTheDocument();
 });
+
+it("incomplete or reversed dates block report requests and manual refresh", async () => {
+  mount(DailyReportPage);
+  await screen.findByText("Documented change explanation");
+  const count = api.mock.calls.length;
+  fireEvent.change(screen.getByLabelText(copilotUiCopy.en.from), { target: { value: "2026-09-17" } });
+  expect(screen.getByRole("alert")).toHaveTextContent("Choose both dates");
+  expect(screen.getByRole("button", { name: copilotUiCopy.en.retry })).toBeDisabled();
+  fireEvent.change(screen.getByLabelText(copilotUiCopy.en.to), { target: { value: "2026-09-16" } });
+  expect(api.mock.calls.length).toBe(count);
+  fireEvent.change(screen.getByLabelText(copilotUiCopy.en.to), { target: { value: "2026-09-17" } });
+  await waitFor(() => expect(api.mock.calls.length).toBeGreaterThan(count));
+});

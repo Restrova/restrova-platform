@@ -1,3 +1,5 @@
+import { ProfitWaterfall, profitComplete } from "../components/financial/ProfitWaterfall.jsx";
+import { ownerCopy } from "./ownerCopy.js";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -104,12 +106,12 @@ function DashboardLoading({ label }) {
   );
 }
 
-export function FinancialDashboardPage() {
+export function FinancialDashboardPage({ today = false }) {
   const auth = useAuth();
   const restaurant = useRestaurant();
-  const { t, formatCurrency, formatNumber, formatPercent } = useLocale();
+  const { t, locale, formatDateTime, formatCurrency, formatNumber, formatPercent } = useLocale();
   const role = auth.user?.role || "viewer";
-  const [scope, setScope] = useState(() => defaultScope(role));
+  const [scope, setScope] = useState(() => (today && role !== "branch_manager" ? "restaurant" : defaultScope(role)));
   const [period, setPeriod] = useState("today");
   const [comparison, setComparison] = useState("previous_period");
 
@@ -123,18 +125,21 @@ export function FinancialDashboardPage() {
       restaurantId: restaurant.selectedRestaurantId,
       branchId: restaurant.selectedBranchId,
       period,
-      comparison
+      comparison,
+      ...(today ? { throughNow: true } : {})
     }),
-    [comparison, period, restaurant.selectedBranchId, restaurant.selectedRestaurantId, scope]
+    [comparison, period, restaurant.selectedBranchId, restaurant.selectedRestaurantId, scope, today]
   );
 
   const dashboardQuery = useQuery({
-    queryKey: ["financial-dashboard", filters],
+    queryKey: ["financial-dashboard", auth.user?.id, auth.organization?.id, filters],
     queryFn: () => getFinancialDashboard(filters),
+    refetchInterval: today ? 60000 : false,
     enabled: Boolean(restaurant.selectedRestaurantId) && (scope !== "branch" || Boolean(restaurant.selectedBranchId))
   });
 
   const dashboard = dashboardQuery.data;
+  const c = ownerCopy[locale] || ownerCopy.en;
   const currencyCode = dashboard?.currencyCode || auth.organization?.currency || "CNY";
   const money = (minor) => formatCurrency(minorToMajor(minor, currencyCode), { currency: currencyCode });
   const percentage = (bps) => formatPercent(bps === null ? null : bps / 10000);
@@ -167,7 +172,7 @@ export function FinancialDashboardPage() {
       </label>
       <label>
         <span>{t("financialDashboard.period")}</span>
-        <select value={period} onChange={(event) => changePeriod(event.target.value)}>
+        <select disabled={today} value={period} onChange={(event) => changePeriod(event.target.value)}>
           {periodOptions.map((option) => (
             <option key={option} value={option}>
               {t(`financialDashboard.periods.${option}`)}
@@ -202,8 +207,8 @@ export function FinancialDashboardPage() {
       <header className="financial-dashboard__header">
         <div>
           <Badge variant="info">{t("financialDashboard.badge")}</Badge>
-          <h1 id="financial-dashboard-title">{t("financialDashboard.title")}</h1>
-          <p>{t("financialDashboard.description")}</p>
+          <h1 id="financial-dashboard-title">{today ? c.today : t("financialDashboard.title")}</h1>
+          <p>{today ? c.todayIntro : t("financialDashboard.description")}</p>
         </div>
         {dashboard && (
           <Badge variant={dashboard.summary.completeness.missingCategories.length ? "warning" : "success"}>
@@ -215,6 +220,21 @@ export function FinancialDashboardPage() {
       </header>
 
       {controls}
+      {today && <p>{c.recorded}</p>}
+      {dashboard?.period.current && (
+        <p className="owner-period">
+          {today ? c.asOf : t("financialDashboard.period")}:{" "}
+          <bdi>{formatDateTime(dashboard.period.current.to, { timeZone: dashboard.timezone })}</bdi>
+          {dashboard.period.comparison && (
+            <>
+              {" "}
+              · {c.previous}:{" "}
+              <bdi>{formatDateTime(dashboard.period.comparison.to, { timeZone: dashboard.timezone })}</bdi>
+            </>
+          )}{" "}
+          · <bdi>{dashboard.timezone}</bdi>
+        </p>
+      )}
 
       {dashboardQuery.isLoading && <DashboardLoading label={t("financialDashboard.loading")} />}
       {dashboardQuery.isError && (
@@ -237,6 +257,11 @@ export function FinancialDashboardPage() {
       {dashboard?.summary.completeness.hasData && (
         <DashboardContent
           dashboard={dashboard}
+          locale={locale}
+          onBranch={(row) => {
+            if (restaurant.setSelectedBranchId?.(row.branchId)) setScope("branch");
+          }}
+          canDrill={(row) => restaurant.branches?.some((branch) => String(branch.id) === String(row.branchId))}
           money={money}
           percentage={percentage}
           formatNumber={formatNumber}
@@ -248,8 +273,20 @@ export function FinancialDashboardPage() {
   );
 }
 
-function DashboardContent({ dashboard, money, percentage, formatNumber, formatCurrency, t }) {
+function DashboardContent({
+  dashboard,
+  money,
+  percentage,
+  formatNumber,
+  formatCurrency,
+  t,
+  locale,
+  onBranch,
+  canDrill
+}) {
   const { summary, comparison } = dashboard;
+  const ready = profitComplete(summary.completeness);
+  const comparable = ready && profitComplete(comparison?.completeness);
   const revenue = summary.revenue.revenueMinor;
   const foodCostBps = ratioBps(summary.costs.foodCostsMinor, revenue);
   const laborCostBps = ratioBps(summary.costs.laborCostsMinor, revenue);
@@ -268,15 +305,15 @@ function DashboardContent({ dashboard, money, percentage, formatNumber, formatCu
     {
       icon: Banknote,
       label: t("financialDashboard.metrics.netProfit"),
-      value: money(summary.profit.netProfitMinor),
-      change: comparison?.changes.netProfitMinor,
+      value: money(ready ? summary.profit.netProfitMinor : null),
+      change: comparable ? comparison.changes.netProfitMinor : null,
       changeFormat: currencyChange
     },
     {
       icon: Percent,
       label: t("financialDashboard.metrics.profitMargin"),
-      value: percentage(summary.marginsBps.netMarginBps),
-      change: comparison?.changes.netMarginBps,
+      value: percentage(ready ? summary.marginsBps.netMarginBps : null),
+      change: comparable ? comparison.changes.netMarginBps : null,
       changeFormat: percentChange
     },
     {
@@ -326,6 +363,7 @@ function DashboardContent({ dashboard, money, percentage, formatNumber, formatCu
         ))}
       </section>
 
+      <ProfitWaterfall summary={summary} money={money} t={t} locale={locale} />
       <section className="financial-dashboard__two-column">
         <Card className="financial-dashboard__trend-card">
           <CardHeader status={<Badge>{t(`financialDashboard.granularities.${dashboard.trends.granularity}`)}</Badge>}>
@@ -353,7 +391,14 @@ function DashboardContent({ dashboard, money, percentage, formatNumber, formatCu
       </section>
 
       <section className="financial-dashboard__two-column financial-dashboard__two-column--bottom">
-        <BranchRankingCard dashboard={dashboard} money={money} percentage={percentage} t={t} />
+        <BranchRankingCard
+          onBranch={onBranch}
+          canDrill={canDrill}
+          dashboard={dashboard}
+          money={money}
+          percentage={percentage}
+          t={t}
+        />
         <DataCoverageCard dashboard={dashboard} t={t} formatNumber={formatNumber} />
       </section>
     </div>
@@ -386,7 +431,7 @@ function CostBreakdownCard({ dashboard, money, t }) {
   );
 }
 
-function BranchRankingCard({ dashboard, money, percentage, t }) {
+function BranchRankingCard({ dashboard, money, percentage, t, onBranch, canDrill }) {
   const rows = dashboard.branchRanking.items;
   return (
     <Card>
@@ -395,37 +440,47 @@ function BranchRankingCard({ dashboard, money, percentage, t }) {
         <CardDescription>{t("financialDashboard.branchRankingDescription")}</CardDescription>
       </CardHeader>
       <CardContent className="financial-table-wrap">
-        {rows.length ? (
-          <table className="financial-table">
-            <thead>
-              <tr>
-                <th>{t("financialDashboard.rank")}</th>
-                <th>{t("financialDashboard.branch")}</th>
-                <th>{t("financialDashboard.metrics.revenue")}</th>
-                <th>{t("financialDashboard.metrics.netProfit")}</th>
-                <th>{t("financialDashboard.metrics.profitMargin")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row) => (
-                <tr key={row.branchId}>
-                  <td>{row.rank || "—"}</td>
-                  <th>
-                    <span>{row.branchName}</span>
-                    <small>
-                      {row.branchCode} · {row.city}
-                    </small>
-                  </th>
-                  <td>{money(row.metrics.revenueMinor)}</td>
-                  <td>{money(row.metrics.netProfitMinor)}</td>
-                  <td>{percentage(row.metrics.netMarginBps)}</td>
+        <div tabIndex={0} role="region" aria-label={t("financialDashboard.branchRanking")}>
+          {rows.length ? (
+            <table className="financial-table">
+              <thead>
+                <tr>
+                  <th>{t("financialDashboard.rank")}</th>
+                  <th>{t("financialDashboard.branch")}</th>
+                  <th>{t("financialDashboard.metrics.revenue")}</th>
+                  <th>{t("financialDashboard.metrics.netProfit")}</th>
+                  <th>{t("financialDashboard.metrics.profitMargin")}</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          <p className="financial-dashboard__muted">{t("financialDashboard.noBranches")}</p>
-        )}
+              </thead>
+              <tbody>
+                {rows.map((row) => (
+                  <tr key={row.branchId}>
+                    <td>{profitComplete(row.completeness) ? row.rank || "—" : "—"}</td>
+                    <th>
+                      <span>
+                        {canDrill(row) ? (
+                          <button className="branch-drill" onClick={() => onBranch(row)}>
+                            {row.branchName}
+                          </button>
+                        ) : (
+                          row.branchName
+                        )}
+                      </span>
+                      <small>
+                        {row.branchCode} · {row.city}
+                      </small>
+                    </th>
+                    <td>{money(row.metrics.revenueMinor)}</td>
+                    <td>{money(profitComplete(row.completeness) ? row.metrics.netProfitMinor : null)}</td>
+                    <td>{percentage(profitComplete(row.completeness) ? row.metrics.netMarginBps : null)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <p className="financial-dashboard__muted">{t("financialDashboard.noBranches")}</p>
+          )}
+        </div>
         {dashboard.branchRanking.unallocatedCostsExcluded && (
           <p className="financial-dashboard__note">{t("financialDashboard.unallocatedNote")}</p>
         )}

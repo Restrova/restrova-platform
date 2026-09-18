@@ -175,25 +175,36 @@ export function listAlerts(user, query) {
       .extend({
         status: z.enum(["open", "resolved", "all"]).default("open"),
         limit: z.coerce.number().int().min(1).max(100).default(50),
-        before: z.coerce.number().int().positive().optional()
+        before: z.coerce.number().int().positive().optional(),
+        order: z.enum(["recent", "priority"]).default("recent")
       })
       .strict(),
     query
   );
   const ids = authorizedBranches(user, parsed).map((branch) => branch.id);
   if (!ids.length) return { items: [], nextBefore: null };
+  const severityRank =
+    "CASE json_extract(snapshot_json, '$.severity') WHEN 'CRITICAL' THEN 0 WHEN 'WARNING' THEN 1 ELSE 2 END";
+  // Resolve the keyset cursor only within the caller's authorized scope.
+  const cursor =
+    parsed.before && parsed.order === "priority"
+      ? db
+          .prepare(
+            `SELECT ${severityRank} AS priority FROM alert_incidents WHERE id=? AND organization_id=? AND branch_id IN (${ids.map(() => "?").join(",")})`
+          )
+          .get(parsed.before, user.organization_id, ...ids)
+      : null;
+  if (parsed.before && parsed.order === "priority" && !cursor) return { items: [], nextBefore: null };
+  const priority = parsed.order === "priority";
+  const predicate = priority ? `(${severityRank}>? OR (${severityRank}=? AND id<?))` : "id<?";
+  const values = priority
+    ? [cursor?.priority ?? -1, cursor?.priority ?? -1, parsed.before || Number.MAX_SAFE_INTEGER]
+    : [parsed.before || Number.MAX_SAFE_INTEGER];
   const rows = db
     .prepare(
-      `SELECT * FROM alert_incidents WHERE organization_id=? AND branch_id IN (${ids.map(() => "?").join(",")}) AND (?='all' OR status=?) AND id<? ORDER BY id DESC LIMIT ?`
+      `SELECT * FROM alert_incidents WHERE organization_id=? AND branch_id IN (${ids.map(() => "?").join(",")}) AND (?='all' OR status=?) AND ${predicate} ORDER BY ${priority ? `${severityRank} ASC, ` : ""}id DESC LIMIT ?`
     )
-    .all(
-      user.organization_id,
-      ...ids,
-      parsed.status,
-      parsed.status,
-      parsed.before || Number.MAX_SAFE_INTEGER,
-      parsed.limit + 1
-    );
+    .all(user.organization_id, ...ids, parsed.status, parsed.status, ...values, parsed.limit + 1);
   return {
     items: rows.slice(0, parsed.limit).map((row) => ({
       id: row.id,

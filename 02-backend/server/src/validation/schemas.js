@@ -145,6 +145,7 @@ export const financialCalculationQuerySchema = z.object({
 });
 
 export const financialPeriodQuerySchema = z.object({
+  throughNow: z.enum(["true", "false"]).optional(),
   period: z.enum(["today", "yesterday", "week", "month", "quarter", "year", "custom"]).default("today"),
   comparison: z.enum(["none", "previous_period", "same_weekday", "previous_year"]).default("previous_period"),
   branchId: z.coerce.number().int().positive().optional(),

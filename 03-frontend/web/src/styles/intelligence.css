@@ -364,3 +364,43 @@
     margin: 15mm;
   }
 }
+
+/* Keep long imported names and mixed-script conversations inside their grid cells. */
+.intelligence-page,
+.copilot-layout > *,
+.copilot-turn,
+.copilot-claims > *,
+.report-details {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+.intelligence-page :is(input, select, textarea) {
+  max-inline-size: 100%;
+  min-inline-size: 0;
+}
+.intelligence-page :is(button, summary),
+.decision-links a {
+  min-block-size: 44px;
+}
+.copilot-thread {
+  white-space: normal;
+  text-align: start;
+  overflow-wrap: anywhere;
+}
+.intelligence-page :is(ol, ul) {
+  padding-inline-start: 1.5rem;
+}
+html[lang="zh-CN"] .intelligence-page {
+  line-height: 1.75;
+}
+@media (max-width: 760px) {
+  .intelligence-page .intelligence-toolbar {
+    align-items: stretch;
+  }
+  .intelligence-page .intelligence-toolbar > label {
+    flex: 1 1 100%;
+  }
+  .intelligence-page .decision-links {
+    flex-wrap: wrap;
+  }
+}

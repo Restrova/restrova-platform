@@ -360,7 +360,18 @@ export function BranchOperationsPage() {
                         {data.scorecards.map((branch) => (
                           <tr key={branch.branchId}>
                             <th scope="row">
-                              {branch.branchName}
+                              {context.branches?.some((row) => String(row.id) === String(branch.branchId)) ? (
+                                <button
+                                  className="branch-drill"
+                                  onClick={() => {
+                                    if (context.setSelectedBranchId(branch.branchId)) setScope("branch");
+                                  }}
+                                >
+                                  {branch.branchName}
+                                </button>
+                              ) : (
+                                branch.branchName
+                              )}
                               <small>{branch.branchCode}</small>
                               <Evidence label={copy.evidence} lines={Object.values(branch.lineage.current).flat()} />
                             </th>

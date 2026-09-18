@@ -1,3 +1,4 @@
+import { ownerCopy } from "./ownerCopy.js";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "../components/ui/Button.jsx";
@@ -25,6 +26,8 @@ function AlertCenterSurface() {
     { locale: uiLocale } = useLocale();
   const locale = uiLocale === "zh-CN" ? "zh" : uiLocale;
   const copy = intelligenceCopy[locale] || intelligenceCopy.en;
+  const ux = ownerCopy[uiLocale] || ownerCopy.en;
+  const [order, setOrder] = useState("priority");
   const [status, setStatus] = useState("open"),
     [before, setBefore] = useState("");
   const scope = context.selectedBranchId
@@ -33,9 +36,9 @@ function AlertCenterSurface() {
   const identity = [auth.user?.id, auth.organization?.id, context.selectedRestaurantId, context.selectedBranchId];
   const client = useQueryClient();
   const list = useQuery({
-    queryKey: ["alerts", ...identity, status, before],
+    queryKey: ["alerts", ...identity, status, before, order],
     queryFn: ({ signal }) =>
-      api(`/alerts?${new URLSearchParams({ ...scope, status, ...(before ? { before } : {}) })}`, { signal }),
+      api(`/alerts?${new URLSearchParams({ ...scope, status, order, ...(before ? { before } : {}) })}`, { signal }),
     retry: false
   });
   const refresh = useMutation({
@@ -59,6 +62,19 @@ function AlertCenterSurface() {
         )}
       </header>
       <div className="intelligence-toolbar">
+        <label>
+          {ux.priority}
+          <select
+            value={order}
+            onChange={(e) => {
+              setOrder(e.target.value);
+              setBefore("");
+            }}
+          >
+            <option value="priority">{ux.urgent}</option>
+            <option value="recent">{ux.recent}</option>
+          </select>
+        </label>
         <label>
           {copy.scope}
           <strong>

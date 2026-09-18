@@ -14,7 +14,9 @@ const { authMock, restaurantMock } = vi.hoisted(() => ({
   },
   restaurantMock: {
     selectedRestaurantId: "10",
-    selectedBranchId: "101"
+    selectedBranchId: "101",
+    branches: [{ id: "101", name: "深圳总店" }],
+    setSelectedBranchId: vi.fn(() => true)
   }
 }));
 
@@ -148,14 +150,14 @@ const dashboard = {
   assumptions: []
 };
 
-function renderDashboard() {
+function renderDashboard(props = {}) {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: 0 } }
   });
   return render(
     <QueryClientProvider client={queryClient}>
       <LocaleProvider>
-        <FinancialDashboardPage />
+        <FinancialDashboardPage {...props} />
       </LocaleProvider>
     </QueryClientProvider>
   );
@@ -173,8 +175,9 @@ describe("financial dashboard", () => {
     renderDashboard();
 
     expect(await screen.findByRole("heading", { name: "Financial performance" })).toBeInTheDocument();
-    expect(await screen.findByText("CN¥170.00")).toBeInTheDocument();
-    expect(screen.getByText("50%")).toBeInTheDocument();
+    expect((await screen.findAllByText("CN¥170.00")).length).toBeGreaterThan(0);
+    expect(screen.queryByText("50%")).not.toBeInTheDocument();
+    expect(screen.getByText(/Profit is withheld/)).toBeInTheDocument();
     expect(screen.getByText("深圳总店")).toBeInTheDocument();
     expect(screen.getByRole("img", { name: /^Revenue and profit trend/ })).toBeInTheDocument();
     expect(screen.getByText(/ledger entries/i)).toBeInTheDocument();
@@ -185,6 +188,29 @@ describe("financial dashboard", () => {
       period: "today",
       comparison: "previous_period"
     });
+  });
+
+  it("today requests a cutoff comparison and locks the period", async () => {
+    renderDashboard({ today: true });
+    await screen.findByRole("heading", { name: "Today so far" });
+    await waitFor(() =>
+      expect(financial.getFinancialDashboard).toHaveBeenCalledWith(
+        expect.objectContaining({ scope: "restaurant", period: "today", throughNow: true })
+      )
+    );
+    expect(screen.getByLabelText("Period")).toBeDisabled();
+  });
+  it("branch ranking drills into an authorized branch without losing the period", async () => {
+    renderDashboard();
+    const user = userEvent.setup();
+    await user.selectOptions(screen.getByLabelText("Period"), "month");
+    await user.click(await screen.findByRole("button", { name: "深圳总店" }));
+    expect(restaurantMock.setSelectedBranchId).toHaveBeenCalledWith(101);
+    await waitFor(() =>
+      expect(financial.getFinancialDashboard).toHaveBeenLastCalledWith(
+        expect.objectContaining({ scope: "branch", branchId: "101", period: "month" })
+      )
+    );
   });
 
   it("requests the selected branch, period, and comparison without widening scope", async () => {

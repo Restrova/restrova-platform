@@ -34,7 +34,7 @@ const defaultProfile = {
 const stepIcons = [User, Building2, Store, MapPin, Check];
 
 function workspaceDestination(value) {
-  return value === "/app" || value?.startsWith("/app/") ? value : "/app/workspace";
+  return value === "/app" || value?.startsWith("/app/") ? value : "/app/dashboard";
 }
 
 export function LoginPage({ mode = "login" }) {
