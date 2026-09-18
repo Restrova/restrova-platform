@@ -1,3 +1,6 @@
+const ExecutiveHomePage = lazy(() =>
+  import("../pages/ExecutiveHomePage.jsx").then((module) => ({ default: module.ExecutiveHomePage }))
+);
 import { lazy, Suspense } from "react";
 const RecommendationsPage = lazy(() =>
   import("../pages/RecommendationsPage.jsx").then((module) => ({ default: module.RecommendationsPage }))
@@ -22,7 +25,9 @@ import { BranchesPage } from "../pages/BranchesPage.jsx";
 import { BranchOperationsPage } from "../pages/BranchOperationsPage.jsx";
 import { LegacyWorkspacePage } from "../pages/LegacyWorkspacePage.jsx";
 import { ImportWizardPage } from "../pages/ImportWizardPage.jsx";
-import { FinancialDashboardPage } from "../pages/FinancialDashboardPage.jsx";
+const FinancialDashboardPage = lazy(() =>
+  import("../pages/FinancialDashboardPage.jsx").then((module) => ({ default: module.FinancialDashboardPage }))
+);
 import { MenuProfitabilityPage } from "../pages/MenuProfitabilityPage.jsx";
 import { LoginPage } from "../pages/LoginPage.jsx";
 import { NotFoundPage } from "../pages/NotFoundPage.jsx";
@@ -57,16 +62,39 @@ export function AppRoutes() {
 
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/app/workspace" replace />} />
+      <Route path="/" element={<Navigate to="/app/dashboard" replace />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/unauthorized" element={<UnauthorizedPage />} />
       {showDesignSystem && <Route path="/dev/design-system" element={<DesignSystemPage />} />}
       <Route element={<AuthBoundary />}>
         <Route element={<AppShell />}>
-          <Route path="/app" element={<Navigate to="/app/workspace" replace />} />
+          <Route path="/app" element={<Navigate to="/app/dashboard" replace />} />
           <Route path="/app/workspace" element={<LegacyWorkspacePage />} />
-          <Route path="/app/dashboard" element={<FinancialDashboardPage />} />
+          <Route
+            path="/app/dashboard"
+            element={
+              <Suspense fallback={<p role="status">…</p>}>
+                <ExecutiveHomePage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/app/profit"
+            element={
+              <Suspense fallback={<p role="status">…</p>}>
+                <FinancialDashboardPage key="profit" />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/app/today"
+            element={
+              <Suspense fallback={<p role="status">…</p>}>
+                <FinancialDashboardPage key="today" today />
+              </Suspense>
+            }
+          />
           <Route path="/app/imports" element={<ImportWizardPage />} />
           <Route path="/app/menu-profitability" element={<MenuProfitabilityPage />} />
           <Route path="/app/branches" element={<BranchesPage />} />
@@ -118,6 +146,8 @@ export function AppRoutes() {
               (item) =>
                 ![
                   "dashboard",
+                  "today",
+                  "profit",
                   "workspace",
                   "imports",
                   "menuProfitability",

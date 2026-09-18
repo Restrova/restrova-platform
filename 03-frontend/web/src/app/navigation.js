@@ -1,6 +1,7 @@
 import {
   AlertTriangle,
   Bot,
+  ChartNoAxesCombined,
   ClipboardList,
   Database,
   FileText,
@@ -34,12 +35,28 @@ export const navigationGroups = [
         requiredRoles: allRoles
       },
       {
+        id: "today",
+        translationKey: "navigation.today",
+        titleKey: "navigation.today",
+        path: "/app/today",
+        icon: Gauge,
+        mobilePriority: true,
+        requiredRoles: allRoles
+      },
+      {
+        id: "profit",
+        translationKey: "navigation.profit",
+        titleKey: "navigation.profit",
+        path: "/app/profit",
+        icon: ChartNoAxesCombined,
+        requiredRoles: allRoles
+      },
+      {
         id: "workspace",
         translationKey: "navigation.workspace",
         titleKey: "navigation.workspace",
         path: "/app/workspace",
         icon: Gauge,
-        mobilePriority: true,
         fullBleed: true,
         requiredRoles: allRoles
       },
@@ -57,7 +74,6 @@ export const navigationGroups = [
         titleKey: "navigation.menuProfitability",
         path: "/app/menu-profitability",
         icon: Utensils,
-        mobilePriority: true,
         requiredRoles: allRoles
       },
       {

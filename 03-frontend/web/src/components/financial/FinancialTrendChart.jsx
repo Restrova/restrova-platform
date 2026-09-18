@@ -1,3 +1,4 @@
+import { profitComplete } from "./ProfitWaterfall.jsx";
 import { useId, useMemo } from "react";
 import { minorToMajor } from "../../lib/financial.js";
 
@@ -12,7 +13,12 @@ function chartGeometry(points) {
   const range = maximum - minimum || 1;
   const x = (index) => padding + (index * (width - padding * 2)) / Math.max(points.length - 1, 1);
   const y = (value) => height - padding - ((value - minimum) / range) * (height - padding * 2);
-  const polyline = (key) => points.map((point, index) => `${x(index)},${y(point.metrics[key])}`).join(" ");
+  const polyline = (key) =>
+    points
+      .map((point, index) =>
+        key === "netProfitMinor" && !profitComplete(point.completeness) ? "|" : `${x(index)},${y(point.metrics[key])}`
+      )
+      .join(" ");
   return { minimum, maximum, zeroY: y(0), revenue: polyline("revenueMinor"), profit: polyline("netProfitMinor") };
 }
 
@@ -51,7 +57,16 @@ export function FinancialTrendChart({ points, currencyCode, labels, formatCurren
           y2={geometry.zeroY}
         />
         <polyline className="financial-chart__line financial-chart__line--revenue" points={geometry.revenue} />
-        <polyline className="financial-chart__line financial-chart__line--profit" points={geometry.profit} />
+        {geometry.profit
+          .split("|")
+          .filter((segment) => segment.trim())
+          .map((segment, index) => (
+            <polyline
+              key={index}
+              className="financial-chart__line financial-chart__line--profit"
+              points={segment.trim()}
+            />
+          ))}
       </svg>
       <div className="financial-chart__axis" aria-hidden="true">
         <span>{first}</span>
@@ -74,7 +89,10 @@ export function FinancialTrendChart({ points, currencyCode, labels, formatCurren
                 {formatCurrency(minorToMajor(point.metrics.revenueMinor, currencyCode), { currency: currencyCode })}
               </td>
               <td>
-                {formatCurrency(minorToMajor(point.metrics.netProfitMinor, currencyCode), { currency: currencyCode })}
+                {formatCurrency(
+                  minorToMajor(profitComplete(point.completeness) ? point.metrics.netProfitMinor : null, currencyCode),
+                  { currency: currencyCode }
+                )}
               </td>
             </tr>
           ))}

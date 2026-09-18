@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+import { ownerCopy } from "./ownerCopy.js";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowUpRight, BadgeDollarSign, BarChart3, RefreshCw, ShoppingBasket, TrendingDown } from "lucide-react";
@@ -113,6 +115,17 @@ function periodRange(days) {
 }
 
 export function MenuProfitabilityPage() {
+  const auth = useAuth(),
+    restaurant = useRestaurant();
+  return (
+    <MenuProfitabilitySurface
+      key={[auth.user?.id, auth.organization?.id, restaurant.selectedRestaurantId, restaurant.selectedBranchId].join(
+        ":"
+      )}
+    />
+  );
+}
+function MenuProfitabilitySurface() {
   const { locale, formatCurrency, formatNumber, formatPercent, formatDateTime } = useLocale();
   const restaurant = useRestaurant();
   const auth = useAuth();
@@ -126,7 +139,7 @@ export function MenuProfitabilityPage() {
     [range, restaurant.selectedBranchId]
   );
   const query = useQuery({
-    queryKey: ["menu-profitability", filters],
+    queryKey: ["menu-profitability", auth.user?.id, auth.organization?.id, restaurant.selectedRestaurantId, filters],
     queryFn: () => getMenuProfitability(filters),
     enabled: Boolean(restaurant.selectedBranchId)
   });
@@ -182,6 +195,10 @@ export function MenuProfitabilityPage() {
           </Button>
         </div>
       </header>
+      <nav className="decision-links" aria-label={(ownerCopy[locale] || ownerCopy.en).menuNext}>
+        <Link to="/app/recommendations">{(ownerCopy[locale] || ownerCopy.en).menuNext}</Link>
+      </nav>
+      <p>{(ownerCopy[locale] || ownerCopy.en).scopeNote}</p>
       {query.isLoading && (
         <div className="menu-profitability__loading" role="status">
           <LoadingSkeleton variant="card" />
@@ -243,7 +260,15 @@ export function MenuProfitabilityPage() {
                                     : "neutral"
                               }
                             >
-                              {item.engineering.classification}
+                              {{
+                                ar: {
+                                  STAR: "نجم",
+                                  PLOWHORSE: "الأكثر طلبًا",
+                                  PUZZLE: "فرصة تسويق",
+                                  DOG: "يحتاج مراجعة"
+                                },
+                                "zh-CN": { STAR: "明星菜品", PLOWHORSE: "畅销低利", PUZZLE: "高利潜力", DOG: "待优化" }
+                              }[locale]?.[item.engineering.classification] || item.engineering.classification}
                             </Badge>
                           </td>
                           <td>{money(item.metrics.contributionProfitMinor)}</td>

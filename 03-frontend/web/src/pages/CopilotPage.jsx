@@ -1,3 +1,4 @@
+import { ownerCopy } from "./ownerCopy.js";
 import { actionCopy } from "./decisionCopy.js";
 import { useState } from "react";
 import { Link } from "react-router-dom";
@@ -68,6 +69,8 @@ function CopilotWorkspace({ scopeKey, scope, branchId, language, copy: c, report
     [threadId, setThread] = useState(null),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(false);
+  const ux = ownerCopy[language === "zh" ? "zh-CN" : language] || ownerCopy.en;
+  const datesValid = (!fromDate && !toDate) || (Boolean(fromDate && toDate) && fromDate <= toDate);
   const filters = {
     scope,
     ...(branchId ? { branchId } : {}),
@@ -90,7 +93,7 @@ function CopilotWorkspace({ scopeKey, scope, branchId, language, copy: c, report
   const daily = useQuery({
     queryKey: ["daily-report", scopeKey, filters, cadence],
     queryFn: ({ signal }) => api(`/reports/executive?${new URLSearchParams({ ...filters, cadence })}`, { signal }),
-    enabled: report && (scope !== "branch" || Boolean(branchId)),
+    enabled: report && datesValid && (scope !== "branch" || Boolean(branchId)),
     retry: false
   });
   async function exportCsv() {
@@ -113,7 +116,7 @@ function CopilotWorkspace({ scopeKey, scope, branchId, language, copy: c, report
   }
   async function submit(e) {
     e.preventDefault();
-    if (!message.trim()) return;
+    if (!message.trim() || !datesValid || busy) return;
     setBusy(true);
     setError(false);
     try {
@@ -165,14 +168,25 @@ function CopilotWorkspace({ scopeKey, scope, branchId, language, copy: c, report
         </label>
         <label>
           {c.to}
-          <input type="date" value={toDate} onChange={(e) => setTo(e.target.value)} />
+          <input type="date" min={fromDate} value={toDate} onChange={(e) => setTo(e.target.value)} />
         </label>
-        <Button onClick={() => (report ? daily.refetch() : threads.refetch())}>{c.retry}</Button>
+        <Button
+          disabled={report && (!datesValid || (scope === "branch" && !branchId))}
+          onClick={() => (report ? daily.refetch() : threads.refetch())}
+        >
+          {c.retry}
+        </Button>
       </div>
+      {!datesValid && <p role="alert">{ux.dateError}</p>}
+      {busy && (
+        <p role="status" aria-live="polite">
+          {ux.busy}
+        </p>
+      )}
       {report && <p className="no-print">{c.periodHint}</p>}
       {(error || daily.isError || threads.isError || thread.isError) && <p role="alert">{c.error}</p>}
       {report ? (
-        daily.isPending ? (
+        !datesValid ? null : daily.isPending ? (
           <p role="status">{c.loading}</p>
         ) : (
           daily.data && (
@@ -239,7 +253,9 @@ function CopilotWorkspace({ scopeKey, scope, branchId, language, copy: c, report
               {threadId && thread.isPending && <p role="status">{c.loading}</p>}
               {thread.data?.turns.map((turn) => (
                 <div className="copilot-turn" key={turn.id}>
-                  <p className="copilot-question">{turn.question}</p>
+                  <p className="copilot-question" dir="auto">
+                    {turn.question}
+                  </p>
                   <CopilotAnswer answer={turn.answer} copy={c} />
                 </div>
               ))}
@@ -247,6 +263,7 @@ function CopilotWorkspace({ scopeKey, scope, branchId, language, copy: c, report
                 <label>
                   {c.title}
                   <textarea
+                    dir="auto"
                     value={message}
                     maxLength={4000}
                     onChange={(e) => setMessage(e.target.value)}
@@ -258,7 +275,11 @@ function CopilotWorkspace({ scopeKey, scope, branchId, language, copy: c, report
                 <Button
                   type="submit"
                   disabled={
-                    busy || !message.trim() || (scope === "branch" && !branchId) || (threadId && thread.isPending)
+                    !datesValid ||
+                    busy ||
+                    !message.trim() ||
+                    (scope === "branch" && !branchId) ||
+                    (threadId && thread.isPending)
                   }
                 >
                   {busy ? c.loading : c.send}

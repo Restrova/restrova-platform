@@ -404,3 +404,97 @@
     transition: none;
   }
 }
+
+.owner-question-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+.owner-shortcuts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+.owner-shortcuts a,
+.branch-drill {
+  min-block-size: 44px;
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-primary);
+  background: var(--color-surface);
+  font: inherit;
+  cursor: pointer;
+  text-decoration: none;
+}
+.owner-facts {
+  margin: 0 0 var(--space-4);
+}
+.owner-facts > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  justify-content: space-between;
+  border-block-end: 1px solid var(--color-border);
+  padding-block: var(--space-3);
+}
+.owner-facts dd {
+  margin: 0;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.owner-home,
+.owner-question-grid > *,
+.owner-period {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+.waterfall-table {
+  overflow: auto;
+  max-inline-size: 100%;
+}
+.waterfall-table table {
+  border-collapse: collapse;
+  inline-size: 100%;
+  min-inline-size: 28rem;
+}
+.waterfall-table th,
+.waterfall-table td {
+  padding: var(--space-3);
+  text-align: start;
+  border-block-end: 1px solid var(--color-border);
+}
+.waterfall-table td {
+  font-variant-numeric: tabular-nums;
+}
+.waterfall-track {
+  display: block;
+  position: relative;
+  inline-size: 100%;
+  min-inline-size: 6rem;
+  block-size: 0.6rem;
+  background: var(--color-surface-muted);
+  margin-block-end: var(--space-2);
+}
+.waterfall-track i {
+  position: absolute;
+  block-size: 100%;
+  background: var(--color-primary);
+}
+.financial-table-wrap > div {
+  overflow: auto;
+}
+.financial-metric__value {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 760px) {
+  .owner-question-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .owner-shortcuts a {
+    flex: 1 1 8rem;
+  }
+}

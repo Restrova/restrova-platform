@@ -215,7 +215,7 @@ export function buildCopilotAnalysis(user, query, intent = "summary") {
   const financialId = collector.add(
     "financial",
     financial,
-    `/app/dashboard?${new URLSearchParams({ scope: context.scope, fromDate: context.fromDate, toDate: context.toDate, ...(context.branchId ? { branchId: context.branchId } : {}) })}`
+    `/app/profit?${new URLSearchParams({ scope: context.scope, fromDate: context.fromDate, toDate: context.toDate, ...(context.branchId ? { branchId: context.branchId } : {}) })}`
   );
   const claim = (key, value, unit = "money", ids = [financialId], extra = {}) =>
     claims.push(makeClaim(context, key, value, unit, ids, extra));

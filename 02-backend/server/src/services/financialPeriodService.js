@@ -207,6 +207,9 @@ export function resolveFinancialPeriodRanges(query, timezone) {
     throw validationError("Same-weekday comparison requires today or yesterday.");
   }
 
+  if (parsed.throughNow === "true" && parsed.period !== "today") {
+    throw validationError("throughNow requires the today period.");
+  }
   const anchor = parsed.anchor ? new Date(parsed.anchor) : new Date();
   localParts(anchor, timezone);
   const resolvedCurrent =
@@ -214,6 +217,21 @@ export function resolveFinancialPeriodRanges(query, timezone) {
       ? { from: new Date(parsed.from).toISOString(), to: new Date(parsed.to).toISOString() }
       : presetRange(parsed.period, anchor, timezone);
   const comparison = comparisonRange(parsed, resolvedCurrent, timezone);
+  if (parsed.throughNow === "true") {
+    resolvedCurrent.to = anchor.toISOString();
+    if (comparison) {
+      const clock = localParts(anchor, timezone);
+      const day = localParts(new Date(comparison.from), timezone);
+      const cutoff = localToInstant({ ...day, hour: clock.hour, minute: clock.minute, second: clock.second }, timezone);
+      // Preserve sub-second precision and clamp DST gaps/overlaps to the comparison day.
+      comparison.to = new Date(
+        Math.max(
+          Date.parse(comparison.from),
+          Math.min(Date.parse(comparison.to), cutoff.getTime() + anchor.getUTCMilliseconds())
+        )
+      ).toISOString();
+    }
+  }
   return {
     preset: parsed.period,
     comparisonKind: parsed.comparison,

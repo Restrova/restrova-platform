@@ -31,6 +31,8 @@ export const dictionaries = {
       productName: "Restrova Platform"
     },
     navigation: {
+      today: "اليوم حتى الآن",
+      profit: "تحليل الأرباح",
       integrations: "مصادر البيانات",
       dashboard: "مركز القرار",
       workspace: "مساحة العمل الحالية",
@@ -336,6 +338,8 @@ export const dictionaries = {
       productName: "Restrova Platform"
     },
     navigation: {
+      today: "Today so far",
+      profit: "Profit analysis",
       integrations: "Data sources",
       dashboard: "Decision Center",
       workspace: "Current Workspace",
@@ -647,6 +651,8 @@ export const dictionaries = {
       productName: "Restrova Platform"
     },
     navigation: {
+      today: "今日截至目前",
+      profit: "利润分析",
       integrations: "数据来源",
       dashboard: "决策中心",
       workspace: "当前工作区",
