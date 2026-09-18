@@ -1,3 +1,4 @@
+import { actionCopy } from "./decisionCopy.js";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -28,7 +29,7 @@ export function CopilotPage({ report = false }) {
   return (
     <section className="intelligence-page" dir={language === "ar" ? "rtl" : "ltr"}>
       <header>
-        <h1>{report ? c.report : c.title}</h1>
+        <h1>{report ? c.reportTitle : c.title}</h1>
         <p>{report ? c.reportIntro : c.intro}</p>
         <nav className="decision-links">
           {auth.user?.role === "owner" && <Link to="/app/imports">{c.imports}</Link>}
@@ -60,6 +61,7 @@ export function CopilotPage({ report = false }) {
 }
 function CopilotWorkspace({ scopeKey, scope, branchId, language, copy: c, report }) {
   const client = useQueryClient(),
+    [cadence, setCadence] = useState("daily"),
     [message, setMessage] = useState(""),
     [fromDate, setFrom] = useState(""),
     [toDate, setTo] = useState(""),
@@ -86,11 +88,29 @@ function CopilotWorkspace({ scopeKey, scope, branchId, language, copy: c, report
     retry: false
   });
   const daily = useQuery({
-    queryKey: ["daily-report", scopeKey, filters],
-    queryFn: ({ signal }) => api(`/reports/daily?${new URLSearchParams(filters)}`, { signal }),
+    queryKey: ["daily-report", scopeKey, filters, cadence],
+    queryFn: ({ signal }) => api(`/reports/executive?${new URLSearchParams({ ...filters, cadence })}`, { signal }),
     enabled: report && (scope !== "branch" || Boolean(branchId)),
     retry: false
   });
+  async function exportCsv() {
+    setError(false);
+    try {
+      const csv = await api(
+        `/reports/export.csv?${new URLSearchParams({ ...filters, cadence, fromDate: daily.data.period.fromDate, toDate: daily.data.period.toDate })}`
+      );
+      const url = URL.createObjectURL(
+        new Blob(["\uFEFF" + csv.replace(/^\uFEFF/, "")], { type: "text/csv;charset=utf-8" })
+      );
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `restrova-${cadence}-${daily.data.period.fromDate}.csv`;
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch {
+      setError(true);
+    }
+  }
   async function submit(e) {
     e.preventDefault();
     if (!message.trim()) return;
@@ -119,7 +139,26 @@ function CopilotWorkspace({ scopeKey, scope, branchId, language, copy: c, report
   }
   return (
     <>
-      <div className="intelligence-toolbar">
+      <div className="intelligence-toolbar no-print">
+        {report && (
+          <label>
+            {c.cadence}
+            <select
+              value={cadence}
+              onChange={(e) => {
+                setCadence(e.target.value);
+                setFrom("");
+                setTo("");
+              }}
+            >
+              {["daily", "weekly", "monthly"].map((value) => (
+                <option key={value} value={value}>
+                  {c[value]}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
         <label>
           {c.from}
           <input type="date" value={fromDate} onChange={(e) => setFrom(e.target.value)} />
@@ -130,12 +169,31 @@ function CopilotWorkspace({ scopeKey, scope, branchId, language, copy: c, report
         </label>
         <Button onClick={() => (report ? daily.refetch() : threads.refetch())}>{c.retry}</Button>
       </div>
+      {report && <p className="no-print">{c.periodHint}</p>}
       {(error || daily.isError || threads.isError || thread.isError) && <p role="alert">{c.error}</p>}
       {report ? (
         daily.isPending ? (
           <p role="status">{c.loading}</p>
         ) : (
-          daily.data && <CopilotAnswer answer={daily.data} copy={c} />
+          daily.data && (
+            <>
+              <div className="decision-links no-print">
+                <Button onClick={exportCsv} disabled={daily.isFetching}>
+                  {c.csv}
+                </Button>
+                <Button onClick={() => window.print()} disabled={daily.isFetching}>
+                  {c.pdf}
+                </Button>
+              </div>
+              <div className="executive-print">
+                <h2>
+                  {c[cadence]} · {c.reportTitle}
+                </h2>
+                <CopilotAnswer answer={daily.data} copy={c} />
+                <ReportDetails report={daily.data} copy={c} language={language} />
+              </div>
+            </>
+          )
         )
       ) : (
         <>
@@ -215,4 +273,80 @@ function CopilotWorkspace({ scopeKey, scope, branchId, language, copy: c, report
 }
 export function DailyReportPage() {
   return <CopilotPage report />;
+}
+
+export function ReportDetails({ report, copy: c, language }) {
+  const actions = actionCopy[language] || actionCopy.en;
+  const digits = new Intl.NumberFormat("en", {
+    style: "currency",
+    currency: report.currencyCode || "SAR"
+  }).resolvedOptions().maximumFractionDigits;
+  const money = (value) =>
+    value == null
+      ? c.noData
+      : new Intl.NumberFormat(language, { style: "currency", currency: report.currencyCode || "SAR" }).format(
+          value / 10 ** digits
+        );
+  return (
+    <section className="report-details">
+      <h2>{c.topActions}</h2>
+      <p>{c.ranking}</p>
+      {report.actionsStatus === "select_branch" ? (
+        <p>{c.actionScope}</p>
+      ) : !report.topActions?.length ? (
+        <p>{c.noActions}</p>
+      ) : (
+        <ol>
+          {report.topActions.map((action) => (
+            <li key={`${action.branchId}-${action.key}`}>
+              <h3>{actions[action.recommendedAction] || c.reviewAction}</h3>
+              {action.item?.name && <p>{action.item.name}</p>}
+              <p>
+                {c.branch}: {action.branchName || action.branchId}
+              </p>
+              {action.sourceIds.map((id) => (
+                <a key={id} href={`#${report.generatedAt}-${id}`}>
+                  {c.sources} {id}
+                </a>
+              ))}{" "}
+              <Link to="/app/recommendations">{c.reviewAction}</Link>
+            </li>
+          ))}
+        </ol>
+      )}
+      {report.trend?.length > 0 && (
+        <>
+          <h2>{c.trend}</h2>
+          <div className="report-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>{c.date}</th>
+                  <th>{c.revenue}</th>
+                  <th>{c.profit}</th>
+                  <th>{c.sources}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {report.trend.map((day) => (
+                  <tr key={day.date}>
+                    <th>{day.date}</th>
+                    <td>{money(day.revenueMinor)}</td>
+                    <td>{money(day.profitMinor)}</td>
+                    <td>
+                      {day.sourceIds.map((id) => (
+                        <a key={id} href={`#${report.generatedAt}-${id}`}>
+                          {id}
+                        </a>
+                      ))}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+    </section>
+  );
 }

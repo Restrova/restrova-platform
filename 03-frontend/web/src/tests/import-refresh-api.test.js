@@ -29,6 +29,9 @@ it("publishes a revision only after successful confirmation of either supported 
     fetch.mockResolvedValue(new Response(JSON.stringify({ dataRevision: { revision: 4 } }), { status: 201 }));
     await api("/data/import", { method: "POST" });
     expect(receive).toHaveBeenCalledTimes(2);
+    fetch.mockResolvedValue(new Response(JSON.stringify({ dataRevision: { revision: 5 } }), { status: 200 }));
+    await api("/integrations/1/jobs/11/confirm", { method: "POST" });
+    expect(receive).toHaveBeenCalledTimes(3);
   } finally {
     window.removeEventListener(dataChangedEvent, receive);
   }

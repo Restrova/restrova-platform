@@ -1,3 +1,4 @@
+import { getExecutiveReport, executiveCsv } from "../services/executiveReportService.js";
 import {
   askCopilot,
   buildCopilotAnalysis,
@@ -17,3 +18,13 @@ export const thread = (req, res) => send(res, getCopilotThread(req.user, req.par
 export const evidence = (req, res) =>
   send(res, getCopilotEvidence(req.user, req.params.id, req.params.turnId, req.params.sourceId));
 export const report = (req, res) => send(res, buildCopilotAnalysis(req.user, req.query, "summary"));
+
+export const executive = (req, res) => send(res, getExecutiveReport(req.user, req.query));
+export const exportCsv = (req, res) => {
+  const report = getExecutiveReport(req.user, req.query);
+  res
+    .set("Cache-Control", "no-store")
+    .set("Content-Disposition", `attachment; filename="restrova-${report.cadence}-${report.period.fromDate}.csv"`)
+    .type("text/csv; charset=utf-8")
+    .send(executiveCsv(report));
+};
