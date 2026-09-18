@@ -31,6 +31,7 @@ export const dictionaries = {
       productName: "Restrova Platform"
     },
     navigation: {
+      integrations: "مصادر البيانات",
       dashboard: "مركز القرار",
       workspace: "مساحة العمل الحالية",
       imports: "استيراد البيانات",
@@ -335,6 +336,7 @@ export const dictionaries = {
       productName: "Restrova Platform"
     },
     navigation: {
+      integrations: "Data sources",
       dashboard: "Decision Center",
       workspace: "Current Workspace",
       imports: "Data Imports",
@@ -645,6 +647,7 @@ export const dictionaries = {
       productName: "Restrova Platform"
     },
     navigation: {
+      integrations: "数据来源",
       dashboard: "决策中心",
       workspace: "当前工作区",
       imports: "数据导入",

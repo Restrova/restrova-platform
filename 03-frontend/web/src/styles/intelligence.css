@@ -294,3 +294,73 @@
     overflow: auto;
   }
 }
+
+.report-details {
+  padding: 1.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 1rem;
+  margin-block: 1rem;
+}
+.report-details li {
+  padding-block: 0.75rem;
+}
+.report-table {
+  overflow-x: auto;
+}
+.report-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.report-table th,
+.report-table td {
+  padding: 0.75rem;
+  text-align: start;
+  border-bottom: 1px solid var(--color-border);
+}
+@media print {
+  body:has(.executive-print) *:not(:has(.executive-print)):not(.executive-print):not(.executive-print *) {
+    display: none !important;
+  }
+  body:has(.executive-print),
+  body:has(.executive-print) *:has(.executive-print) {
+    display: block !important;
+    position: static !important;
+    width: auto !important;
+    height: auto !important;
+    overflow: visible !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  .executive-print {
+    position: static;
+    width: 100%;
+    color: #000;
+    background: #fff;
+  }
+  .executive-print * {
+    color: #000 !important;
+    background: #fff !important;
+  }
+  .executive-print pre,
+  .executive-print .no-print {
+    display: none !important;
+  }
+  .executive-print article,
+  .executive-print li,
+  .executive-print tr {
+    break-inside: avoid;
+  }
+  .executive-print a {
+    text-decoration: underline;
+  }
+  .report-table {
+    overflow: visible;
+  }
+  .report-table thead {
+    display: table-header-group;
+  }
+  @page {
+    size: A4;
+    margin: 15mm;
+  }
+}

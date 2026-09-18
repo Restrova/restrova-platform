@@ -141,6 +141,14 @@ export const navigationGroups = [
         requiredRoles: [ROLE_OWNER]
       },
       {
+        id: "integrations",
+        translationKey: "navigation.integrations",
+        titleKey: "navigation.integrations",
+        path: "/app/integrations",
+        icon: Database,
+        requiredRoles: [ROLE_OWNER]
+      },
+      {
         id: "settings",
         translationKey: "navigation.settings",
         titleKey: "navigation.settings",

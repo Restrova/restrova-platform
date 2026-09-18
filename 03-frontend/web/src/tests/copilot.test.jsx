@@ -60,7 +60,7 @@ beforeEach(() => {
       return { threads: [{ id: 1, title: "Saved question", scope: "restaurant", version: 1 }] };
     if (path === "/copilot/ask") return { threadId: 1, version: 1, answer };
     if (path === "/copilot/threads/1") return { version: 1, turns: [{ id: 1, question: "Saved question", answer }] };
-    if (path.startsWith("/reports/daily")) return structuredClone(answer);
+    if (path.startsWith("/reports/executive")) return structuredClone(answer);
     throw new Error(`Unexpected request ${path} ${options?.method}`);
   });
 });
@@ -69,7 +69,7 @@ for (const locale of ["ar", "en", "zh-CN"])
     const c = copilotUiCopy[locale === "zh-CN" ? "zh" : locale];
     mount(DailyReportPage, locale);
     expect(await screen.findByText("Documented change explanation")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: c.report }).closest("section")).toHaveAttribute(
+    expect(screen.getByRole("heading", { name: c.reportTitle }).closest("section")).toHaveAttribute(
       "dir",
       locale === "ar" ? "rtl" : "ltr"
     );
@@ -99,7 +99,7 @@ it("branch managers are constrained and imports refresh reports", async () => {
   auth.user.role = "branch_manager";
   const { client } = mount(DailyReportPage);
   await screen.findByText("Documented change explanation");
-  expect(screen.getByRole("combobox")).toBeDisabled();
+  expect(screen.getByRole("combobox", { name: "Analysis scope" })).toBeDisabled();
   expect(api.mock.calls.some(([path]) => path.includes("scope=branch") && path.includes("branchId=101"))).toBe(true);
   const calls = api.mock.calls.length;
   announceDataChange({ organizationId: 1, restaurantId: 10, revision: 2 });

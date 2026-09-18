@@ -1,3 +1,4 @@
+import * as integrations from "../controllers/integrationController.js";
 import * as copilot from "../controllers/copilotController.js";
 import express, { Router } from "express";
 import * as controller from "../controllers/apiController.js";
@@ -11,11 +12,25 @@ const asyncHandler = (handler) => (req, res, next) =>
   Promise.resolve()
     .then(() => handler(req, res, next))
     .catch(next);
+router.get("/integrations", auth, requireOwner, asyncHandler(integrations.list));
+router.post("/integrations", auth, requireOwner, asyncHandler(integrations.create));
+router.get("/integrations/:id/history", auth, requireOwner, asyncHandler(integrations.history));
+router.post(
+  "/integrations/:id/preview",
+  auth,
+  requireOwner,
+  express.raw({ type: "text/csv", limit: "5mb" }),
+  asyncHandler(integrations.preview)
+);
+router.post("/integrations/:id/jobs/:jobId/mapping", auth, requireOwner, asyncHandler(integrations.mapping));
+router.post("/integrations/:id/jobs/:jobId/confirm", auth, requireOwner, asyncHandler(integrations.confirm));
 router.get("/copilot/context", auth, asyncHandler(copilot.context));
 router.post("/copilot/ask", auth, asyncHandler(copilot.ask));
 router.get("/copilot/threads", auth, asyncHandler(copilot.threads));
 router.get("/copilot/threads/:id", auth, asyncHandler(copilot.thread));
 router.get("/copilot/threads/:id/turns/:turnId/evidence/:sourceId", auth, asyncHandler(copilot.evidence));
+router.get("/reports/executive", auth, asyncHandler(copilot.executive));
+router.get("/reports/export.csv", auth, asyncHandler(copilot.exportCsv));
 router.get("/reports/daily", auth, asyncHandler(copilot.report));
 router.get("/data/revision", auth, asyncHandler(decisions.dataRevision));
 router.get("/decisions", auth, asyncHandler(decisions.decisionList));

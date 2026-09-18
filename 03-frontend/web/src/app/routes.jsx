@@ -2,6 +2,9 @@ import { lazy, Suspense } from "react";
 const RecommendationsPage = lazy(() =>
   import("../pages/RecommendationsPage.jsx").then((module) => ({ default: module.RecommendationsPage }))
 );
+const IntegrationPage = lazy(() =>
+  import("../pages/IntegrationPage.jsx").then((module) => ({ default: module.IntegrationPage }))
+);
 const CopilotPage = lazy(() => import("../pages/CopilotPage.jsx").then((module) => ({ default: module.CopilotPage })));
 const DailyReportPage = lazy(() =>
   import("../pages/CopilotPage.jsx").then((module) => ({ default: module.DailyReportPage }))
@@ -101,6 +104,14 @@ export function AppRoutes() {
               </Suspense>
             }
           />
+          <Route
+            path="/app/integrations"
+            element={
+              <Suspense fallback={<p role="status">…</p>}>
+                <IntegrationPage />
+              </Suspense>
+            }
+          />
           <Route path="/app/team" element={<TeamPage />} />
           {navigationItems
             .filter(
@@ -117,7 +128,8 @@ export function AppRoutes() {
                   "forecasts",
                   "recommendations",
                   "assistant",
-                  "reports"
+                  "reports",
+                  "integrations"
                 ].includes(item.id)
             )
             .map((item) => (

@@ -44,7 +44,12 @@ export async function api(path, options = {}) {
     });
   }
 
-  if (options.method === "POST" && (path === "/data/import" || /^\/data\/import-jobs\/[^/]+\/confirm$/.test(path)))
+  if (
+    options.method === "POST" &&
+    (path === "/data/import" ||
+      /^\/integrations\/[^/]+\/jobs\/[^/]+\/confirm$/.test(path) ||
+      /^\/data\/import-jobs\/[^/]+\/confirm$/.test(path))
+  )
     announceDataChange(body?.dataRevision);
   return body;
 }
