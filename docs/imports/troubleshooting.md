@@ -13,3 +13,9 @@ Start every investigation with `request_id`, `import_job_id`, `organization_id`,
 | Persistence failure            | Correlate the request ID with sanitized server errors; check database health and disk capacity | Keep the job unconfirmed, repair infrastructure, then create a fresh preview                                         |
 
 Operational metrics are available at `GET /api/data/import-jobs/metrics`. Audit history is immutable and contains safe event details only. Back up the durable database before migrations or production releases.
+
+## XLSX table layout
+
+The importer reads the first numbered worksheet and expects column headers in its first row. It accepts both default-namespace and prefixed SpreadsheetML cell, row, value, inline-string and shared-string elements. Formatted report covers with blank header cells produce a table-layout error instead of being reported as empty.
+
+Multi-sheet summary reports are not transaction imports. Export the underlying table with a single header row and retain the original reporting period, currency and aggregation level. Never fabricate order IDs, transaction dates or currency to force a summary into the sales template. Resolve unexplained differences between reported gross sales, discounts and net revenue with the source before confirmation. Keep restaurant/branch assignment explicit. This parser fix does not add multi-sheet report analysis to Copilot or close the remaining owner UI localization reviews.
