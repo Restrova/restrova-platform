@@ -174,7 +174,7 @@ function decodeXml(value) {
 
 function xmlText(fragment) {
   const values = [];
-  const regex = /<t\b[^>]*>([\s\S]*?)<\/t>/g;
+  const regex = /<(?:[A-Za-z_][\w.-]*:)?t\b[^>]*>([\s\S]*?)<\/(?:[A-Za-z_][\w.-]*:)?t>/g;
   let match;
   while ((match = regex.exec(fragment))) values.push(decodeXml(match[1]));
   return values.join("");
@@ -183,7 +183,7 @@ function xmlText(fragment) {
 function sharedStringsFromXml(xml) {
   if (!xml) return [];
   const strings = [];
-  const regex = /<si\b[^>]*>([\s\S]*?)<\/si>/g;
+  const regex = /<(?:[A-Za-z_][\w.-]*:)?si\b[^>]*>([\s\S]*?)<\/(?:[A-Za-z_][\w.-]*:)?si>/g;
   let match;
   while ((match = regex.exec(xml))) strings.push(xmlText(match[1]));
   return strings;
@@ -201,11 +201,11 @@ function columnIndexFromReference(reference) {
 
 function worksheetMatrix(xml, sharedStrings) {
   const matrix = [];
-  const rowRegex = /<row\b[^>]*>([\s\S]*?)<\/row>/g;
+  const rowRegex = /<(?:[A-Za-z_][\w.-]*:)?row\b[^>]*>([\s\S]*?)<\/(?:[A-Za-z_][\w.-]*:)?row>/g;
   let rowMatch;
   while ((rowMatch = rowRegex.exec(xml))) {
     const values = [];
-    const cellRegex = /<c\b([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g;
+    const cellRegex = /<(?:[A-Za-z_][\w.-]*:)?c\b([^>]*?)(?:\/>|>([\s\S]*?)<\/(?:[A-Za-z_][\w.-]*:)?c>)/g;
     let cellMatch;
     let sequentialIndex = 0;
     while ((cellMatch = cellRegex.exec(rowMatch[1]))) {
@@ -215,7 +215,8 @@ function worksheetMatrix(xml, sharedStrings) {
       const type = attrs.match(/\bt="([^"]+)"/)?.[1];
       const columnIndex = columnIndexFromReference(reference) ?? sequentialIndex;
       sequentialIndex = columnIndex + 1;
-      const rawValue = content.match(/<v\b[^>]*>([\s\S]*?)<\/v>/)?.[1] ?? "";
+      const rawValue =
+        content.match(/<(?:[A-Za-z_][\w.-]*:)?v\b[^>]*>([\s\S]*?)<\/(?:[A-Za-z_][\w.-]*:)?v>/)?.[1] ?? "";
       let value;
       if (type === "s") value = sharedStrings[Number(rawValue)] ?? "";
       else if (type === "inlineStr") value = xmlText(content);
@@ -246,7 +247,13 @@ export function parseXlsxBuffer(buffer, limits = config.imports) {
     if (!worksheetName) throw validationError("The XLSX file does not contain a worksheet.");
     const worksheet = decodeWorkbookXml(zip.readEntry(worksheetName));
     const sharedStrings = sharedStringsFromXml(decodeWorkbookXml(zip.readEntry("xl/sharedStrings.xml")));
-    return rowsToObjects(worksheetMatrix(worksheet, sharedStrings), limits);
+    const matrix = worksheetMatrix(worksheet, sharedStrings);
+    if (matrix.length && matrix[0].some((value) => !cleanHeader(value))) {
+      throw validationError(
+        "The first XLSX worksheet must start with a table header in row 1. Report titles, merged cells and blank column names are not supported. Export the data table as CSV or XLSX."
+      );
+    }
+    return rowsToObjects(matrix, limits);
   } catch (error) {
     if (error?.code === "VALIDATION_ERROR") throw error;
     throw validationError("The XLSX file is invalid.");

@@ -825,3 +825,49 @@ test("Smart import classifies and evaluates analytical restaurant sales datasets
     preview.payload.datasetEvaluation.numericColumns.some((metric) => metric.column === "actual_selling_price")
   );
 });
+
+test("XLSX accepts prefixed SpreadsheetML inline and shared strings", async () => {
+  const { parseXlsxBuffer } = await import("../src/import/stagedFileParser.js");
+  const prefix = (xml) => xml.replace(/<(\/?)([A-Za-z][\w]*)/g, "<$1x:$2").replace('xmlns="', 'xmlns:x="');
+  const inline = storedZip([
+    [
+      "xl/worksheets/sheet1.xml",
+      prefix(
+        worksheetXml([
+          ["الصنف", "المبيعات"],
+          ["طبق تجريبي", "125.50"]
+        ])
+      )
+    ]
+  ]);
+  assert.deepEqual(parseXlsxBuffer(inline), {
+    headers: ["الصنف", "المبيعات"],
+    rows: [{ الصنف: "طبق تجريبي", المبيعات: "125.50" }]
+  });
+  const shared = storedZip([
+    [
+      "xl/sharedStrings.xml",
+      '<s:sst xmlns:s="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><s:si><s:t>name</s:t></s:si><s:si><s:r><s:t>Test &amp; </s:t></s:r><s:r><s:t>item</s:t></s:r></s:si></s:sst>'
+    ],
+    [
+      "xl/worksheets/sheet1.xml",
+      '<x:worksheet xmlns:x="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><x:sheetData><x:row r="1"><x:c r="A1" t="s"><x:v>0</x:v></x:c><x:c r="B1" t="inlineStr"><x:is><x:t>amount</x:t></x:is></x:c></x:row><x:row r="2"><x:c r="A2" t="s"><x:v>1</x:v></x:c><x:c r="B2"><x:v>12.5</x:v></x:c></x:row></x:sheetData></x:worksheet>'
+    ]
+  ]);
+  assert.deepEqual(parseXlsxBuffer(shared).rows, [{ name: "Test & item", amount: "12.5" }]);
+});
+
+test("XLSX formatted reports explain the required table layout without treating them as empty", async () => {
+  const { parseXlsxBuffer } = await import("../src/import/stagedFileParser.js");
+  const report = storedZip([
+    [
+      "xl/worksheets/sheet1.xml",
+      worksheetXml([
+        ["Sales report", ""],
+        ["name", "amount"],
+        ["Test", "20"]
+      ])
+    ]
+  ]);
+  assert.throws(() => parseXlsxBuffer(report), /table header in row 1/);
+});
