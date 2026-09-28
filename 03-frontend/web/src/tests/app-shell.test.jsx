@@ -45,8 +45,8 @@ describe("AppShell", () => {
 
   it("shows active sidebar route, collapses, expands and persists preference", async () => {
     renderWithShell({ route: "/app/menu-profitability" });
-    const activeLink = (await screen.findAllByRole("link", { name: /ربحية القائمة/ })).find(
-      (link) => link.getAttribute("href") === "/app/menu-profitability"
+    const activeLink = (await screen.findAllByRole("link", { name: /الرئيسية/ })).find(
+      (link) => link.getAttribute("href") === "/app/dashboard"
     );
     expect(activeLink).toHaveAttribute("aria-current", "page");
     await userEvent.click(screen.getByRole("button", { name: "طي الشريط الجانبي" }));
@@ -58,14 +58,14 @@ describe("AppShell", () => {
 
   it("renders topbar controls and language switching updates shell labels", async () => {
     renderWithShell();
-    expect(await screen.findByRole("heading", { name: "مركز القرار" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "الرئيسية" })).toBeInTheDocument();
     expect(screen.getByLabelText("الفرع الحالي")).toBeInTheDocument();
     expect(screen.getByLabelText("تغيير اللغة")).toBeInTheDocument();
     expect(screen.getAllByText("وضع تجريبي").length).toBeGreaterThan(0);
-    expect(screen.getByRole("button", { name: "الإشعارات" })).toBeDisabled();
+    expect(screen.getByRole("link", { name: "الإشعارات" })).toHaveAttribute("href", "/app/alerts");
 
     await userEvent.selectOptions(screen.getByLabelText("تغيير اللغة"), "en");
-    expect(await screen.findByRole("heading", { name: "Decision Center" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Home" })).toBeInTheDocument();
     expect(document.documentElement.dir).toBe("ltr");
   });
 
@@ -82,12 +82,15 @@ describe("AppShell", () => {
     expect(trigger).toHaveFocus();
   });
 
-  it("mobile bottom navigation shows priority routes and More opens drawer", async () => {
+  it("mobile bottom navigation has exactly the four primary destinations", async () => {
     renderWithShell();
-    const workspaceLinks = await screen.findAllByRole("link", { name: /مساحة العمل الحالية/ });
-    expect(workspaceLinks.some((link) => link.getAttribute("href") === "/app/workspace")).toBe(true);
-    await userEvent.click(screen.getByRole("button", { name: "المزيد" }));
-    expect(screen.getByRole("dialog", { name: "Restrova Platform" })).toBeInTheDocument();
+    await screen.findByText("Outlet content");
+    expect([...document.querySelectorAll(".mobile-bottom-nav a")].map((a) => a.getAttribute("href"))).toEqual([
+      "/app/dashboard",
+      "/app/assistant",
+      "/app/data",
+      "/app/settings"
+    ]);
   });
 
   it("logs out through centralized auth and redirects to login", async () => {

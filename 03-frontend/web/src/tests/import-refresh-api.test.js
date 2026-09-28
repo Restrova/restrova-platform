@@ -36,3 +36,15 @@ it("publishes a revision only after successful confirmation of either supported 
     window.removeEventListener(dataChangedEvent, receive);
   }
 });
+
+it("downloads report binary bytes and still parses authorization errors", async () => {
+  const bytes = new Uint8Array([80, 75, 3, 4, 255, 0, 128]);
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(bytes, { status: 200 })));
+  const result = await api("/reports/table.xlsx", { responseType: "blob" });
+  expect(new Uint8Array(await result.arrayBuffer())).toEqual(bytes);
+  fetch.mockResolvedValue(new Response(JSON.stringify({ error: "Permission denied" }), { status: 403 }));
+  await expect(api("/reports/table.xlsx", { responseType: "blob" })).rejects.toMatchObject({
+    message: "Permission denied",
+    status: 403
+  });
+});

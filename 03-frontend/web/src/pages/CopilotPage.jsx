@@ -1,3 +1,5 @@
+import { simpleCopy } from "./simpleCopy.js";
+import { TabularReports } from "./TabularReports.jsx";
 import { ownerCopy } from "./ownerCopy.js";
 import { actionCopy } from "./decisionCopy.js";
 import { useState } from "react";
@@ -22,7 +24,7 @@ export function CopilotPage({ report = false }) {
     { locale } = useLocale(),
     language = locale === "zh-CN" ? "zh" : locale,
     c = copilotUiCopy[language] || copilotUiCopy.en,
-    [selectedScope, setScope] = useState("restaurant"),
+    [selectedScope, setScope] = useState("branch"),
     scope = auth.user?.role === "branch_manager" ? "branch" : importJobId ? "restaurant" : selectedScope;
   const scopeKey = [
     auth.user?.id,
@@ -44,17 +46,30 @@ export function CopilotPage({ report = false }) {
           <Link to={report ? "/app/assistant" : "/app/reports"}>{report ? c.title : c.report}</Link>
         </nav>
       </header>
-      <label>
-        {c.scope}
-        <select
-          value={scope}
-          disabled={auth.user?.role === "branch_manager" || Boolean(importJobId)}
-          onChange={(e) => setScope(e.target.value)}
-        >
-          <option value="restaurant">{c.restaurant}</option>
-          <option value="branch">{c.branch}</option>
-        </select>
-      </label>
+      <details className="simple-details">
+        <summary>{(simpleCopy[locale] || simpleCopy.en).tools}</summary>
+        <label>
+          {c.scope}
+          <select
+            value={scope}
+            disabled={auth.user?.role === "branch_manager" || Boolean(importJobId)}
+            onChange={(e) => setScope(e.target.value)}
+          >
+            <option value="restaurant">{c.restaurant}</option>
+            <option value="branch">{c.branch}</option>
+          </select>
+        </label>
+      </details>
+      {report && (
+        <TabularReports
+          key={`tables:${scopeKey}`}
+          scopeKey={scopeKey}
+          scope={scope}
+          branchId={scope === "branch" ? Number(restaurant.selectedBranchId) : undefined}
+          language={language}
+          canExport={["owner", "branch_manager"].includes(auth.user?.role)}
+        />
+      )}
       <CopilotWorkspace
         key={scopeKey}
         scopeKey={scopeKey}
@@ -64,14 +79,23 @@ export function CopilotPage({ report = false }) {
         copy={c}
         importJobId={importJobId}
         report={report}
+        initialMessage={
+          searchParams.get("question") === "today"
+            ? language === "ar"
+              ? "كيف وضع مطعمي اليوم؟"
+              : language === "zh"
+                ? "今天餐厅经营得怎么样？"
+                : "How are we doing today?"
+            : ""
+        }
       />
     </section>
   );
 }
-function CopilotWorkspace({ scopeKey, scope, branchId, language, copy: c, report, importJobId }) {
+function CopilotWorkspace({ scopeKey, scope, branchId, language, copy: c, report, importJobId, initialMessage = "" }) {
   const client = useQueryClient(),
     [cadence, setCadence] = useState("daily"),
-    [message, setMessage] = useState(""),
+    [message, setMessage] = useState(initialMessage),
     [fromDate, setFrom] = useState(""),
     [toDate, setTo] = useState(""),
     [threadId, setThread] = useState(null),
@@ -169,52 +193,55 @@ function CopilotWorkspace({ scopeKey, scope, branchId, language, copy: c, report
           #{activeImportId}
         </p>
       )}
-      <div className="intelligence-toolbar no-print">
-        {report && (
+      <details className="simple-details" open={report}>
+        <summary>{(simpleCopy[language === "zh" ? "zh-CN" : language] || simpleCopy.en).tools}</summary>
+        <div className="intelligence-toolbar no-print">
+          {report && (
+            <label>
+              {c.cadence}
+              <select
+                value={cadence}
+                onChange={(e) => {
+                  setCadence(e.target.value);
+                  setFrom("");
+                  setTo("");
+                }}
+              >
+                {["daily", "weekly", "monthly"].map((value) => (
+                  <option key={value} value={value}>
+                    {c[value]}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
           <label>
-            {c.cadence}
-            <select
-              value={cadence}
-              onChange={(e) => {
-                setCadence(e.target.value);
-                setFrom("");
-                setTo("");
-              }}
-            >
-              {["daily", "weekly", "monthly"].map((value) => (
-                <option key={value} value={value}>
-                  {c[value]}
-                </option>
-              ))}
-            </select>
+            {c.from}
+            <input
+              disabled={Boolean(activeImportId)}
+              type="date"
+              value={fromDate}
+              onChange={(e) => setFrom(e.target.value)}
+            />
           </label>
-        )}
-        <label>
-          {c.from}
-          <input
-            disabled={Boolean(activeImportId)}
-            type="date"
-            value={fromDate}
-            onChange={(e) => setFrom(e.target.value)}
-          />
-        </label>
-        <label>
-          {c.to}
-          <input
-            disabled={Boolean(activeImportId)}
-            type="date"
-            min={fromDate}
-            value={toDate}
-            onChange={(e) => setTo(e.target.value)}
-          />
-        </label>
-        <Button
-          disabled={report && (!datesValid || (scope === "branch" && !branchId))}
-          onClick={() => (report ? daily.refetch() : threads.refetch())}
-        >
-          {c.retry}
-        </Button>
-      </div>
+          <label>
+            {c.to}
+            <input
+              disabled={Boolean(activeImportId)}
+              type="date"
+              min={fromDate}
+              value={toDate}
+              onChange={(e) => setTo(e.target.value)}
+            />
+          </label>
+          <Button
+            disabled={report && (!datesValid || (scope === "branch" && !branchId))}
+            onClick={() => (report ? daily.refetch() : threads.refetch())}
+          >
+            {c.retry}
+          </Button>
+        </div>
+      </details>
       {!datesValid && <p role="alert">{ux.dateError}</p>}
       {busy && (
         <p role="status" aria-live="polite">
@@ -251,7 +278,8 @@ function CopilotWorkspace({ scopeKey, scope, branchId, language, copy: c, report
         <>
           <p>{c.private}</p>
           <div className="copilot-layout">
-            <aside>
+            <details className="copilot-history">
+              <summary>{c.history}</summary>
               <h2>{c.history}</h2>
               <Button
                 onClick={() => {
@@ -283,7 +311,7 @@ function CopilotWorkspace({ scopeKey, scope, branchId, language, copy: c, report
                     {row.title}
                   </button>
                 ))}
-            </aside>
+            </details>
             <div>
               {!threadId && (
                 <>

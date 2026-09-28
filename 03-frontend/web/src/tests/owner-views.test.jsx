@@ -5,7 +5,7 @@ import { beforeEach, expect, it, vi } from "vitest";
 import { LocaleProvider } from "../contexts/LocaleContext.jsx";
 import { ExecutiveHomePage } from "../pages/ExecutiveHomePage.jsx";
 import { ProfitWaterfall, waterfallRows, costCategories } from "../components/financial/ProfitWaterfall.jsx";
-import { ownerCopy } from "../pages/ownerCopy.js";
+import { simpleCopy } from "../pages/simpleCopy.js";
 import { mobilePriorityItems } from "../app/navigation.js";
 const { api, auth, restaurant } = vi.hoisted(() => ({
   api: vi.fn(),
@@ -58,32 +58,40 @@ function mount(locale = "en") {
 }
 beforeEach(() => {
   api.mockReset();
-  api.mockResolvedValue(report);
+  api.mockImplementation(async (path) => (path.startsWith("/experience") ? structuredClone(overview) : report));
   auth.user.role = "owner";
   auth.user.id = 1;
   restaurant.selectedBranchId = "101";
 });
+const overview = {
+  hasData: true,
+  date: "2026-09-28",
+  timezone: "Asia/Riyadh",
+  currencyCode: "SAR",
+  today: { source: "import", revenueMinor: 125000, profitMinor: null, orders: 18 },
+  status: { costs: { count: 0 } }
+};
 for (const locale of ["ar", "en", "zh-CN"])
-  it(`executive home answers four questions and links evidence in ${locale}`, async () => {
+  it(`home shows three honest metrics, one chart and one insight in ${locale}`, async () => {
     mount(locale);
-    const c = ownerCopy[locale];
-    for (const key of ["health", "changed", "why", "next"])
-      expect(await screen.findByRole("heading", { name: c[key] })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: c.today })).toHaveAttribute("href", "/app/today");
-    expect(screen.getByRole("link", { name: c.profit })).toHaveAttribute("href", "/app/profit");
+    const c = simpleCopy[locale];
+    expect(await screen.findByRole("heading", { name: c.home })).toBeInTheDocument();
+    expect(document.querySelectorAll(".simple-kpi")).toHaveLength(3);
+    expect(screen.getByRole("link", { name: new RegExp(c.profit) })).toHaveTextContent(c.unknown);
+    expect(screen.getByRole("link", { name: c.ask })).toHaveAttribute("href", "/app/assistant");
+    expect(screen.getByRole("heading", { name: c.trend })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: c.insight })).toBeInTheDocument();
+    expect(document.querySelector("img")).toBeNull();
     expect(document.documentElement.dir).toBe(locale === "ar" ? "rtl" : "ltr");
-    expect(screen.getByText(c.recorded)).toBeInTheDocument();
-    expect(document.getElementById("2026-09-18-e1")).toBeInTheDocument();
   });
-it("manager home cannot widen scope and changes in branch/user produce fresh queries", async () => {
+it("header branch and account changes produce fresh scoped home requests", async () => {
   auth.user.role = "branch_manager";
   const view = mount();
-  await screen.findByRole("heading", { name: ownerCopy.en.health });
-  expect(screen.getByLabelText("Scope")).toBeDisabled();
-  expect(api.mock.calls.at(-1)[0]).toContain("scope=branch&branchId=101");
+  await screen.findByRole("heading", { name: simpleCopy.en.home });
+  expect(api.mock.calls.some(([p]) => p.includes("branchId=101"))).toBe(true);
   restaurant.selectedBranchId = "102";
   view.refresh();
-  await waitFor(() => expect(api.mock.calls.at(-1)[0]).toContain("branchId=102"));
+  await waitFor(() => expect(api.mock.calls.some(([p]) => p.includes("branchId=102"))).toBe(true));
   const count = api.mock.calls.length;
   auth.user.id = 2;
   view.refresh();
@@ -92,8 +100,9 @@ it("manager home cannot widen scope and changes in branch/user produce fresh que
 it("home handles failed requests with retry and never invents totals", async () => {
   api.mockRejectedValueOnce({ status: 403 });
   mount();
-  expect(await screen.findByText("Permission required")).toBeInTheDocument();
-  expect(screen.queryByText("SAR 100")).not.toBeInTheDocument();
+  expect(await screen.findByRole("alert")).toHaveTextContent(simpleCopy.en.error);
+  expect(screen.getByRole("button", { name: simpleCopy.en.retry })).toBeEnabled();
+  expect(document.querySelectorAll(".simple-kpi")).toHaveLength(0);
 });
 it("waterfall reconciles refunds and losses; missing inputs never imply zero profit", () => {
   const summary = {
@@ -114,14 +123,15 @@ it("waterfall reconciles refunds and losses; missing inputs never imply zero pro
   expect(screen.getByRole("status")).toHaveTextContent("More complete data");
   expect(screen.queryByText("SAR -7500")).not.toBeInTheDocument();
 });
-it("mobile navigation gives direct access to home, today, alerts and copilot", () => {
-  expect(mobilePriorityItems.map((item) => item.id)).toEqual(["dashboard", "today", "alerts", "assistant"]);
+it("mobile navigation gives direct access to exactly home, AI, data and settings", () => {
+  expect(mobilePriorityItems.map((item) => item.id)).toEqual(["dashboard", "assistant", "data", "settings"]);
 });
-it("owner changes scope without putting foreign identifiers into the request", async () => {
+it("first visit offers connect and upload before an empty dashboard", async () => {
+  api.mockResolvedValue({ ...overview, hasData: false });
   mount();
-  await screen.findByRole("heading", { name: ownerCopy.en.health });
-  fireEvent.change(screen.getByLabelText("Scope"), { target: { value: "branch" } });
-  await waitFor(() => expect(api.mock.calls.at(-1)[0]).toContain("branchId=101"));
-  fireEvent.change(screen.getByLabelText("Scope"), { target: { value: "restaurant" } });
-  await waitFor(() => expect(api.mock.calls.at(-1)[0]).not.toContain("branchId"));
+  expect(await screen.findByRole("heading", { name: /Welcome/ })).toBeInTheDocument();
+  expect(screen.getByRole("link", { name: simpleCopy.en.connect })).toHaveAttribute("href", "/app/integrations");
+  expect(document.querySelectorAll(".simple-kpi")).toHaveLength(0);
+  fireEvent.click(screen.getByRole("button", { name: simpleCopy.en.later }));
+  expect(await screen.findByRole("heading", { name: simpleCopy.en.home })).toBeInTheDocument();
 });

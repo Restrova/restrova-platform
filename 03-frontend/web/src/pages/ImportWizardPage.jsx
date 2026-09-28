@@ -643,6 +643,51 @@ function Completion({ job, onReset }) {
       {!cancelled && (
         <>
           <p>{c.connected}</p>
+          {job.firstInsight && (
+            <div className="simple-panel import-first-insight">
+              <h2>
+                {locale === "ar"
+                  ? "هذا اللي لقيناه في المبيعات الجديدة"
+                  : locale === "zh-CN"
+                    ? "新导入销售记录的摘要"
+                    : "From your newly imported sales"}
+              </h2>
+              <p>
+                <bdi>
+                  {job.firstInsight.from} — {job.firstInsight.to}
+                </bdi>
+              </p>
+              <dl>
+                <dt>{locale === "ar" ? "صافي المبيعات" : locale === "zh-CN" ? "净销售额" : "Net sales"}</dt>
+                <dd>
+                  {new Intl.NumberFormat(locale, { style: "currency", currency: job.firstInsight.currencyCode }).format(
+                    job.firstInsight.revenueMinor /
+                      10 **
+                        new Intl.NumberFormat("en", {
+                          style: "currency",
+                          currency: job.firstInsight.currencyCode
+                        }).resolvedOptions().maximumFractionDigits
+                  )}
+                </dd>
+                <dt>
+                  {locale === "ar"
+                    ? "الطلبات في السجلات الجديدة"
+                    : locale === "zh-CN"
+                      ? "新记录中的订单"
+                      : "Orders in new records"}
+                </dt>
+                <dd>{job.firstInsight.orders}</dd>
+                <dt>
+                  {locale === "ar"
+                    ? "الأكثر مبيعًا بالكمية"
+                    : locale === "zh-CN"
+                      ? "销量最高的菜品"
+                      : "Top dish by quantity"}
+                </dt>
+                <dd>{job.firstInsight.bestDish}</dd>
+              </dl>
+            </div>
+          )}
           <p>
             {c.revision}: {job.dataRevision?.revision ?? "—"}
           </p>
@@ -652,9 +697,12 @@ function Completion({ job, onReset }) {
             </p>
           )}
           <nav className="decision-links">
-            <a href="/app/recommendations">{c.title}</a>
-            <a href="/app/forecasts">{c.forecast}</a>
-            <a href="/app/alerts">{c.alerts}</a>
+            <a href="/app/assistant">
+              {locale === "ar" ? "عرض تحليل AI" : locale === "zh-CN" ? "查看 AI 分析" : "See AI analysis"}
+            </a>
+            <a href="/app/data">
+              {locale === "ar" ? "عرض بيانات مطعمك" : locale === "zh-CN" ? "查看餐厅数据" : "View restaurant data"}
+            </a>
           </nav>
         </>
       )}
@@ -663,8 +711,8 @@ function Completion({ job, onReset }) {
           Import another file
         </Button>
         {!cancelled && (
-          <Button variant="outline" onClick={() => window.location.assign("/app/workspace")}>
-            View workspace
+          <Button variant="outline" onClick={() => window.location.assign("/app/dashboard")}>
+            {locale === "ar" ? "الرئيسية" : locale === "zh-CN" ? "首页" : "Home"}
           </Button>
         )}
       </div>

@@ -28,3 +28,5 @@ createRoot(document.getElementById("root")).render(
 );
 
 import "./styles/intelligence.css";
+
+import "./styles/simple-experience.css";

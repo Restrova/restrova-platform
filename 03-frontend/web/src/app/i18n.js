@@ -31,6 +31,9 @@ export const dictionaries = {
       productName: "Restrova Platform"
     },
     navigation: {
+      home: "الرئيسية",
+      ai: "المساعد",
+      data: "البيانات",
       today: "اليوم حتى الآن",
       profit: "تحليل الأرباح",
       integrations: "مصادر البيانات",
@@ -338,6 +341,9 @@ export const dictionaries = {
       productName: "Restrova Platform"
     },
     navigation: {
+      home: "Home",
+      ai: "AI",
+      data: "Data",
       today: "Today so far",
       profit: "Profit analysis",
       integrations: "Data sources",
@@ -651,6 +657,9 @@ export const dictionaries = {
       productName: "Restrova Platform"
     },
     navigation: {
+      home: "首页",
+      ai: "AI",
+      data: "数据",
       today: "今日截至目前",
       profit: "利润分析",
       integrations: "数据来源",

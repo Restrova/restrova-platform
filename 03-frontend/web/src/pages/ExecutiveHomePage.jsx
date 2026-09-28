@@ -1,151 +1,169 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { Sparkles, ArrowUpRight } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext.jsx";
 import { useRestaurant } from "../contexts/RestaurantContext.jsx";
 import { useLocale } from "../contexts/LocaleContext.jsx";
 import { api } from "../lib/api.js";
 import { Button } from "../components/ui/Button.jsx";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/Card.jsx";
-import { ErrorState } from "../components/ui/ErrorState.jsx";
-import { CopilotAnswer } from "./CopilotAnswer.jsx";
-import { ReportDetails } from "./CopilotPage.jsx";
-import { copilotUiCopy } from "./copilotUiCopy.js";
-import { ownerCopy } from "./ownerCopy.js";
-
+import { simpleCopy } from "./simpleCopy.js";
+import { actionCopy } from "./decisionCopy.js";
+import { useOverview, ConnectChoices } from "./SimplePages.jsx";
 export function ExecutiveHomePage() {
   const auth = useAuth(),
     restaurant = useRestaurant(),
-    { locale, t } = useLocale();
-  const c = ownerCopy[locale] || ownerCopy.en,
-    language = locale === "zh-CN" ? "zh" : locale;
-  const [selection, setSelection] = useState("restaurant");
-  const scope = auth.user?.role === "branch_manager" ? "branch" : selection;
-  const filters = {
-    cadence: "daily",
-    language,
-    scope,
-    ...(scope === "branch" ? { branchId: restaurant.selectedBranchId } : {})
-  };
-  const query = useQuery({
-    queryKey: ["owner-home", auth.user?.id, auth.organization?.id, restaurant.selectedRestaurantId, filters],
-    queryFn: ({ signal }) => api(`/reports/executive?${new URLSearchParams(filters)}`, { signal }),
-    enabled: Boolean(restaurant.selectedRestaurantId) && (scope !== "branch" || Boolean(restaurant.selectedBranchId)),
+    { locale } = useLocale(),
+    c = simpleCopy[locale] || simpleCopy.en,
+    language = locale === "zh-CN" ? "zh" : locale,
+    query = useOverview();
+  const [dismissed, setDismissed] = useState("");
+  const accountKey = `${auth.user?.id}:${restaurant.selectedRestaurantId}`;
+  const weekly = useQuery({
+    queryKey: ["simple-home-trend", accountKey, restaurant.selectedBranchId, language],
+    queryFn: ({ signal }) =>
+      api(
+        `/reports/executive?${new URLSearchParams({ cadence: "weekly", language, scope: restaurant.selectedBranchId ? "branch" : "restaurant", ...(restaurant.selectedBranchId ? { branchId: restaurant.selectedBranchId } : {}) })}`,
+        { signal }
+      ),
+    enabled: Boolean(query.data?.hasData),
     retry: false
   });
+  if (query.isPending) return <p role="status">{c.loading}</p>;
+  if (query.isError)
+    return (
+      <section className="simple-page">
+        <p role="alert">{c.error}</p>
+        <Button onClick={() => query.refetch()}>{c.retry}</Button>
+      </section>
+    );
+  const data = query.data,
+    digits = new Intl.NumberFormat(locale, { style: "currency", currency: data.currencyCode }).resolvedOptions()
+      .maximumFractionDigits;
+  const money = (n) =>
+    n == null
+      ? c.unknown
+      : new Intl.NumberFormat(locale, {
+          style: "currency",
+          currency: data.currencyCode,
+          maximumFractionDigits: digits
+        }).format(n / 10 ** digits);
+  if (!data.hasData && dismissed !== accountKey && auth.user?.role === "owner")
+    return (
+      <section className="simple-welcome simple-page">
+        <img src="/images/restrova/welcome-mascot.webp" alt="" width="180" height="180" />
+        <p className="simple-eyebrow">RESTROVA</p>
+        <h1>{c.welcome} 👋</h1>
+        <p>{c.connectIntro}</p>
+        <ConnectChoices c={c} />
+        <Button variant="ghost" onClick={() => setDismissed(accountKey)}>
+          {c.later}
+        </Button>
+      </section>
+    );
+  const action = weekly.data?.topActions?.[0],
+    actions = actionCopy[language] || actionCopy.en;
+  const trend = weekly.data?.trend || [],
+    known = trend.filter((day) => day.revenueMinor != null),
+    max = Math.max(1, ...known.map((day) => Math.abs(day.revenueMinor)));
   return (
-    <section className="owner-home intelligence-page">
-      <header>
-        <h1>{c.title}</h1>
-        <p>{c.intro}</p>
+    <section className="simple-page simple-home">
+      <header className="simple-home-heading">
+        <div>
+          <p className="simple-eyebrow">
+            {c.hello}
+            {auth.user?.name ? `, ${auth.user.name}` : ""} 👋
+          </p>
+          <h1>{restaurant.selectedRestaurant?.name || c.home}</h1>
+          <p>{c.home}</p>
+        </div>
+        <details className="simple-actions">
+          <summary aria-label={c.tools}>•••</summary>
+          <Link to="/app/reports">{c.reports}</Link>
+          <Link to="/app/forecasts">{c.forecast}</Link>
+          <Link to="/app/menu-profitability">{c.viewMenu}</Link>
+        </details>
       </header>
-      <nav className="owner-shortcuts" aria-label={t("navigation.mainNavigation")}>
+      <p className="simple-period">
+        {c.today} ·{" "}
+        <bdi>
+          {data.date} · {data.timezone}
+        </bdi>
+        {data.today.source === "manual" ? ` · ${c.manualSource}` : ""}
+      </p>
+      <div className="simple-kpis">
         {[
-          ["today", c.today],
-          ["profit", c.profit],
-          ["menu-profitability", t("navigation.menuProfitability")],
-          ["sales-comparison", t("navigation.salesComparison")],
-          ["alerts", t("navigation.alerts")],
-          ["assistant", t("navigation.assistant")]
-        ].map(([path, label]) => (
-          <Link key={path} to={`/app/${path}`}>
-            {label}
+          [c.sales, money(data.today.revenueMinor), "today"],
+          [c.profit, money(data.today.profitMinor), "profit"],
+          [
+            c.orders,
+            data.today.orders == null ? c.unknown : new Intl.NumberFormat(locale).format(data.today.orders),
+            "today"
+          ]
+        ].map(([label, value, path]) => (
+          <Link to={`/app/${path}`} className="simple-kpi" key={label}>
+            <span>
+              {label}
+              <ArrowUpRight size={18} />
+            </span>
+            <strong>{value}</strong>
           </Link>
         ))}
-      </nav>
-      <div className="intelligence-toolbar">
-        <label>
-          {t("financialDashboard.scope")}
-          <select
-            value={scope}
-            disabled={auth.user?.role === "branch_manager"}
-            onChange={(e) => setSelection(e.target.value)}
-          >
-            {["restaurant", "branch"].map((value) => (
-              <option key={value} value={value}>
-                {t(`financialDashboard.scopes.${value}`)}
-              </option>
-            ))}
-          </select>
-        </label>
-        <Button loading={query.isFetching} onClick={() => query.refetch()}>
-          {t("financialDashboard.refresh")}
-        </Button>
       </div>
-      <p>{c.recorded}</p>
-      {query.isLoading && <p role="status">{t("financialDashboard.loading")}</p>}
-      {query.isError && (
-        <ErrorState type={query.error?.status === 403 ? "permission" : "network"} onRetry={() => query.refetch()} />
+      <p className="simple-muted">{c.profitNote}</p>
+      {data.alert && (
+        <Link className="simple-attention" to="/app/alerts">
+          <strong>{c.important}</strong>
+          <span>{data.alert.snapshot?.title || c.details} →</span>
+        </Link>
       )}
-      {query.data && <ExecutiveHomeContent report={query.data} locale={locale} />}
-    </section>
-  );
-}
-
-export function ExecutiveHomeContent({ report, locale }) {
-  const c = ownerCopy[locale] || ownerCopy.en,
-    language = locale === "zh-CN" ? "zh" : locale,
-    copy = copilotUiCopy[language] || copilotUiCopy.en;
-  const groups = [
-    ["health", ["revenue", "profit", "margin", "orders"]],
-    ["changed", ["change", "profitChange", "foodChange", "costChange"]]
-  ];
-  return (
-    <>
-      <p>
-        {copy.period}:{" "}
-        <bdi>
-          {report.period.fromDate} — {report.period.toDate}
-        </bdi>{" "}
-        · {copy.revision}: <bdi>{report.dataRevision.revision}</bdi>
-      </p>
-      <div className="owner-question-grid">
-        {groups.map(([key, keys]) => (
-          <Card key={key}>
-            <CardHeader>
-              <CardTitle>{c[key]}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <dl className="owner-facts">
-                {report.claims
-                  .filter((claim) => keys.includes(claim.key))
-                  .map((claim) => (
-                    <div key={claim.key}>
-                      <dt>{claim.label}</dt>
-                      <dd>{claim.status === "supported" ? claim.text.slice(claim.label.length + 2) : c.unknown}</dd>
-                    </div>
-                  ))}
-              </dl>
-              <a href="#owner-evidence">{c.evidence}</a>
-            </CardContent>
-          </Card>
-        ))}
-        <Card>
-          <CardHeader>
-            <CardTitle>{c.why}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {report.executiveSummary?.length ? (
-              report.executiveSummary.map((item, index) => <p key={index}>{item.text}</p>)
-            ) : (
-              <p>{c.missing}</p>
-            )}
-            <a href="#owner-evidence">{c.evidence}</a>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>{c.next}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ReportDetails report={{ ...report, trend: [] }} copy={copy} language={language} />
-          </CardContent>
-        </Card>
-      </div>
-      <section id="owner-evidence" tabIndex={-1}>
-        <h2>{c.evidence}</h2>
-        <CopilotAnswer answer={report} copy={copy} />
+      <Link className="simple-ask" to="/app/assistant">
+        <Sparkles size={23} />
+        {c.ask}
+        <span aria-hidden="true">→</span>
+      </Link>
+      <section className="simple-panel">
+        <h2>{c.trend}</h2>
+        {weekly.isFetching ? (
+          <p role="status">{c.loading}</p>
+        ) : weekly.isError ? (
+          <p role="alert">{c.error}</p>
+        ) : !known.length ? (
+          <p>{c.noTrend}</p>
+        ) : (
+          <div className="simple-chart" role="img" aria-label={c.trend}>
+            {trend.map((day) => (
+              <div className="simple-chart-day" key={day.date}>
+                <small>{money(day.revenueMinor)}</small>
+                <div className="simple-chart-track">
+                  <span
+                    style={{
+                      background: day.revenueMinor < 0 ? "#b84e35" : undefined,
+                      height: day.revenueMinor == null ? 0 : `${Math.max(2, (Math.abs(day.revenueMinor) / max) * 100)}%`
+                    }}
+                  />
+                </div>
+                <span>
+                  <bdi>{day.date.slice(5)}</bdi>
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
-    </>
+      <section className="simple-panel simple-insight">
+        <p className="simple-eyebrow">RESTROVA AI</p>
+        <h2>{c.insight}</h2>
+        <p>
+          {action
+            ? actions[action.recommendedAction] || c.details
+            : !data.status.costs.count
+              ? `${c.missing}: ${c.costs}`
+              : c.noAlert}
+        </p>
+        {action?.item?.name && <p>{action.item.name}</p>}
+        <Link to={action ? "/app/recommendations" : "/app/data"}>{c.details} →</Link>
+      </section>
+    </section>
   );
 }

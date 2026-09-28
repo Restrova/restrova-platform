@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 import { isNavigationItemActive } from "../../app/navigation.js";
 import { useLocale } from "../../contexts/LocaleContext.jsx";
@@ -10,22 +10,17 @@ export function SidebarNavigationItem({ item, collapsed = false, onNavigate }) {
   const label = t(item.translationKey);
 
   return (
-    <NavLink
+    <Link
       to={item.path}
-      className={({ isActive }) => `sidebar-nav__item ${isActive ? "is-active" : ""}`.trim()}
+      className={`sidebar-nav__item ${isNavigationItemActive(item, location.pathname) ? "is-active" : ""}`}
+      aria-current={isNavigationItemActive(item, location.pathname) ? "page" : undefined}
       title={collapsed ? label : undefined}
       onClick={onNavigate}
-      end
     >
-      {({ isActive }) => (
-        <>
-          <Icon size={18} aria-hidden="true" />
-          <span className={collapsed ? "sr-only" : ""}>{label}</span>
-          <span className="sidebar-nav__state sr-only">
-            {isNavigationItemActive(item, location.pathname) || isActive ? label : ""}
-          </span>
-        </>
-      )}
-    </NavLink>
+      <>
+        <Icon size={18} aria-hidden="true" />
+        <span className={collapsed ? "sr-only" : ""}>{label}</span>
+      </>
+    </Link>
   );
 }

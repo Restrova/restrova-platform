@@ -404,3 +404,34 @@ html[lang="zh-CN"] .intelligence-page {
     flex-wrap: wrap;
   }
 }
+
+.tabular-reports {
+  min-width: 0;
+  padding: clamp(1rem, 3vw, 1.75rem);
+  border: 1px solid var(--border, #dce5e3);
+  border-radius: 1rem;
+  margin-block: 1.5rem;
+}
+.tabular-reports .intelligence-toolbar {
+  flex-wrap: wrap;
+}
+.tabular-reports .report-table {
+  max-width: 100%;
+}
+.tabular-reports td {
+  overflow-wrap: anywhere;
+}
+.tabular-reports details bdi {
+  overflow-wrap: anywhere;
+}
+@media (max-width: 600px) {
+  .tabular-reports .intelligence-toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .tabular-reports input,
+  .tabular-reports select {
+    width: 100%;
+    min-width: 0;
+  }
+}

@@ -29,7 +29,8 @@ export async function api(path, options = {}) {
   if (token) headers.Authorization = `Bearer ${token}`;
 
   const response = await fetch(`/api${path}`, { ...options, headers });
-  const body = parseResponseBody(await response.text());
+  const body =
+    options.responseType === "blob" && response.ok ? await response.blob() : parseResponseBody(await response.text());
 
   if (!response.ok) {
     if (response.status === 401 && token) {
