@@ -355,7 +355,8 @@ export function LoginPage({ mode = "login" }) {
           </div>
         </form>
       </section>
-      <aside>
+      <aside className="restrova-welcome-art">
+        <img src="/images/restrova/welcome-restaurant.webp" alt="" className="welcome-art-image" />
         <div className="quote">{t("auth.quote")}</div>
         <div className="answer">
           <Sparkles size={18} />

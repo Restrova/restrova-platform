@@ -46,13 +46,10 @@ export const copilotUiCopy = {
     source: "فتح صفحة المصدر",
     private: "محادثاتك خاصة بحسابك وتخضع لصلاحياتك الحالية.",
     suggestions: [
+      "كيف وضع مطعمي اليوم؟",
       "ليش انخفض الربح هذا الأسبوع؟",
-      "إيش تغير أمس؟",
-      "أي فرع خسر أكثر؟",
-      "ليش زادت تكلفة الطعام؟",
-      "أي أصناف أراجع سعرها؟",
       "اعرض توقع الإيراد",
-      "اعرض التنبيهات"
+      "أي أصناف تحتاج انتباه؟"
     ],
     empty: "ابدأ بسؤال أو اختر مثالًا.",
     saved: "إجابة محفوظة",
@@ -108,13 +105,10 @@ export const copilotUiCopy = {
     source: "Open source page",
     private: "Conversations are private to your account and follow your current permissions.",
     suggestions: [
+      "How are we doing today?",
       "Why did profit decrease this week?",
-      "What changed yesterday?",
-      "Which branch lost most money?",
-      "Why did food cost increase?",
-      "Which dishes should I reprice?",
       "Show revenue forecasts",
-      "Show alerts"
+      "Which dishes need attention?"
     ],
     empty: "Ask a question or choose an example.",
     saved: "Saved answer",
@@ -169,15 +163,7 @@ export const copilotUiCopy = {
     period: "期间",
     source: "打开来源页面",
     private: "对话仅限本人，并受当前权限限制。",
-    suggestions: [
-      "为什么本周利润下降？",
-      "昨天有什么变化？",
-      "哪家门店亏损最多？",
-      "食材成本为什么上涨？",
-      "哪些菜品需要调价？",
-      "显示收入预测",
-      "显示提醒"
-    ],
+    suggestions: ["今天经营情况怎么样？", "为什么本周利润下降？", "显示收入预测", "哪些菜品需要关注？"],
     empty: "输入问题或选择示例。",
     saved: "已保存的回答",
     note: "分析描述记录证据，不证明运营因果关系或保证结果。",

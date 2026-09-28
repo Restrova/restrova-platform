@@ -538,6 +538,10 @@ function publicJob(job, rows, auditRows = []) {
       warnings: job.warning_count || 0,
       imported: job.imported_rows
     },
+    firstInsight: auditRows.findLast((event) => event.event_type === "import_completed")
+      ? JSON.parse(auditRows.findLast((event) => event.event_type === "import_completed").details_json || "{}")
+          .firstInsight || null
+      : null,
     previewRows,
     rowErrors,
     rowWarnings,
@@ -856,11 +860,33 @@ export function confirmStagedImport(user, jobId, confirmationToken, requestId) {
       throw conflict("Import job is no longer available to confirm.");
     }
     if (importedRows) recordDataRevision(user);
+    let firstInsight = null;
+    if (importedSalesRows.length) {
+      const quantities = new Map();
+      for (const row of importedSalesRows)
+        quantities.set(row.item_code, (quantities.get(row.item_code) || 0) + row.quantity);
+      const best = [...quantities].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0];
+      const dates = importedSalesRows.map((row) => row.created_at).sort();
+      firstInsight = {
+        currencyCode: user.currency,
+        revenueMinor: importedSalesRows.reduce(
+          (total, row) => total + row.gross_sales_minor - row.discount_minor - row.refund_amount_minor,
+          0
+        ),
+        orders: new Set(importedSalesRows.map((row) => `${row.branch_id}:${row.external_order_id}`)).size,
+        bestDish: stagedImportRepository.findCatalogItemByCode(user, best[0])?.name || best[0],
+        bestDishQuantity: best[1],
+        from: dates[0],
+        to: dates.at(-1),
+        source: "newly_imported_sales_lines"
+      };
+    }
     const confirmed = stagedImportRepository.findImportJobInScope(user, id);
     recordAudit(user, confirmed, "import_confirmed", safeRequestId, { importedRows });
     recordAudit(user, confirmed, "import_completed", safeRequestId, {
       importedRows,
-      skippedRows: confirmed.duplicate_rows
+      skippedRows: confirmed.duplicate_rows,
+      firstInsight
     });
   });
 

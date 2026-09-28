@@ -1,3 +1,4 @@
+import { todayCopilotAnswer } from "./experienceService.js";
 import { authorizedImportReport, buildImportReportAnalysis } from "./importReportAnalysis.js";
 import crypto from "node:crypto";
 import { z } from "zod";
@@ -432,7 +433,12 @@ export function classifyCopilotQuestion(text, previous) {
     )
   )
     return "summary";
-  if (previous && /yesterday|week|what about|and |[اأ]مس|[اأ]سبوع|وماذا|طيب|昨天|本周|那/.test(question))
+  if (/how are we|how is.{0,20}(restaurant|business)|كيف.{0,20}(وضع|المطعم|مطعمي)|经营情况|今天怎么样/.test(question))
+    return "summary";
+  if (
+    previous &&
+    /today|اليوم|今天|yesterday|week|what about|and |[اأ]مس|[اأ]سبوع|وماذا|طيب|昨天|本周|那/.test(question)
+  )
     return previous;
   return "clarify";
 }
@@ -547,7 +553,7 @@ export function askCopilot(user, body) {
         ? { fromDate: dayOffset(today, -1), toDate: dayOffset(today, -1) }
         : explicitWeek
           ? { fromDate: dayOffset(today, -7), toDate: dayOffset(today, -1) }
-          : previous?.period
+          : previous?.period && previous.version !== "today-v1"
             ? { fromDate: previous.period.fromDate, toDate: previous.period.toDate }
             : {};
   const query = {
@@ -587,6 +593,16 @@ export function askCopilot(user, body) {
       toolsUsed: [],
       generatedAt: new Date().toISOString()
     };
+  } else if (
+    (/today|اليوم|今天/i.test(parsed.message) ||
+      (previous?.version === "today-v1" &&
+        !explicitYesterday &&
+        !/week|month|أسبوع|اسبوع|شهر|周|月/i.test(parsed.message))) &&
+    ["summary", "profit", "changes"].includes(intent) &&
+    !parsed.fromDate &&
+    !parsed.toDate
+  ) {
+    answer = todayCopilotAnswer(user, query);
   } else answer = buildCopilotAnalysis(user, query, intent);
   if (Buffer.byteLength(JSON.stringify(answer), "utf8") > 2_000_000)
     throw validationError("Evidence exceeds 2 MB; select a shorter period or one branch.");

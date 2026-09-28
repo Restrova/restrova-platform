@@ -6,6 +6,10 @@ export function BranchSwitcher() {
   const restaurant = useRestaurant();
   const disabled = restaurant.loading || !restaurant.selectedRestaurant;
 
+  if (restaurant.branches.length <= 1)
+    return (
+      <span className="single-branch">{restaurant.selectedBranch?.name || restaurant.selectedRestaurant?.name}</span>
+    );
   return (
     <label className="shell-switcher branch-switcher">
       <span>{t("navigation.currentBranch")}</span>

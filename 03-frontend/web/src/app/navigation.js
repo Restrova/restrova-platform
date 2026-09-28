@@ -179,19 +179,35 @@ export const navigationGroups = [
 export const navigationItems = navigationGroups.flatMap((group) =>
   group.items.map((item) => ({ ...item, groupId: group.id }))
 );
-export const mobilePriorityItems = navigationItems.filter((item) => item.mobilePriority).slice(0, 4);
+const primaryIds = ["dashboard", "assistant", "data", "settings"];
+const dataItem = {
+  id: "data",
+  translationKey: "navigation.data",
+  titleKey: "navigation.data",
+  path: "/app/data",
+  icon: Database,
+  requiredRoles: allRoles
+};
+navigationItems.push(dataItem);
+for (const item of navigationItems) {
+  if (item.id === "dashboard") item.translationKey = item.titleKey = "navigation.home";
+  if (item.id === "assistant") item.translationKey = item.titleKey = "navigation.ai";
+  if (item.id === "settings") item.requiredRoles = allRoles;
+}
+export const mobilePriorityItems = primaryIds.map((id) => navigationItems.find((item) => item.id === id));
 
 export function roleCanAccess(item, role) {
   return !item.requiredRoles || item.requiredRoles.includes(role || ROLE_VIEWER);
 }
 
 export function getNavigationForRole(role) {
-  return navigationGroups
-    .map((group) => ({
-      ...group,
-      items: group.items.filter((item) => roleCanAccess(item, role))
-    }))
-    .filter((group) => group.items.length > 0);
+  return [
+    {
+      id: "primary",
+      translationKey: "navigation.mainNavigation",
+      items: mobilePriorityItems.filter((item) => roleCanAccess(item, role))
+    }
+  ];
 }
 
 export function findNavigationItem(pathname) {
@@ -199,5 +215,21 @@ export function findNavigationItem(pathname) {
 }
 
 export function isNavigationItemActive(item, pathname) {
+  if (item.id === "dashboard")
+    return [
+      "/app/dashboard",
+      "/app/today",
+      "/app/profit",
+      "/app/forecasts",
+      "/app/recommendations",
+      "/app/menu-profitability",
+      "/app/reports",
+      "/app/alerts",
+      "/app/sales-comparison"
+    ].includes(pathname);
+  if (item.id === "data")
+    return ["/app/data", "/app/imports", "/app/data-quality", "/app/workspace"].includes(pathname);
+  if (item.id === "settings")
+    return ["/app/settings", "/app/branches", "/app/team", "/app/integrations"].includes(pathname);
   return item.path === pathname;
 }

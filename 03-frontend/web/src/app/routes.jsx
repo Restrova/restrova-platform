@@ -1,3 +1,4 @@
+import { DataPage, SettingsPage } from "../pages/SimplePages.jsx";
 const ExecutiveHomePage = lazy(() =>
   import("../pages/ExecutiveHomePage.jsx").then((module) => ({ default: module.ExecutiveHomePage }))
 );
@@ -95,6 +96,8 @@ export function AppRoutes() {
               </Suspense>
             }
           />
+          <Route path="/app/data" element={<DataPage />} />
+          <Route path="/app/settings" element={<SettingsPage />} />
           <Route path="/app/imports" element={<ImportWizardPage />} />
           <Route path="/app/menu-profitability" element={<MenuProfitabilityPage />} />
           <Route path="/app/branches" element={<BranchesPage />} />
@@ -145,6 +148,8 @@ export function AppRoutes() {
             .filter(
               (item) =>
                 ![
+                  "data",
+                  "settings",
                   "dashboard",
                   "today",
                   "profit",

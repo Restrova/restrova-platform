@@ -57,7 +57,7 @@ beforeEach(() => {
   api.mockImplementation(async (path, options) => {
     if (path.includes("/evidence/")) return { source: { data: { ledgerId: "IMPORTED-EVIDENCE" } } };
     if (path === "/copilot/threads")
-      return { threads: [{ id: 1, title: "Saved question", scope: "restaurant", version: 1 }] };
+      return { threads: [{ id: 1, title: "Saved question", scope: "branch", branchId: 101, version: 1 }] };
     if (path === "/copilot/ask") return { threadId: 1, version: 1, answer };
     if (path === "/copilot/threads/1") return { version: 1, turns: [{ id: 1, question: "Saved question", answer }] };
     if (path.startsWith("/reports/executive")) return structuredClone(answer);
@@ -85,7 +85,7 @@ it("sends the question, reloads saved evidence and keeps conversation version", 
   fireEvent.click(screen.getByRole("button", { name: "Send" }));
   expect(await screen.findByText("Documented change explanation")).toBeInTheDocument();
   const body = JSON.parse(api.mock.calls.find(([p]) => p === "/copilot/ask")[1].body);
-  expect(body).toMatchObject({ scope: "restaurant", language: "en", message: "profit yesterday" });
+  expect(body).toMatchObject({ scope: "branch", branchId: 101, language: "en", message: "profit yesterday" });
   expect(body.requestKey).toMatch(/^[a-f0-9-]{36}$/);
   fireEvent.change(screen.getByRole("textbox"), { target: { value: "And yesterday?" } });
   fireEvent.click(screen.getByRole("button", { name: "Send" }));
@@ -108,9 +108,11 @@ it("branch managers are constrained and imports refresh reports", async () => {
 });
 it("scope changes clear the conversation; request failures remain recoverable", async () => {
   mount();
+  const history = screen.getByText(copilotUiCopy.en.history, { selector: "summary" }).closest("details");
+  history.open = true;
   fireEvent.click(await screen.findByRole("button", { name: "Saved question" }));
   await screen.findByText("Documented change explanation");
-  fireEvent.change(screen.getByRole("combobox"), { target: { value: "branch" } });
+  fireEvent.change(screen.getByRole("combobox"), { target: { value: "restaurant" } });
   expect(screen.queryByText("Documented change explanation")).not.toBeInTheDocument();
   api.mockRejectedValue(new Error("unavailable"));
   fireEvent.change(screen.getByRole("textbox"), { target: { value: "profit" } });

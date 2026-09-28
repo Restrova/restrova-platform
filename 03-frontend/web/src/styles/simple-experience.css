@@ -1,0 +1,377 @@
+:root {
+  --restrova-brand: #08755d;
+}
+.simple-page {
+  max-width: 1000px;
+  margin-inline: auto;
+  padding: clamp(8px, 2vw, 24px);
+  color: #182b28;
+  font-size: 16px;
+  line-height: 1.65;
+}
+.simple-page h1 {
+  font-size: clamp(1.75rem, 4vw, 2.7rem);
+  line-height: 1.25;
+  letter-spacing: -0.025em;
+  margin-block: 8px 14px;
+}
+.simple-page h2 {
+  font-size: 1.2rem;
+  margin-block: 0 14px;
+}
+.simple-eyebrow {
+  color: #47736b;
+  font-size: 0.85rem;
+  font-weight: 650;
+  letter-spacing: 0.03em;
+}
+.simple-home-heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 20px;
+}
+.simple-period,
+.simple-muted {
+  color: #60726e;
+  font-size: 0.9rem;
+}
+.simple-kpis {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-block: 20px 10px;
+}
+.simple-kpi {
+  background: #fff;
+  border: 1px solid #e0e9e5;
+  border-radius: 18px;
+  padding: 24px;
+  text-decoration: none;
+  color: inherit;
+}
+.simple-kpi span {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  color: #526660;
+}
+.simple-kpi strong {
+  display: block;
+  font-size: clamp(1.45rem, 2.5vw, 2.2rem);
+  margin-block-start: 16px;
+  overflow-wrap: anywhere;
+}
+.simple-ask,
+.simple-primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: var(--restrova-brand);
+  color: white;
+  border-radius: 12px;
+  padding: 16px 22px;
+  font-weight: 650;
+  text-decoration: none;
+}
+.simple-ask {
+  margin-block: 28px;
+  font-size: 1.15rem;
+}
+.simple-ask span {
+  margin-inline-start: auto;
+}
+.simple-secondary {
+  display: block;
+  border: 1px solid #c9dad3;
+  border-radius: 12px;
+  padding: 15px 22px;
+  text-align: center;
+  text-decoration: none;
+  color: #164b3d;
+  background: white;
+}
+.simple-panel {
+  border: 1px solid #e0e9e5;
+  background: white;
+  padding: 26px;
+  border-radius: 18px;
+  margin-block: 22px;
+  min-width: 0;
+}
+.simple-insight {
+  border-inline-start: 4px solid var(--restrova-brand);
+}
+.simple-attention {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  background: #fff6e7;
+  padding: 16px 20px;
+  border-radius: 12px;
+  color: #855116;
+  text-decoration: none;
+}
+.simple-chart {
+  display: flex;
+  justify-content: space-around;
+  gap: 12px;
+  overflow-x: auto;
+  padding-block: 15px;
+}
+.simple-chart-day {
+  flex: 1;
+  text-align: center;
+  min-width: 65px;
+  font-size: 0.8rem;
+}
+.simple-chart-day small {
+  white-space: nowrap;
+}
+.simple-chart-track {
+  height: 145px;
+  display: flex;
+  align-items: end;
+  justify-content: center;
+  margin-block: 14px;
+  border-bottom: 1px solid #e3ece7;
+}
+.simple-chart-track span {
+  width: 55%;
+  max-width: 46px;
+  background: #219378;
+  border-radius: 6px 6px 0 0;
+}
+.simple-details {
+  border-top: 1px solid #e0e9e5;
+  padding-block: 16px;
+  margin-block: 18px;
+}
+.simple-details summary,
+.simple-actions summary,
+.copilot-history summary {
+  cursor: pointer;
+  color: #47665d;
+  font-weight: 600;
+  padding: 8px;
+}
+.simple-details pre {
+  max-height: 250px;
+  overflow: auto;
+  direction: ltr;
+  font-size: 0.8rem;
+}
+.simple-actions {
+  position: relative;
+  min-width: 45px;
+  text-align: center;
+}
+.simple-actions[open] {
+  padding: 12px;
+  background: white;
+  border: 1px solid #dce5e0;
+  border-radius: 12px;
+}
+.simple-actions a {
+  display: block;
+  padding: 8px;
+  white-space: nowrap;
+}
+.data-status-list {
+  background: white;
+  border: 1px solid #dce5e0;
+  border-radius: 18px;
+  margin-block: 30px;
+  padding-inline: 24px;
+}
+.data-status-list article {
+  padding-block: 22px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid #ecf0ed;
+}
+.data-status-list article:last-child {
+  border-bottom: 0;
+}
+.data-status-list h2 {
+  margin-block: 0 4px;
+}
+.data-status-list small {
+  color: #67766f;
+}
+.simple-good {
+  color: #08755d;
+}
+.simple-warning {
+  color: #9c5d0d;
+}
+.connect-choices {
+  max-width: 520px;
+  margin: 28px auto;
+}
+.connect-choices p {
+  font-size: 0.9rem;
+  color: #63756c;
+  padding-inline: 12px;
+}
+.simple-welcome {
+  text-align: center;
+  max-width: 740px;
+  padding-block: 36px;
+}
+.simple-welcome img {
+  object-fit: contain;
+}
+.settings-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-block: 16px;
+}
+.settings-tabs button {
+  flex-shrink: 0;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  padding: 12px 18px;
+  color: #4d675e;
+}
+.settings-tabs [aria-selected="true"] {
+  color: #075640;
+  background: #eaf4ee;
+  border-color: #cddfd5;
+}
+.simple-manual {
+  display: grid;
+  gap: 16px;
+  max-width: 520px;
+}
+.simple-manual label {
+  display: grid;
+  gap: 7px;
+}
+.simple-manual input {
+  padding: 13px;
+  border-radius: 10px;
+  border: 1px solid #bacfc3;
+  background: white;
+}
+.notification-link {
+  display: inline-flex;
+  position: relative;
+  padding: 10px;
+  color: #274d42;
+}
+.notification-dot {
+  position: absolute;
+  top: 0;
+  inset-inline-end: 0;
+  background: #b84e35;
+  color: white;
+  border-radius: 50%;
+  width: 17px;
+  height: 17px;
+  text-align: center;
+  font-size: 12px;
+}
+.restrova-welcome-art {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  min-height: 550px;
+}
+.welcome-art-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: -2;
+}
+.restrova-welcome-art::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(0deg, rgba(7, 37, 28, 0.85), rgba(7, 37, 28, 0.02) 70%);
+  z-index: -1;
+}
+.restrova-welcome-art .quote,
+.restrova-welcome-art .answer,
+.restrova-welcome-art .boundary {
+  position: relative;
+  color: white;
+}
+.restrova-welcome-art .quote {
+  margin-block-start: auto;
+}
+.copilot-layout {
+  display: flex;
+  flex-direction: column;
+  max-width: 920px;
+  margin-inline: auto;
+}
+.copilot-history {
+  border-bottom: 1px solid #e1e8e3;
+  padding-block: 8px;
+}
+.copilot-history .copilot-thread {
+  display: inline-block;
+  width: auto;
+  margin: 6px;
+}
+.copilot-form textarea {
+  min-height: 110px;
+  font-size: 1rem;
+  border-radius: 16px;
+  padding: 18px;
+}
+@media (max-width: 700px) {
+  .simple-kpis {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .simple-kpi {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px;
+  }
+  .simple-kpi strong {
+    margin: 0;
+    font-size: 1.7rem;
+  }
+  .simple-kpi svg {
+    display: none;
+  }
+  .simple-panel {
+    padding: 18px;
+  }
+  .data-status-list article {
+    align-items: start;
+    flex-direction: column;
+  }
+  .mobile-bottom-nav {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .simple-home-heading {
+    flex-wrap: wrap;
+  }
+  .single-branch {
+    max-width: 130px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .restrova-welcome-art {
+    min-height: 340px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .simple-page * {
+    transition: none !important;
+  }
+}

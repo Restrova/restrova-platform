@@ -1,3 +1,5 @@
+import { getExperience, saveDailySummary } from "../services/experienceService.js";
+import * as tabularReports from "../controllers/tabularReportController.js";
 import * as integrations from "../controllers/integrationController.js";
 import * as copilot from "../controllers/copilotController.js";
 import express, { Router } from "express";
@@ -29,6 +31,20 @@ router.post("/copilot/ask", auth, asyncHandler(copilot.ask));
 router.get("/copilot/threads", auth, asyncHandler(copilot.threads));
 router.get("/copilot/threads/:id", auth, asyncHandler(copilot.thread));
 router.get("/copilot/threads/:id/turns/:turnId/evidence/:sourceId", auth, asyncHandler(copilot.evidence));
+router.post(
+  "/experience/daily",
+  auth,
+  requireManagerWrite,
+  asyncHandler((req, res) => res.status(201).json(saveDailySummary(req.user, req.body)))
+);
+router.get(
+  "/experience/overview",
+  auth,
+  asyncHandler((req, res) => res.set("Cache-Control", "no-store").json(getExperience(req.user, req.query)))
+);
+router.get("/reports/table", auth, asyncHandler(tabularReports.report));
+router.get("/reports/table.csv", auth, asyncHandler(tabularReports.exportReport("csv")));
+router.get("/reports/table.xlsx", auth, asyncHandler(tabularReports.exportReport("xlsx")));
 router.get("/reports/executive", auth, asyncHandler(copilot.executive));
 router.get("/reports/export.csv", auth, asyncHandler(copilot.exportCsv));
 router.get("/reports/daily", auth, asyncHandler(copilot.report));
