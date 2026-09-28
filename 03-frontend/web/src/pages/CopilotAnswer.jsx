@@ -16,7 +16,7 @@ export function CopilotAnswer({ answer, copy: c }) {
           · {c.revision}: {answer.dataRevision.revision}
         </p>
         {!answer.claims.length ? (
-          <p>{answer.content}</p>
+          <p style={{ whiteSpace: "pre-line" }}>{answer.content}</p>
         ) : (
           <>
             {answer.executiveSummary?.map((item, i) => (

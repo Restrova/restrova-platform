@@ -1,3 +1,4 @@
+import { authorizedImportReport, buildImportReportAnalysis } from "./importReportAnalysis.js";
 import crypto from "node:crypto";
 import { z } from "zod";
 import { db } from "../db.js";
@@ -425,7 +426,12 @@ export function classifyCopilotQuestion(text, previous) {
   if (/menu|dish|item|صنف|[اأ]صناف|[اأ]طباق|菜单|菜品/.test(question)) return "menu";
   if (/profit|margin|ربح|[اأ]رباح|هامش|利润/.test(question)) return "profit";
   if (/chang|تغير|تغيّر|تغييرات|تغي[يّ]ر|变化/.test(question)) return "changes";
-  if (/revenue|sales|summary|report|[اإ]يراد|مبيعات|ملخص|تقرير|收入|销售|摘要|报告/.test(question)) return "summary";
+  if (
+    /revenue|sales|summary|report|analy[sz]e|حلل|تحليل|分析|[اإ]يراد|مبيعات|ملخص|تقرير|收入|销售|摘要|报告/.test(
+      question
+    )
+  )
+    return "summary";
   if (previous && /yesterday|week|what about|and |[اأ]مس|[اأ]سبوع|وماذا|طيب|昨天|本周|那/.test(question))
     return previous;
   return "clarify";
@@ -446,6 +452,12 @@ export function listCopilotThreads(user) {
         "SELECT id,title,scope,branch_id AS branchId,version,created_at AS createdAt FROM copilot_threads WHERE organization_id=? AND restaurant_id=? AND owner_id=? AND (?=0 OR (scope='branch' AND branch_id=?)) ORDER BY id DESC LIMIT 50"
       )
       .all(user.organization_id, user.restaurant_id, user.owner_id, manager ? 1 : 0, user.branch_id || null)
+      .map((row) => {
+        const first = db
+          .prepare("SELECT response_json FROM copilot_turns WHERE thread_id=? ORDER BY id LIMIT 1")
+          .get(row.id);
+        return { ...row, importJobId: first ? JSON.parse(first.response_json).importJobId || null : null };
+      })
   };
 }
 export function getCopilotThread(user, id) {
@@ -463,6 +475,7 @@ export function getCopilotThread(user, id) {
       .all(thread.id)
       .map((row) => {
         const answer = JSON.parse(row.response_json);
+        if (answer.importJobId) authorizedImportReport(user, answer.importJobId);
         return {
           id: row.id,
           question: row.question,
@@ -485,6 +498,7 @@ export function askCopilot(user, body) {
       .extend({
         message: z.string().trim().min(1).max(4000),
         threadId: z.number().int().positive().optional(),
+        importJobId: z.number().int().positive().optional(),
         version: z.number().int().min(0).default(0),
         requestKey: z.string().uuid()
       })
@@ -511,7 +525,9 @@ export function askCopilot(user, body) {
   if (prior) {
     if (prior.thread_id !== thread.id || prior.request_hash !== requestHash)
       throw conflict("Request key was already used for a different question or scope.");
-    return { threadId: thread.id, version: thread.version, answer: JSON.parse(prior.response_json), replayed: true };
+    const replay = JSON.parse(prior.response_json);
+    if (replay.importJobId) authorizedImportReport(user, replay.importJobId);
+    return { threadId: thread.id, version: thread.version, answer: replay, replayed: true };
   }
   if (thread && thread.version !== parsed.version) throw conflict("Conversation changed; reload before continuing.");
   if (thread?.version >= 100) throw conflict("Start a new conversation after 100 turns.");
@@ -540,10 +556,25 @@ export function askCopilot(user, body) {
     ...period,
     language: parsed.language
   };
+  if (previous && parsed.importJobId && parsed.importJobId !== previous.importJobId)
+    throw conflict("Start a new conversation when changing the uploaded report.");
+  const importJobId = parsed.importJobId || previous?.importJobId;
+  if (importJobId && (query.scope === "branch" || query.branchId))
+    throw validationError("Uploaded aggregate reports require restaurant scope.");
+  if (importJobId && (parsed.fromDate || parsed.toDate))
+    throw validationError("Uploaded aggregate reports use their full source period.");
   let answer;
-  if (["refused", "clarify"].includes(intent)) {
-    const context = resolveCopilotContext(user, query);
+  if (importJobId && !["refused", "clarify"].includes(intent)) {
+    resolveCopilotContext(user, { scope: "restaurant", language: parsed.language });
+    answer = buildImportReportAnalysis(user, importJobId, parsed.language, intent, parsed.message);
+  } else if (["refused", "clarify"].includes(intent)) {
+    if (importJobId) authorizedImportReport(user, importJobId);
+    const context = resolveCopilotContext(
+      user,
+      importJobId ? { scope: "restaurant", language: parsed.language } : query
+    );
     answer = {
+      ...(importJobId ? { importJobId } : {}),
       version: "9.8-v1",
       intent,
       language: parsed.language,
@@ -593,5 +624,6 @@ export function getCopilotEvidence(user, threadId, turnId, sourceId) {
   const answer = JSON.parse(turn.response_json),
     source = answer.sources.find((s) => s.id === sourceId);
   if (!source) throw notFound();
+  if (answer.importJobId) authorizedImportReport(user, answer.importJobId);
   return { source, stale: answer.dataRevision.revision !== getDataRevision(user).revision };
 }

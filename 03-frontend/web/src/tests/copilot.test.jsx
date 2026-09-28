@@ -32,14 +32,14 @@ const answer = {
   ],
   notes: []
 };
-function mount(Page = CopilotPage, locale = "en") {
+function mount(Page = CopilotPage, locale = "en", route = "/app/assistant") {
   localStorage.setItem("locale", locale);
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return {
     client,
     ...render(
       <QueryClientProvider client={client}>
-        <MemoryRouter>
+        <MemoryRouter initialEntries={[route]}>
           <LocaleProvider>
             <ImportDataBridge />
             <Page />
@@ -142,4 +142,19 @@ it("incomplete or reversed dates block report requests and manual refresh", asyn
   expect(api.mock.calls.length).toBe(count);
   fireEvent.change(screen.getByLabelText(copilotUiCopy.en.to), { target: { value: "2026-09-17" } });
   await waitFor(() => expect(api.mock.calls.length).toBeGreaterThan(count));
+});
+
+it("uploaded report mode disables date slicing, filters history and sends the upload id", async () => {
+  mount(CopilotPage, "en", "/app/assistant?importJobId=42");
+  expect(screen.getByLabelText(copilotUiCopy.en.from)).toBeDisabled();
+  expect(screen.getByLabelText(copilotUiCopy.en.to)).toBeDisabled();
+  expect(screen.getByRole("combobox")).toBeDisabled();
+  expect(screen.queryByRole("button", { name: "Saved question" })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Analyze the report" }));
+  fireEvent.click(screen.getByRole("button", { name: "Send" }));
+  await waitFor(() => expect(api.mock.calls.some(([p]) => p === "/copilot/ask")).toBe(true));
+  const body = JSON.parse(api.mock.calls.find(([p]) => p === "/copilot/ask")[1].body);
+  expect(body).toMatchObject({ importJobId: 42, scope: "restaurant", message: "Analyze the report" });
+  expect(body.fromDate).toBeUndefined();
+  expect(body.toDate).toBeUndefined();
 });
