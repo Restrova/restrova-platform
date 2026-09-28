@@ -1,7 +1,7 @@
 import { ownerCopy } from "./ownerCopy.js";
 import { actionCopy } from "./decisionCopy.js";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../contexts/AuthContext.jsx";
 import { useRestaurant } from "../contexts/RestaurantContext.jsx";
@@ -11,13 +11,19 @@ import { Button } from "../components/ui/Button.jsx";
 import { CopilotAnswer } from "./CopilotAnswer.jsx";
 import { copilotUiCopy } from "./copilotUiCopy.js";
 export function CopilotPage({ report = false }) {
+  const [searchParams] = useSearchParams();
+  const candidateId =
+    !report && /^\d+$/.test(searchParams.get("importJobId") || "")
+      ? Number(searchParams.get("importJobId"))
+      : undefined;
+  const importJobId = Number.isSafeInteger(candidateId) && candidateId > 0 ? candidateId : undefined;
   const auth = useAuth(),
     restaurant = useRestaurant(),
     { locale } = useLocale(),
     language = locale === "zh-CN" ? "zh" : locale,
     c = copilotUiCopy[language] || copilotUiCopy.en,
     [selectedScope, setScope] = useState("restaurant"),
-    scope = auth.user?.role === "branch_manager" ? "branch" : selectedScope;
+    scope = auth.user?.role === "branch_manager" ? "branch" : importJobId ? "restaurant" : selectedScope;
   const scopeKey = [
     auth.user?.id,
     auth.organization?.id,
@@ -25,7 +31,8 @@ export function CopilotPage({ report = false }) {
     restaurant.selectedBranchId,
     scope,
     language,
-    report
+    report,
+    importJobId
   ].join(":");
   return (
     <section className="intelligence-page" dir={language === "ar" ? "rtl" : "ltr"}>
@@ -41,7 +48,7 @@ export function CopilotPage({ report = false }) {
         {c.scope}
         <select
           value={scope}
-          disabled={auth.user?.role === "branch_manager"}
+          disabled={auth.user?.role === "branch_manager" || Boolean(importJobId)}
           onChange={(e) => setScope(e.target.value)}
         >
           <option value="restaurant">{c.restaurant}</option>
@@ -55,12 +62,13 @@ export function CopilotPage({ report = false }) {
         branchId={scope === "branch" ? Number(restaurant.selectedBranchId) : undefined}
         language={language}
         copy={c}
+        importJobId={importJobId}
         report={report}
       />
     </section>
   );
 }
-function CopilotWorkspace({ scopeKey, scope, branchId, language, copy: c, report }) {
+function CopilotWorkspace({ scopeKey, scope, branchId, language, copy: c, report, importJobId }) {
   const client = useQueryClient(),
     [cadence, setCadence] = useState("daily"),
     [message, setMessage] = useState(""),
@@ -90,6 +98,14 @@ function CopilotWorkspace({ scopeKey, scope, branchId, language, copy: c, report
     enabled: Boolean(threadId) && !report,
     retry: false
   });
+  const activeImportId = importJobId || thread.data?.turns?.[0]?.answer?.importJobId;
+  const suggestions = activeImportId
+    ? language === "ar"
+      ? ["حلل التقرير", "وش أعلى الأصناف مبيعًا؟", "وش توصياتك بناء على التقرير؟"]
+      : language === "zh"
+        ? ["分析报告", "哪些菜品销售额最高？"]
+        : ["Analyze the report", "Which item rows have the highest sales?"]
+    : c.suggestions;
   const daily = useQuery({
     queryKey: ["daily-report", scopeKey, filters, cadence],
     queryFn: ({ signal }) => api(`/reports/executive?${new URLSearchParams({ ...filters, cadence })}`, { signal }),
@@ -124,6 +140,7 @@ function CopilotWorkspace({ scopeKey, scope, branchId, language, copy: c, report
         method: "POST",
         body: JSON.stringify({
           ...filters,
+          ...(activeImportId ? { importJobId: activeImportId, fromDate: undefined, toDate: undefined } : {}),
           message,
           requestKey: crypto.randomUUID(),
           ...(threadId ? { threadId, version: thread.data?.version } : {})
@@ -142,6 +159,16 @@ function CopilotWorkspace({ scopeKey, scope, branchId, language, copy: c, report
   }
   return (
     <>
+      {activeImportId && (
+        <p role="status">
+          {language === "ar"
+            ? "تحليل ملف مرفوع للفترة الكاملة، وليس سجل مبيعات يومية."
+            : language === "zh"
+              ? "分析上传报告的完整期间，不是每日销售账簿。"
+              : "Analyzing the uploaded report's full period, not daily sales."}{" "}
+          #{activeImportId}
+        </p>
+      )}
       <div className="intelligence-toolbar no-print">
         {report && (
           <label>
@@ -164,11 +191,22 @@ function CopilotWorkspace({ scopeKey, scope, branchId, language, copy: c, report
         )}
         <label>
           {c.from}
-          <input type="date" value={fromDate} onChange={(e) => setFrom(e.target.value)} />
+          <input
+            disabled={Boolean(activeImportId)}
+            type="date"
+            value={fromDate}
+            onChange={(e) => setFrom(e.target.value)}
+          />
         </label>
         <label>
           {c.to}
-          <input type="date" min={fromDate} value={toDate} onChange={(e) => setTo(e.target.value)} />
+          <input
+            disabled={Boolean(activeImportId)}
+            type="date"
+            min={fromDate}
+            value={toDate}
+            onChange={(e) => setTo(e.target.value)}
+          />
         </label>
         <Button
           disabled={report && (!datesValid || (scope === "branch" && !branchId))}
@@ -225,12 +263,21 @@ function CopilotWorkspace({ scopeKey, scope, branchId, language, copy: c, report
                 {c.new}
               </Button>
               {threads.data?.threads
-                .filter((row) => row.scope === scope && (scope !== "branch" || row.branchId === branchId))
+                .filter(
+                  (row) =>
+                    row.scope === scope &&
+                    (scope !== "branch" || row.branchId === branchId) &&
+                    (!importJobId || row.importJobId === importJobId)
+                )
                 .map((row) => (
                   <button
                     className="copilot-thread"
                     key={row.id}
-                    onClick={() => setThread(row.id)}
+                    onClick={() => {
+                      setThread(row.id);
+                      setFrom("");
+                      setTo("");
+                    }}
                     aria-current={threadId === row.id ? "true" : undefined}
                   >
                     {row.title}
@@ -242,7 +289,7 @@ function CopilotWorkspace({ scopeKey, scope, branchId, language, copy: c, report
                 <>
                   <p>{c.empty}</p>
                   <div className="decision-links">
-                    {c.suggestions.map((question) => (
+                    {suggestions.map((question) => (
                       <Button variant="outline" key={question} onClick={() => setMessage(question)}>
                         {question}
                       </Button>

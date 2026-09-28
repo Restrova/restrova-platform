@@ -232,7 +232,7 @@ function DetectionSummary({ job, template }) {
   );
 }
 
-function DatasetEvaluation({ evaluation, locale, onReset, onFinish }) {
+function DatasetEvaluation({ evaluation, locale, onReset, onFinish, supportsReport }) {
   if (!evaluation) return null;
   const ar = locale === "ar";
   const completeness = `${(evaluation.completenessBps / 100).toFixed(1)}%`;
@@ -317,7 +317,17 @@ function DatasetEvaluation({ evaluation, locale, onReset, onFinish }) {
             </span>
           </div>
           <div className="import-actions">
-            <Button onClick={onFinish}>{ar ? "الانتقال إلى مركز القرار" : "Continue to decision center"}</Button>
+            <Button onClick={onFinish}>
+              {!supportsReport
+                ? ar
+                  ? "الانتقال إلى مركز القرار"
+                  : "Continue to decision center"
+                : ar
+                  ? "تحليل الملف مع المساعد"
+                  : locale === "zh-CN"
+                    ? "使用助手分析报告"
+                    : "Analyze report with assistant"}
+            </Button>
             <Button variant="outline" leadingIcon={<RefreshCcw size={16} />} onClick={onReset}>
               {ar ? "تحليل ملف آخر" : "Analyze another file"}
             </Button>
@@ -861,7 +871,18 @@ export function ImportWizardPage() {
             evaluation={job.datasetEvaluation}
             locale={locale}
             onReset={resetImport}
-            onFinish={() => window.location.assign("/app/workspace")}
+            supportsReport={["item_name", "quantity", "gross_sales", "period_start", "period_end", "record_type"].every(
+              (key) => job.mapping?.sourceHeaders?.includes(key)
+            )}
+            onFinish={() =>
+              window.location.assign(
+                ["item_name", "quantity", "gross_sales", "period_start", "period_end", "record_type"].every((key) =>
+                  job.mapping?.sourceHeaders?.includes(key)
+                )
+                  ? `/app/assistant?importJobId=${job.id}`
+                  : "/app/workspace"
+              )
+            }
           />
           {job.datasetEvaluation?.mode !== "analysis_only" && (
             <>
