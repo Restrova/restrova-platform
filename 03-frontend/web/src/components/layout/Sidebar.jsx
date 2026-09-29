@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Store } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useLocale } from "../../contexts/LocaleContext.jsx";
 import { useRestaurant } from "../../contexts/RestaurantContext.jsx";
@@ -22,7 +22,7 @@ export function Sidebar({ collapsed, onCollapsedChange }) {
     >
       <div className="app-sidebar__product">
         <Link to="/app/dashboard" className="product-mark" aria-label={t("common.productName")}>
-          <Store size={22} />
+          <img src="/images/restrova/brand-mark.webp" alt="" width="40" height="40" />
         </Link>
         {!collapsed && (
           <div>

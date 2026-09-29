@@ -51,14 +51,23 @@ export function ExecutiveHomePage() {
   if (!data.hasData && dismissed !== accountKey && auth.user?.role === "owner")
     return (
       <section className="simple-welcome simple-page">
-        <img src="/images/restrova/welcome-mascot.webp" alt="" width="180" height="180" />
-        <p className="simple-eyebrow">RESTROVA</p>
-        <h1>{c.welcome} 👋</h1>
-        <p>{c.connectIntro}</p>
-        <ConnectChoices c={c} />
-        <Button variant="ghost" onClick={() => setDismissed(accountKey)}>
-          {c.later}
-        </Button>
+        <ol className="welcome-steps" aria-label={c.welcome}>
+          <li aria-current="step">{c.connectStep}</li>
+          <li>{c.reviewStep}</li>
+          <li>{c.analysisStep}</li>
+        </ol>
+        <div className="welcome-card">
+          <img src="/images/restrova/welcome-mascot.webp" alt="" width="180" height="180" />
+          <div className="welcome-card__content">
+            <p className="simple-eyebrow">RESTROVA</p>
+            <h1>{c.welcome} 👋</h1>
+            <p>{c.connectIntro}</p>
+            <ConnectChoices c={c} />
+            <Button variant="ghost" onClick={() => setDismissed(accountKey)}>
+              {c.later}
+            </Button>
+          </div>
+        </div>
       </section>
     );
   const action = weekly.data?.topActions?.[0],
@@ -152,17 +161,20 @@ export function ExecutiveHomePage() {
         )}
       </section>
       <section className="simple-panel simple-insight">
-        <p className="simple-eyebrow">RESTROVA AI</p>
-        <h2>{c.insight}</h2>
-        <p>
-          {action
-            ? actions[action.recommendedAction] || c.details
-            : !data.status.costs.count
-              ? `${c.missing}: ${c.costs}`
-              : c.noAlert}
-        </p>
-        {action?.item?.name && <p>{action.item.name}</p>}
-        <Link to={action ? "/app/recommendations" : "/app/data"}>{c.details} →</Link>
+        <img className="rivo-insight" src="/images/restrova/welcome-mascot.webp" alt="" width="84" height="84" />
+        <div>
+          <p className="simple-eyebrow">RIVO AI</p>
+          <h2>{c.insight}</h2>
+          <p>
+            {action
+              ? actions[action.recommendedAction] || c.details
+              : !data.status.costs.count
+                ? `${c.missing}: ${c.costs}`
+                : c.noAlert}
+          </p>
+          {action?.item?.name && <p>{action.item.name}</p>}
+          <Link to={action ? "/app/recommendations" : "/app/data"}>{c.details} →</Link>
+        </div>
       </section>
     </section>
   );

@@ -9,6 +9,15 @@ import { announceDataChange } from "../lib/dataRefresh.js";
 import { simpleCopy } from "./simpleCopy.js";
 import { LanguageSwitcher } from "../components/layout/LanguageSwitcher.jsx";
 import { Button } from "../components/ui/Button.jsx";
+import {
+  BarChart3,
+  CheckCircle2,
+  CircleAlert,
+  FileSpreadsheet,
+  Link2,
+  ShoppingBag,
+  UtensilsCrossed
+} from "lucide-react";
 export function useOverview() {
   const auth = useAuth(),
     restaurant = useRestaurant();
@@ -24,11 +33,11 @@ export function ConnectChoices({ c }) {
   return (
     <div className="connect-choices">
       <Link className="simple-primary" to="/app/integrations">
-        {c.connect} <span aria-hidden="true">→</span>
+        <Link2 size={20} aria-hidden="true" /> {c.connect} <span aria-hidden="true">→</span>
       </Link>
       <p>{c.connectionNote}</p>
       <Link className="simple-secondary" to="/app/imports">
-        {c.upload}
+        <FileSpreadsheet size={20} aria-hidden="true" /> {c.upload}
       </Link>
     </div>
   );
@@ -56,11 +65,27 @@ export function DataPage() {
           <div className="data-status-list">
             {["sales", "orders", "costs"].map((key) => (
               <article key={key}>
-                <div>
-                  <h2>{c[key]}</h2>
-                  <span className={query.data.status[key].count ? "simple-good" : "simple-warning"}>
-                    {query.data.status[key].count ? c.ready : c.missing}
+                <div className="data-status-name">
+                  <span className="data-status-icon" aria-hidden="true">
+                    {key === "sales" ? (
+                      <BarChart3 size={22} />
+                    ) : key === "orders" ? (
+                      <ShoppingBag size={22} />
+                    ) : (
+                      <UtensilsCrossed size={22} />
+                    )}
                   </span>
+                  <div>
+                    <h2>{c[key]}</h2>
+                    <span className={query.data.status[key].count ? "simple-good" : "simple-warning"}>
+                      {query.data.status[key].count ? (
+                        <CheckCircle2 size={16} aria-hidden="true" />
+                      ) : (
+                        <CircleAlert size={16} aria-hidden="true" />
+                      )}
+                      {query.data.status[key].count ? c.ready : c.missing}
+                    </span>
+                  </div>
                 </div>
                 <small>
                   {c.updated}: <bdi>{query.data.status[key].updatedAt || "—"}</bdi>
@@ -166,6 +191,7 @@ export function SettingsPage() {
   const tab = tabs.includes(params.get("tab")) ? params.get("tab") : "restaurant";
   return (
     <section className="simple-page">
+      <p className="simple-eyebrow">RESTROVA / SETTINGS</p>
       <h1>{c.settings}</h1>
       <div className="settings-tabs" role="tablist" aria-label={c.settings}>
         {tabs.map((key) => (
@@ -184,14 +210,31 @@ export function SettingsPage() {
       <section className="simple-panel" role="tabpanel" id="settings-panel" aria-labelledby={`settings-${tab}`}>
         {tab === "restaurant" && (
           <>
-            <h2>{restaurant.selectedRestaurant?.name}</h2>
-            <p>
-              {auth.session?.restaurant?.currency} · {auth.session?.restaurant?.timezone}
-            </p>
+            <h2>{c.restaurant}</h2>
+            <dl className="settings-facts">
+              <div>
+                <dt>{c.restaurant}</dt>
+                <dd>{restaurant.selectedRestaurant?.name || "—"}</dd>
+              </div>
+              <div>
+                <dt>{c.currency}</dt>
+                <dd>{auth.session?.restaurant?.currency || "—"}</dd>
+              </div>
+              <div>
+                <dt>{c.timezone}</dt>
+                <dd>{auth.session?.restaurant?.timezone || "—"}</dd>
+              </div>
+            </dl>
             {owner && (
-              <Link to="/app/branches">
-                {c.manage} {c.branches} →
-              </Link>
+              <div className="settings-branch-card">
+                <div>
+                  <h2>{c.branches}</h2>
+                  <p>{restaurant.selectedBranch?.name || c.restaurant}</p>
+                </div>
+                <Link to="/app/branches">
+                  {c.manage} {c.branches} →
+                </Link>
+              </div>
             )}
           </>
         )}

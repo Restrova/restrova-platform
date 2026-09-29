@@ -39,7 +39,10 @@ export function CopilotPage({ report = false }) {
   return (
     <section className="intelligence-page" dir={language === "ar" ? "rtl" : "ltr"}>
       <header>
-        <h1>{report ? c.reportTitle : c.title}</h1>
+        <div className="rivo-heading">
+          {!report && <img src="/images/restrova/welcome-mascot.webp" alt="" width="62" height="62" />}
+          <h1>{report ? c.reportTitle : c.title}</h1>
+        </div>
         <p>{report ? c.reportIntro : c.intro}</p>
         <nav className="decision-links">
           {auth.user?.role === "owner" && <Link to="/app/imports">{c.imports}</Link>}
@@ -315,8 +318,11 @@ function CopilotWorkspace({ scopeKey, scope, branchId, language, copy: c, report
             <div>
               {!threadId && (
                 <>
-                  <p>{c.empty}</p>
-                  <div className="decision-links">
+                  <div className="copilot-empty">
+                    <img src="/images/restrova/welcome-mascot.webp" alt="" width="88" height="88" />
+                    <p>{c.empty}</p>
+                  </div>
+                  <div className="decision-links copilot-suggestions">
                     {suggestions.map((question) => (
                       <Button variant="outline" key={question} onClick={() => setMessage(question)}>
                         {question}
