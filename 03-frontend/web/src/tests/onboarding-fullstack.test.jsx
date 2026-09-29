@@ -161,11 +161,11 @@ describe("full-stack restaurant onboarding", () => {
 
     await user.type(screen.getByLabelText("Email"), email);
     await user.type(screen.getByLabelText("Password"), password);
-    await user.click(screen.getByRole("button", { name: "Open decision center" }));
+    await user.click(screen.getByRole("button", { name: "Login" }));
 
     expect(await screen.findByRole("heading", { name: "Branch management" })).toBeInTheDocument();
     expect(await screen.findByText("Login Main")).toBeInTheDocument();
     expect(localStorage.getItem("token")).toBeTruthy();
-    expect(screen.queryByRole("button", { name: "Open decision center" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Login" })).not.toBeInTheDocument();
   }, 15_000);
 });

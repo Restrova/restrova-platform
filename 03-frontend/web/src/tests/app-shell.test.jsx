@@ -39,7 +39,11 @@ describe("AppShell", () => {
         </LocaleProvider>
       </QueryClientProvider>
     );
-    expect(await screen.findByRole("button", { name: "فتح مركز القرار" })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "تسجيل الدخول" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /مرحبًا بك مجددًا/ })).toBeInTheDocument();
+    expect(screen.getByLabelText("كلمة المرور")).toHaveAttribute("type", "password");
+    await userEvent.click(screen.getByRole("button", { name: "إظهار كلمة المرور" }));
+    expect(screen.getByLabelText("كلمة المرور")).toHaveAttribute("type", "text");
     expect(screen.queryByRole("navigation", { name: "التنقل الرئيسي" })).not.toBeInTheDocument();
   });
 
