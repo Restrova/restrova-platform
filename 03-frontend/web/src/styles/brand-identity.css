@@ -515,6 +515,9 @@
   font-size: 1.1rem;
   background: #0e6b57;
 }
+.login--sign-in form .onboarding-actions button {
+  width: 100%;
+}
 .login-benefits {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -551,7 +554,7 @@
 }
 .login--sign-in .welcome-art-image {
   object-fit: cover;
-  object-position: center center;
+  object-position: left center;
 }
 .login--sign-in .restrova-welcome-art::after {
   background:
@@ -578,7 +581,7 @@
 }
 .login-hero-copy h2 {
   margin: 0;
-  font-size: clamp(2.4rem, 4.3vw, 5rem);
+  font-size: clamp(2.4rem, 3.6vw, 4.4rem);
   line-height: 1.38;
   color: #fff;
   text-shadow: 0 3px 20px rgb(0 0 0 / 0.33);
