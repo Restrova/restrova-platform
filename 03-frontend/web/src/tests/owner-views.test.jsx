@@ -81,7 +81,7 @@ for (const locale of ["ar", "en", "zh-CN"])
     expect(screen.getByRole("link", { name: c.ask })).toHaveAttribute("href", "/app/assistant");
     expect(screen.getByRole("heading", { name: c.trend })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: c.insight })).toBeInTheDocument();
-    expect(document.querySelector("img")).toBeNull();
+    expect(document.querySelectorAll(".rivo-insight img, img.rivo-insight")).toHaveLength(1);
     expect(document.documentElement.dir).toBe(locale === "ar" ? "rtl" : "ltr");
   });
 it("header branch and account changes produce fresh scoped home requests", async () => {

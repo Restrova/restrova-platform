@@ -1,17 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import {
-  Bot,
-  Building2,
-  Check,
-  ChevronLeft,
-  ChevronRight,
-  MapPin,
-  ShieldCheck,
-  Sparkles,
-  Store,
-  User
-} from "lucide-react";
+import { Building2, Check, ChevronLeft, ChevronRight, MapPin, ShieldCheck, Sparkles, Store, User } from "lucide-react";
 import { LanguageSwitcher } from "../components/layout/LanguageSwitcher.jsx";
 import { useAuth } from "../contexts/AuthContext.jsx";
 import { useLocale } from "../contexts/LocaleContext.jsx";
@@ -104,7 +93,7 @@ export function LoginPage({ mode = "login" }) {
         <div className="auth-toolbar">
           <div className="brand">
             <span>
-              <Bot />
+              <img src="/images/restrova/brand-mark.webp" alt="" width="40" height="40" />
             </span>
             <b>{t("common.productName")}</b>
           </div>
