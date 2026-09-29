@@ -112,7 +112,14 @@ export function LoginPage({ mode = "login" }) {
             <span>
               <img src="/images/restrova/brand-mark.webp" alt="" width="40" height="40" />
             </span>
-            <b>{t("common.productName")}</b>
+            {isRegister ? (
+              <b>{t("common.productName")}</b>
+            ) : (
+              <span className="login-brand-name">
+                <b>Restrova</b>
+                <small>{t("auth.brandSubtitle")}</small>
+              </span>
+            )}
           </div>
           <LanguageSwitcher compact />
         </div>
