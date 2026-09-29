@@ -354,14 +354,14 @@
 }
 
 /* The sign-in screen follows the supplied two-panel reference. */
-.login--sign-in {
+.login--reference {
   min-height: 100dvh;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 0;
   padding: 0;
   background: #fffefa;
 }
-.login--sign-in > section {
+.login--reference > section {
   display: flex;
   justify-content: flex-start;
   min-width: 0;
@@ -373,23 +373,23 @@
   box-shadow: none;
   overflow: visible;
 }
-.login--sign-in > section::before {
+.login--reference > section::before {
   display: none;
 }
-.login--sign-in .auth-toolbar {
+.login--reference .auth-toolbar {
   width: 100%;
   align-self: stretch;
 }
-.login--sign-in .brand {
+.login--reference .brand {
   gap: 0.6rem;
   font-size: clamp(1.35rem, 2vw, 2rem);
   font-weight: 800;
 }
-.login--sign-in .brand span {
+.login--reference .brand span {
   width: 3.7rem;
   height: 3.7rem;
 }
-.login--sign-in .brand .login-brand-name {
+.login--reference .brand .login-brand-name {
   display: grid;
   align-content: center;
   width: auto;
@@ -403,7 +403,7 @@
   font-weight: 500;
   color: #5d716a;
 }
-.login--sign-in .language-switcher {
+.login--reference .language-switcher {
   border: 1px solid #e5e8e2;
   border-radius: 1rem;
   padding: 0.3rem 0.7rem;
@@ -413,7 +413,7 @@
   margin: auto;
   padding-block: 1rem;
 }
-.login--sign-in form {
+.login--reference form {
   width: 100%;
   margin: 0;
   padding: clamp(1.7rem, 3vw, 3rem);
@@ -422,11 +422,11 @@
   background: #fffefa;
   box-shadow: 0 16px 60px rgb(35 65 54 / 0.065);
 }
-.login--sign-in .login-intro {
+.login--reference .login-intro {
   text-align: center;
   margin-bottom: 1.7rem;
 }
-.login--sign-in .login-intro h1 {
+.login--reference .login-intro h1 {
   max-width: none;
   margin: 0 0 0.35rem;
   color: #102c24;
@@ -434,19 +434,19 @@
   line-height: 1.4;
   letter-spacing: 0;
 }
-.login--sign-in .login-intro p {
+.login--reference .login-intro p {
   max-width: none;
   color: #516762;
   font-size: 1rem;
 }
-.login--sign-in .auth-tabs {
+.login--reference .auth-tabs {
   padding: 0;
   margin-bottom: 1.5rem;
   background: transparent;
   border: 0;
   gap: 0.65rem;
 }
-.login--sign-in .auth-tabs a {
+.login--reference .auth-tabs a {
   display: grid;
   min-height: 3.5rem;
   place-items: center;
@@ -456,35 +456,35 @@
   color: #60716c;
   font-weight: 650;
 }
-.login--sign-in .auth-tabs a.active {
+.login--reference .auth-tabs a.active {
   border-color: #0e6b57;
   background: #e9f5f0;
   color: #0e6b57;
   box-shadow: none;
 }
-.login--sign-in .onboarding-fieldset {
+.login--reference .onboarding-fieldset {
   min-height: 0;
   padding: 0;
 }
-.login--sign-in label {
+.login--reference label {
   margin: 1.2rem 0;
   color: #243c36;
   font-size: 1rem;
 }
-.login--sign-in .auth-input-wrap {
+.login--reference .auth-input-wrap {
   position: relative;
   display: flex;
   align-items: center;
   margin-top: 0.5rem;
 }
-.login--sign-in .auth-input-wrap > svg {
+.login--reference .auth-input-wrap > svg {
   position: absolute;
   inset-inline-end: 1rem;
   z-index: 1;
   color: #617a77;
   pointer-events: none;
 }
-.login--sign-in .auth-input-wrap input {
+.login--reference .auth-input-wrap input {
   min-height: 3.65rem;
   margin: 0;
   padding-inline: 1.1rem 3rem;
@@ -492,12 +492,12 @@
   border: 1px solid #d9e2e2;
   border-radius: 0.8rem;
 }
-.login--sign-in .auth-input-wrap input:focus {
+.login--reference .auth-input-wrap input:focus {
   background: #fff;
   border-color: #0e6b57;
   box-shadow: 0 0 0 3px rgb(14 107 87 / 0.12);
 }
-.login--sign-in .auth-input-wrap .auth-password-toggle {
+.login--reference .auth-input-wrap .auth-password-toggle {
   position: absolute;
   inset-inline-start: 0.6rem;
   inset-block-start: 50%;
@@ -516,20 +516,20 @@
   box-shadow: none;
   cursor: pointer;
 }
-.login--sign-in .auth-password-toggle:hover {
+.login--reference .auth-password-toggle:hover {
   background: #e9f5f0;
   color: #0e6b57;
   transform: translateY(-50%);
   box-shadow: none;
 }
-.login--sign-in .onboarding-actions button {
+.login--reference .onboarding-actions button {
   width: 100%;
   min-height: 3.75rem;
   margin-top: 0.5rem;
   font-size: 1.1rem;
   background: #0e6b57;
 }
-.login--sign-in form .onboarding-actions button {
+.login--reference form .onboarding-actions button {
   width: 100%;
 }
 .login-benefits {
@@ -555,7 +555,7 @@
   height: 1.35rem;
 }
 
-.login--sign-in > aside.restrova-welcome-art {
+.login--reference > aside.restrova-welcome-art {
   min-width: 0;
   min-height: 100dvh;
   margin: 0;
@@ -566,16 +566,16 @@
   justify-content: flex-start;
   isolation: isolate;
 }
-.login--sign-in .welcome-art-image {
+.login--reference .welcome-art-image {
   object-fit: cover;
   object-position: left center;
 }
-.login--sign-in .restrova-welcome-art::after {
+.login--reference .restrova-welcome-art::after {
   background:
     linear-gradient(90deg, rgb(19 24 18 / 0.03), rgb(17 28 18 / 0.32)),
     linear-gradient(0deg, rgb(24 24 14 / 0.35), transparent 35%);
 }
-.login--sign-in .login-hero-kicker {
+.login--reference .login-hero-kicker {
   position: relative;
   z-index: 1;
   width: 12rem;
@@ -614,11 +614,11 @@
   line-height: 1.8;
   text-shadow: 0 2px 12px rgb(0 0 0 / 0.45);
 }
-[dir="ltr"] .login--sign-in .login-hero-copy {
+[dir="ltr"] .login--reference .login-hero-copy {
   align-self: flex-end;
   text-align: left;
 }
-[dir="ltr"] .login--sign-in .login-hero-copy p {
+[dir="ltr"] .login--reference .login-hero-copy p {
   margin-left: 0;
 }
 .login-hero-card {
@@ -654,7 +654,7 @@
 }
 
 @media (max-width: 1100px) {
-  .login--sign-in > section {
+  .login--reference > section {
     padding-inline: clamp(1.3rem, 3vw, 2.5rem);
   }
   .login-hero-copy {
@@ -665,14 +665,14 @@
   }
 }
 @media (max-width: 800px) {
-  .login--sign-in {
+  .login--reference {
     display: block;
   }
-  .login--sign-in > section {
+  .login--reference > section {
     min-height: 100dvh;
     padding: 1.4rem;
   }
-  .login--sign-in > aside {
+  .login--reference > aside {
     display: none;
   }
   .login-entry {
@@ -680,17 +680,17 @@
   }
 }
 @media (max-width: 480px) {
-  .login--sign-in form {
+  .login--reference form {
     padding: 1.35rem;
   }
-  .login--sign-in .brand {
+  .login--reference .brand {
     font-size: 1.1rem;
   }
-  .login--sign-in .brand span {
+  .login--reference .brand span {
     width: 2.8rem;
     height: 2.8rem;
   }
-  .login--sign-in .login-intro h1 {
+  .login--reference .login-intro h1 {
     font-size: 1.85rem;
   }
 }
@@ -734,4 +734,26 @@
     align-items: flex-start;
     flex-direction: column;
   }
+}
+
+/* Registration uses the same visual layout while its steps remain usable. */
+.login--onboarding > aside.restrova-welcome-art {
+  position: sticky;
+  inset-block-start: 0;
+  height: 100dvh;
+  align-self: start;
+}
+.login--onboarding .login-entry { margin-block: auto; }
+.login--onboarding .onboarding-fieldset { min-height: 0; }
+.login--onboarding .onboarding-stepper { margin-block: 1.25rem 1.5rem; }
+.login--onboarding .onboarding-stepper small { font-size: 0.78rem; }
+.login--onboarding .onboarding-actions { margin-top: 1rem; }
+.login--onboarding .onboarding-actions button.secondary {
+  width: auto;
+  min-width: 7rem;
+  background: #fff;
+}
+.login--onboarding .onboarding-actions button:not(.secondary) { flex: 1; }
+@media (max-width: 800px) {
+  .login--onboarding > aside.restrova-welcome-art { display: none; }
 }
