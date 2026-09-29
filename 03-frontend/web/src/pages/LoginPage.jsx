@@ -12,7 +12,6 @@ import {
   Mail,
   MapPin,
   ShieldCheck,
-  Sparkles,
   Store,
   User,
   Zap
@@ -105,47 +104,37 @@ export function LoginPage({ mode = "login" }) {
   };
 
   return (
-    <main className={`login ${isRegister ? "login--onboarding" : "login--sign-in"}`}>
+    <main className={`login login--reference ${isRegister ? "login--onboarding" : "login--sign-in"}`}>
       <section>
         <div className="auth-toolbar">
           <div className="brand">
             <span>
               <img src="/images/restrova/brand-mark.webp" alt="" width="40" height="40" />
             </span>
-            {isRegister ? (
-              <b>{t("common.productName")}</b>
-            ) : (
-              <span className="login-brand-name">
-                <b>Restrova</b>
-                <small>{t("auth.brandSubtitle")}</small>
-              </span>
-            )}
+            <span className="login-brand-name">
+              <b>Restrova</b>
+              <small>{t("auth.brandSubtitle")}</small>
+            </span>
           </div>
           <LanguageSwitcher compact />
         </div>
-        {isRegister && (
-          <>
-            <h1>
-              {t("auth.headline")} <em>{t("auth.headlineAccent")}</em>
-            </h1>
-            <p>{t("auth.description")}</p>
-            <div className="superpowers">
-              <span>{t("navigation.reports")}</span>
-              <span>{t("navigation.menuProfitability")}</span>
-              <span>{t("navigation.alerts")}</span>
-            </div>
-          </>
-        )}
-        <div className={isRegister ? undefined : "login-entry"}>
+        <div className="login-entry">
           <form onSubmit={submit} className={isRegister ? "onboarding-form" : ""}>
-            {!isRegister && (
-              <div className="login-intro">
-                <h1>
-                  {t("auth.welcomeBack")} <span aria-hidden="true">👋</span>
-                </h1>
-                <p>{t("auth.signInDescription")}</p>
-              </div>
-            )}
+            <div className="login-intro">
+              {isRegister ? (
+                <>
+                  <h1>{t("auth.createRestaurant")}</h1>
+                  <p>{t("auth.description")}</p>
+                </>
+              ) : (
+                <>
+                  <h1>
+                    {t("auth.welcomeBack")} <span aria-hidden="true">👋</span>
+                  </h1>
+                  <p>{t("auth.signInDescription")}</p>
+                </>
+              )}
+            </div>
             <div className="auth-tabs">
               <Link className={!isRegister ? "active" : ""} to="/login">
                 {t("auth.login")}
@@ -415,43 +404,24 @@ export function LoginPage({ mode = "login" }) {
       </section>
       <aside className="restrova-welcome-art">
         <img
-          src={isRegister ? "/images/restrova/welcome-restaurant.webp" : "/images/restrova/login-rivo-restaurant.webp"}
+          src="/images/restrova/login-rivo-restaurant.webp"
           alt=""
           className="welcome-art-image"
         />
-        {isRegister ? (
-          <>
-            <div className="quote">{t("auth.quote")}</div>
-            <div className="answer">
-              <Sparkles size={18} />
-              <div>
-                <b>{t("auth.nextMove")}</b>
-                <br />
-                {t("auth.sampleAnswer")}
-              </div>
-            </div>
-            <div className="boundary">
-              <ShieldCheck /> {t("auth.boundary")}
-            </div>
-          </>
-        ) : (
-          <>
-            <p className="login-hero-kicker">{t("auth.heroKicker")}</p>
-            <div className="login-hero-copy">
-              <h2>
-                {t("auth.heroTitle")} <em>{t("auth.heroAccent")}</em>
-              </h2>
-              <p>{t("auth.heroDescription")}</p>
-            </div>
-            <div className="login-hero-card">
-              <BarChart3 size={32} aria-hidden="true" />
-              <div>
-                <strong>{t("auth.heroCardTitle")}</strong>
-                <span>{t("auth.heroCardDescription")}</span>
-              </div>
-            </div>
-          </>
-        )}
+        <p className="login-hero-kicker">{t("auth.heroKicker")}</p>
+        <div className="login-hero-copy">
+          <h2>
+            {t("auth.heroTitle")} <em>{t("auth.heroAccent")}</em>
+          </h2>
+          <p>{t("auth.heroDescription")}</p>
+        </div>
+        <div className="login-hero-card">
+          <BarChart3 size={32} aria-hidden="true" />
+          <div>
+            <strong>{t("auth.heroCardTitle")}</strong>
+            <span>{t("auth.heroCardDescription")}</span>
+          </div>
+        </div>
       </aside>
     </main>
   );
