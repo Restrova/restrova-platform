@@ -9,6 +9,9 @@ import {
   Eye,
   EyeOff,
   LockKeyhole,
+  LoaderCircle,
+  Globe2,
+  Sparkles,
   Mail,
   MapPin,
   ShieldCheck,
@@ -39,6 +42,65 @@ const stepIcons = [User, Building2, Store, MapPin, Check];
 
 function workspaceDestination(value) {
   return value === "/app" || value?.startsWith("/app/") ? value : "/app/dashboard";
+}
+
+function LoginAtmosphere() {
+  const { t } = useLocale();
+  const [playVideo, setPlayVideo] = useState(false);
+  const [videoFailed, setVideoFailed] = useState(false);
+
+  useEffect(() => {
+    if (!window.matchMedia) return;
+    const desktop = window.matchMedia("(min-width: 1024px)");
+    const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const update = () => setPlayVideo(desktop.matches && !motion.matches);
+    update();
+    desktop.addEventListener("change", update);
+    motion.addEventListener("change", update);
+    return () => {
+      desktop.removeEventListener("change", update);
+      motion.removeEventListener("change", update);
+    };
+  }, []);
+
+  return (
+    <aside className="auth-atmosphere">
+      <img className="auth-atmosphere__poster" src="/static/images/restrova-login-poster.webp" alt="" />
+      {playVideo && !videoFailed && (
+        <video
+          className="auth-atmosphere__video"
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="metadata"
+          poster="/static/images/restrova-login-poster.webp"
+          aria-hidden="true"
+          onError={() => setVideoFailed(true)}
+        >
+          <source src="/static/videos/restrova-login.mp4" type="video/mp4" />
+        </video>
+      )}
+      <div className="auth-atmosphere__content">
+        <span className="auth-ai-badge">
+          <Sparkles size={15} aria-hidden="true" />
+          {t("auth.premiumBadge")}
+        </span>
+        <h2>
+          {t("auth.premiumTitle")}
+          <em>{t("auth.premiumAccent")}</em>
+        </h2>
+        <p>{t("auth.premiumDescription")}</p>
+      </div>
+      <div className="auth-atmosphere__footer">
+        <img className="auth-mascot" src="/images/restrova/welcome-mascot.webp" alt="" width="170" height="170" />
+        <span>
+          <ShieldCheck size={17} aria-hidden="true" />
+          {t("auth.secureAccess")}
+        </span>
+      </div>
+    </aside>
+  );
 }
 
 export function LoginPage({ mode = "login" }) {
@@ -104,7 +166,7 @@ export function LoginPage({ mode = "login" }) {
   };
 
   return (
-    <main className={`login login--reference ${isRegister ? "login--onboarding" : "login--sign-in"}`}>
+    <main className={`login login--premium ${isRegister ? "login--onboarding" : "login--sign-in"}`}>
       <section>
         <div className="auth-toolbar">
           <div className="brand">
@@ -116,7 +178,10 @@ export function LoginPage({ mode = "login" }) {
               <small>{t("auth.brandSubtitle")}</small>
             </span>
           </div>
-          <LanguageSwitcher compact />
+          <div className="auth-language">
+            <Globe2 size={17} aria-hidden="true" />
+            <LanguageSwitcher compact />
+          </div>
         </div>
         <div className="login-entry">
           <form onSubmit={submit} className={isRegister ? "onboarding-form" : ""}>
@@ -173,6 +238,8 @@ export function LoginPage({ mode = "login" }) {
                     {!isRegister && <Mail size={19} aria-hidden="true" />}
                     <input
                       type="email"
+                      placeholder="name@restaurant.com"
+                      dir="ltr"
                       value={email}
                       onChange={(event) => {
                         setEmail(event.target.value);
@@ -192,6 +259,7 @@ export function LoginPage({ mode = "login" }) {
                       type={!isRegister && passwordVisible ? "text" : "password"}
                       value={password}
                       onChange={(event) => setPassword(event.target.value)}
+                      placeholder={t("auth.passwordPlaceholder")}
                       autoComplete={isRegister ? "new-password" : "current-password"}
                       minLength={8}
                       required
@@ -372,7 +440,8 @@ export function LoginPage({ mode = "login" }) {
                   <BackIcon size={16} /> {t("common.back")}
                 </button>
               )}
-              <button disabled={busy}>
+              <button disabled={busy} aria-busy={busy}>
+                {busy && <LoaderCircle className="auth-loader" size={18} aria-hidden="true" />}
                 {busy
                   ? t("auth.working")
                   : isRegister && step < steps.length - 1
@@ -380,7 +449,7 @@ export function LoginPage({ mode = "login" }) {
                     : isRegister
                       ? t("auth.createOrganization")
                       : t("auth.login")}
-                {!busy && isRegister && step < steps.length - 1 && <NextIcon size={16} />}
+                {!busy && (!isRegister || step < steps.length - 1) && <NextIcon size={17} aria-hidden="true" />}
               </button>
             </div>
           </form>
@@ -402,27 +471,7 @@ export function LoginPage({ mode = "login" }) {
           )}
         </div>
       </section>
-      <aside className="restrova-welcome-art">
-        <img
-          src="/images/restrova/login-rivo-restaurant.webp"
-          alt=""
-          className="welcome-art-image"
-        />
-        <p className="login-hero-kicker">{t("auth.heroKicker")}</p>
-        <div className="login-hero-copy">
-          <h2>
-            {t("auth.heroTitle")} <em>{t("auth.heroAccent")}</em>
-          </h2>
-          <p>{t("auth.heroDescription")}</p>
-        </div>
-        <div className="login-hero-card">
-          <BarChart3 size={32} aria-hidden="true" />
-          <div>
-            <strong>{t("auth.heroCardTitle")}</strong>
-            <span>{t("auth.heroCardDescription")}</span>
-          </div>
-        </div>
-      </aside>
+      <LoginAtmosphere />
     </main>
   );
 }

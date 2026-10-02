@@ -40,7 +40,7 @@ describe("AppShell", () => {
       </QueryClientProvider>
     );
     expect(await screen.findByRole("button", { name: "تسجيل الدخول" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /مرحبًا بك مجددًا/ })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /مرحباً بعودتك/ })).toBeInTheDocument();
     expect(screen.getByLabelText("كلمة المرور")).toHaveAttribute("type", "password");
     await userEvent.click(screen.getByRole("button", { name: "إظهار كلمة المرور" }));
     expect(screen.getByLabelText("كلمة المرور")).toHaveAttribute("type", "text");
