@@ -57,6 +57,7 @@
   flex-shrink: 0;
 }
 .login--premium .brand .login-brand-name {
+  color: var(--restrova-text);
   display: grid;
   width: auto;
   height: auto;

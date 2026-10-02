@@ -78,7 +78,7 @@ function LoginAtmosphere() {
           aria-hidden="true"
           onError={() => setVideoFailed(true)}
         >
-          <source src="/static/videos/restrova-login.mp4" type="video/mp4" />
+          <source src="/static/videos/restrova-login.mp4" type="video/mp4" onError={() => setVideoFailed(true)} />
         </video>
       )}
       <div className="auth-atmosphere__content">
