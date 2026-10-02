@@ -44,6 +44,7 @@ const allowedOrigins = new Set(
 );
 
 if (bcryptCost < 4 || bcryptCost > 15) failStartup("BCRYPT_COST must be an integer between 4 and 15.");
+if (rateLimitWindowMs < 1) failStartup("RATE_LIMIT_WINDOW_MS must be a positive integer.");
 if (apiRateLimitMax < 1) failStartup("API_RATE_LIMIT_MAX must be a positive integer.");
 if (authRateLimitMax < 1) failStartup("AUTH_RATE_LIMIT_MAX must be a positive integer.");
 if (importPreviewRateLimitMax < 1) failStartup("IMPORT_PREVIEW_RATE_LIMIT_MAX must be a positive integer.");

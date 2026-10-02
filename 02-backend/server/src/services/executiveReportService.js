@@ -28,11 +28,11 @@ const priorities = {
   bundle_item: 11,
   test_targeted_offer: 12
 };
-export function reportPeriod(user, query) {
+export function reportPeriod(user, query, now = new Date()) {
   const { cadence, ...scope } = validate(querySchema, query);
   if (Boolean(scope.fromDate) !== Boolean(scope.toDate)) throw validationError("Supply both report dates.");
   if (!scope.fromDate) {
-    const today = localDate(new Date().toISOString(), user.timezone);
+    const today = localDate(now.toISOString(), user.timezone);
     scope.toDate = dayOffset(today, -1);
     scope.fromDate =
       cadence === "weekly"
@@ -63,8 +63,8 @@ export function rankReportActions(groups) {
     )
     .slice(0, 3);
 }
-export function getExecutiveReport(user, query) {
-  const { cadence, scope } = reportPeriod(user, query),
+export function getExecutiveReport(user, query, now = new Date()) {
+  const { cadence, scope } = reportPeriod(user, query, now),
     report = buildCopilotAnalysis(user, scope, "summary"),
     context = resolveCopilotContext(user, scope);
   // A fixed documented priority policy; incomparable unit costs and total profits are never ranked as projected savings.

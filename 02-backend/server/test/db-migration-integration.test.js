@@ -37,7 +37,8 @@ test("application database bootstrap records applied migrations", async () => {
       { version: "0010_copilot_evidence.sql" },
       { version: "0011_integration_framework.sql" },
       { version: "0012_report_exports.sql" },
-      { version: "0013_manual_daily_summaries.sql" }
+      { version: "0013_manual_daily_summaries.sql" },
+      { version: "0014_scheduled_reports.sql" }
     ]);
   } finally {
     if (db?.open) db.close();

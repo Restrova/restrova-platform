@@ -1,3 +1,4 @@
+import { ReportSchedules } from "./ReportSchedules.jsx";
 import { simpleCopy } from "./simpleCopy.js";
 import { TabularReports } from "./TabularReports.jsx";
 import { ownerCopy } from "./ownerCopy.js";
@@ -82,6 +83,7 @@ export function CopilotPage({ report = false }) {
         copy={c}
         importJobId={importJobId}
         report={report}
+        canSchedule={auth.user?.role === "owner"}
         initialMessage={
           searchParams.get("question") === "today"
             ? language === "ar"
@@ -95,8 +97,19 @@ export function CopilotPage({ report = false }) {
     </section>
   );
 }
-function CopilotWorkspace({ scopeKey, scope, branchId, language, copy: c, report, importJobId, initialMessage = "" }) {
+function CopilotWorkspace({
+  scopeKey,
+  scope,
+  branchId,
+  language,
+  copy: c,
+  report,
+  importJobId,
+  canSchedule,
+  initialMessage = ""
+}) {
   const client = useQueryClient(),
+    [savedReport, setSavedReport] = useState(null),
     [cadence, setCadence] = useState("daily"),
     [message, setMessage] = useState(initialMessage),
     [fromDate, setFrom] = useState(""),
@@ -139,6 +152,7 @@ function CopilotWorkspace({ scopeKey, scope, branchId, language, copy: c, report
     enabled: report && datesValid && (scope !== "branch" || Boolean(branchId)),
     retry: false
   });
+  const shownReport = savedReport || daily.data;
   async function exportCsv() {
     setError(false);
     try {
@@ -252,15 +266,25 @@ function CopilotWorkspace({ scopeKey, scope, branchId, language, copy: c, report
         </p>
       )}
       {report && <p className="no-print">{c.periodHint}</p>}
+      {report && canSchedule && (scope !== "branch" || Boolean(branchId)) && (
+        <ReportSchedules
+          scopeKey={scopeKey}
+          branchId={scope === "branch" ? branchId : undefined}
+          language={language}
+          copy={c}
+          onOpen={setSavedReport}
+          onLive={() => setSavedReport(null)}
+        />
+      )}
       {(error || daily.isError || threads.isError || thread.isError) && <p role="alert">{c.error}</p>}
       {report ? (
-        !datesValid ? null : daily.isPending ? (
+        !datesValid ? null : !savedReport && daily.isPending ? (
           <p role="status">{c.loading}</p>
         ) : (
-          daily.data && (
+          shownReport && (
             <>
               <div className="decision-links no-print">
-                <Button onClick={exportCsv} disabled={daily.isFetching}>
+                <Button onClick={exportCsv} disabled={daily.isFetching || Boolean(savedReport)}>
                   {c.csv}
                 </Button>
                 <Button onClick={() => window.print()} disabled={daily.isFetching}>
@@ -268,11 +292,20 @@ function CopilotWorkspace({ scopeKey, scope, branchId, language, copy: c, report
                 </Button>
               </div>
               <div className="executive-print">
-                <h2>
-                  {c[cadence]} · {c.reportTitle}
-                </h2>
-                <CopilotAnswer answer={daily.data} copy={c} />
-                <ReportDetails report={daily.data} copy={c} language={language} />
+                <header className="report-brand">
+                  <img src="/images/restrova/brand-mark.webp" alt="Restrova" width="48" height="48" />
+                  <div>
+                    <strong>RESTROVA</strong>
+                    <h2>
+                      {c[shownReport.cadence || cadence]} · {c.reportTitle}
+                    </h2>
+                  </div>
+                </header>
+                <p>
+                  {shownReport.period.fromDate} — {shownReport.period.toDate} · {shownReport.currencyCode}
+                </p>
+                <CopilotAnswer answer={shownReport} copy={c} />
+                <ReportDetails report={shownReport} copy={c} language={language} />
               </div>
             </>
           )

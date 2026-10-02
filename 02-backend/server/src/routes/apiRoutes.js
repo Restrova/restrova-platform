@@ -1,3 +1,4 @@
+import * as scheduledReports from "../services/scheduledReportService.js";
 import { getExperience, saveDailySummary } from "../services/experienceService.js";
 import * as tabularReports from "../controllers/tabularReportController.js";
 import * as integrations from "../controllers/integrationController.js";
@@ -14,6 +15,7 @@ const asyncHandler = (handler) => (req, res, next) =>
   Promise.resolve()
     .then(() => handler(req, res, next))
     .catch(next);
+router.get("/integrations/health", auth, requireOwner, asyncHandler(integrations.health));
 router.get("/integrations", auth, requireOwner, asyncHandler(integrations.list));
 router.post("/integrations", auth, requireOwner, asyncHandler(integrations.create));
 router.get("/integrations/:id/history", auth, requireOwner, asyncHandler(integrations.history));
@@ -21,11 +23,24 @@ router.post(
   "/integrations/:id/preview",
   auth,
   requireOwner,
+  importPreviewRateLimit,
   express.raw({ type: "text/csv", limit: "5mb" }),
   asyncHandler(integrations.preview)
 );
-router.post("/integrations/:id/jobs/:jobId/mapping", auth, requireOwner, asyncHandler(integrations.mapping));
-router.post("/integrations/:id/jobs/:jobId/confirm", auth, requireOwner, asyncHandler(integrations.confirm));
+router.post(
+  "/integrations/:id/jobs/:jobId/mapping",
+  auth,
+  requireOwner,
+  importActionRateLimit,
+  asyncHandler(integrations.mapping)
+);
+router.post(
+  "/integrations/:id/jobs/:jobId/confirm",
+  auth,
+  requireOwner,
+  importActionRateLimit,
+  asyncHandler(integrations.confirm)
+);
 router.get("/copilot/context", auth, asyncHandler(copilot.context));
 router.post("/copilot/ask", auth, asyncHandler(copilot.ask));
 router.get("/copilot/threads", auth, asyncHandler(copilot.threads));
@@ -45,6 +60,32 @@ router.get(
 router.get("/reports/table", auth, asyncHandler(tabularReports.report));
 router.get("/reports/table.csv", auth, asyncHandler(tabularReports.exportReport("csv")));
 router.get("/reports/table.xlsx", auth, asyncHandler(tabularReports.exportReport("xlsx")));
+router.get(
+  "/reports/schedules",
+  auth,
+  requireOwner,
+  asyncHandler((req, res) => res.set("Cache-Control", "no-store").json(scheduledReports.listReportSchedules(req.user)))
+);
+router.post(
+  "/reports/schedules",
+  auth,
+  requireOwner,
+  asyncHandler((req, res) => res.status(201).json(scheduledReports.createReportSchedule(req.user, req.body)))
+);
+router.patch(
+  "/reports/schedules/:id",
+  auth,
+  requireOwner,
+  asyncHandler((req, res) => res.json(scheduledReports.setReportSchedule(req.user, req.params.id, req.body)))
+);
+router.get(
+  "/reports/scheduled/:id",
+  auth,
+  requireOwner,
+  asyncHandler((req, res) =>
+    res.set("Cache-Control", "no-store").json(scheduledReports.getScheduledReport(req.user, req.params.id))
+  )
+);
 router.get("/reports/executive", auth, asyncHandler(copilot.executive));
 router.get("/reports/export.csv", auth, asyncHandler(copilot.exportCsv));
 router.get("/reports/daily", auth, asyncHandler(copilot.report));

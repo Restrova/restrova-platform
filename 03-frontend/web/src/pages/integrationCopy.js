@@ -1,5 +1,14 @@
 export const integrationCopy = {
   ar: {
+    health: "حالة المصادر",
+    manual: "استيراد يدوي",
+    lastImport: "آخر استيراد ناجح",
+    none: "لم يتم بعد",
+    records: "السجلات المستوردة",
+    nextSync: "التحديث التالي",
+    needs_review: "يحتاج مراجعة",
+    imported: "تم الاستيراد",
+    awaiting_import: "بانتظار أول استيراد",
     title: "مصادر البيانات",
     intro: "اربط ملفات الأنظمة الخارجية ببيانات مطعمك، واحفظ ربط الأعمدة للاستيراد التالي.",
     owner: "إدارة المصادر متاحة لمالك المطعم.",
@@ -33,6 +42,15 @@ export const integrationCopy = {
     cancelled: "ملغي"
   },
   en: {
+    health: "Source health",
+    manual: "Manual import",
+    lastImport: "Last successful import",
+    none: "Not yet",
+    records: "Imported records",
+    nextSync: "Next update",
+    needs_review: "Needs review",
+    imported: "Imported",
+    awaiting_import: "Awaiting first import",
     title: "Data sources",
     intro: "Map external system exports into restaurant data and reuse column mappings on the next import.",
     owner: "Only restaurant owners can manage sources.",
@@ -66,6 +84,15 @@ export const integrationCopy = {
     cancelled: "Cancelled"
   },
   zh: {
+    health: "来源状态",
+    manual: "手动导入",
+    lastImport: "上次成功导入",
+    none: "尚未导入",
+    records: "已导入记录",
+    nextSync: "下次更新",
+    needs_review: "需要审核",
+    imported: "已导入",
+    awaiting_import: "等待首次导入",
     title: "数据来源",
     intro: "将外部系统导出的文件映射到餐厅数据，并在下次导入时复用列映射。",
     owner: "仅餐厅所有者可管理来源。",

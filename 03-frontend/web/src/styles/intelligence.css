@@ -435,3 +435,25 @@ html[lang="zh-CN"] .intelligence-page {
     min-width: 0;
   }
 }
+
+.report-brand {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding-block: 1rem;
+  border-bottom: 2px solid #234d40;
+}
+.report-brand h2 {
+  margin-block: 0.5rem;
+}
+.report-brand strong {
+  letter-spacing: 0.16em;
+  color: #234d40;
+}
+.report-schedule {
+  padding: 1rem;
+  margin-block: 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 1rem;
+  overflow-wrap: anywhere;
+}

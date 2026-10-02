@@ -17,3 +17,5 @@ export const mapping = (req, res) =>
 export const confirm = (req, res) =>
   send(res, service.confirmConnector(req.user, req.params.id, req.params.jobId, req.body, req.requestId));
 export const history = (req, res) => send(res, service.connectorHistory(req.user, req.params.id));
+
+export const health = (req, res) => send(res, service.connectorHealth(req.user));
