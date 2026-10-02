@@ -503,3 +503,24 @@
     display: none;
   }
 }
+@media (max-width: 480px) {
+  .login--premium .brand {
+    gap: 7px;
+  }
+  .login--premium .brand > span:first-child {
+    width: 32px;
+    height: 32px;
+  }
+  .login--premium .login-brand-name b {
+    font-size: 22px;
+  }
+  .login--premium .login-brand-name small {
+    display: none;
+  }
+  .login--premium .language-switcher select {
+    max-width: 96px;
+  }
+  .login--premium .auth-toolbar {
+    gap: 12px;
+  }
+}
