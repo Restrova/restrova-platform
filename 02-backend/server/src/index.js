@@ -1,4 +1,5 @@
 import "dotenv/config";
+import { startReportScheduler } from "./services/scheduledReportService.js";
 import { createApp } from "./app.js";
 import { config } from "./config/appConfig.js";
 import { getAiRuntimeStatus } from "./ai.js";
@@ -9,6 +10,7 @@ import { logInfo } from "./observability/logger.js";
 const app = createApp();
 
 if (!config.isTest) {
+  startReportScheduler();
   app.listen(config.port, () => {
     const ai = getAiRuntimeStatus();
     console.log(`API listening on http://localhost:${config.port}`);

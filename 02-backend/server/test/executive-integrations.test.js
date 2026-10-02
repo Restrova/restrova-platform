@@ -179,3 +179,44 @@ test("connector boundaries reject foreign owners, branch roles, arbitrary adapte
   assert.equal(invalid.payload.confirmationToken, null);
   assert.equal((await f.get("/data/revision")).payload.revision, 0);
 });
+test("source health exposes manual state, review errors and confirmed totals without tenant leakage", async (t) => {
+  const f = await fixture(t),
+    created = await f.post("/integrations", { name: "Health", templateKey: "costs" }),
+    id = created.payload.id;
+  let health = await f.get("/integrations/health");
+  const initial = health.payload.sources.find((s) => s.id === id);
+  assert.equal(initial.status, "awaiting_import");
+  assert.equal(initial.liveConnection, false);
+  assert.equal(initial.nextSyncAt, null);
+  const preview = await request(f.server, `/integrations/${id}/preview?filename=costs.csv`, {
+    token: f.owner.token,
+    method: "POST",
+    raw: "item_code,direct_food_cost,effective_from\nITEM,-2,2025-01-01T00:00:00Z"
+  });
+  assert.equal(preview.status, 201);
+  const valid = await request(f.server, `/integrations/${id}/preview?filename=costs.csv`, {
+    token: f.owner.token,
+    method: "POST",
+    raw: "item_code,direct_food_cost,effective_from\nITEM,2,2025-01-01T00:00:00Z"
+  });
+  assert.ok(valid.payload.confirmationToken);
+  const confirmed = await f.post(`/integrations/${id}/jobs/${valid.payload.id}/confirm`, {
+    confirmationToken: valid.payload.confirmationToken
+  });
+  assert.equal(confirmed.status, 200);
+  const success = (await f.get("/integrations/health")).payload.sources.find((s) => s.id === id);
+  assert.equal(success.status, "imported");
+  assert.equal(success.importedRows, 1);
+  assert.ok(success.lastImportAt);
+  await request(f.server, `/integrations/${id}/preview?filename=costs.csv`, {
+    token: f.owner.token,
+    method: "POST",
+    raw: "item_code,direct_food_cost,effective_from\nITEM,-2,2025-01-01T00:00:00Z"
+  });
+  health = await f.get("/integrations/health");
+  assert.equal(health.payload.sources.find((s) => s.id === id).status, "needs_review");
+  const other = await account(f.server),
+    foreign = await request(f.server, "/integrations/health", { token: other.token });
+  assert.equal(foreign.payload.sources.length, 0);
+  assert.equal((await request(f.server, "/integrations/health", { token: roleToken(f.owner, "viewer") })).status, 403);
+});

@@ -16,24 +16,43 @@ function clientKey(req) {
   return req.user?.owner_id ? `user:${req.user.owner_id}` : req.ip || req.socket?.remoteAddress || "unknown";
 }
 
-export function createRateLimiter({ windowMs, max, message }) {
+export function createRateLimiter({ windowMs, max, message, maxBuckets = 10000, now = Date.now }) {
+  if (
+    !Number.isInteger(windowMs) ||
+    windowMs < 1 ||
+    !Number.isInteger(max) ||
+    max < 1 ||
+    !Number.isInteger(maxBuckets) ||
+    maxBuckets < 1
+  )
+    throw new Error("Invalid rate limit configuration");
   const buckets = new Map();
+  let nextPruneAt = 0;
   return (req, res, next) => {
-    const now = Date.now();
-    const endpoint = req.route?.path || req.path || req.baseUrl;
-    const key = `${clientKey(req)}:${req.baseUrl || ""}:${endpoint}`;
-    const bucket = buckets.get(key);
-    if (!bucket || bucket.resetAt <= now) {
-      buckets.set(key, { count: 1, resetAt: now + windowMs });
-      res.setHeader("RateLimit-Limit", String(max));
-      res.setHeader("RateLimit-Remaining", String(Math.max(max - 1, 0)));
-      return next();
+    const time = now();
+    if (time >= nextPruneAt) {
+      for (const [key, bucket] of buckets) if (bucket.resetAt <= time) buckets.delete(key);
+      nextPruneAt = time + Math.min(windowMs, 60000);
     }
-    bucket.count += 1;
+    // One bucket per client per limiter: varying a path/query cannot bypass the limit.
+    const key = clientKey(req);
+    let bucket = buckets.get(key);
+    if (!bucket || bucket.resetAt <= time) {
+      if (!bucket && buckets.size >= maxBuckets) {
+        res.setHeader("Retry-After", String(Math.max(1, Math.ceil((nextPruneAt - time) / 1000))));
+        return next(rateLimited(message));
+      }
+      bucket = { count: 0, resetAt: time + windowMs };
+      buckets.set(key, bucket);
+    }
+    bucket.count++;
     res.setHeader("RateLimit-Limit", String(max));
     res.setHeader("RateLimit-Remaining", String(Math.max(max - bucket.count, 0)));
     res.setHeader("RateLimit-Reset", String(Math.ceil(bucket.resetAt / 1000)));
-    if (bucket.count > max) return next(rateLimited(message));
+    if (bucket.count > max) {
+      res.setHeader("Retry-After", String(Math.max(1, Math.ceil((bucket.resetAt - time) / 1000))));
+      return next(rateLimited(message));
+    }
     return next();
   };
 }

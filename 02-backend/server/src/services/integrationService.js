@@ -127,3 +127,36 @@ export function connectorHistory(user, id) {
       .map((item) => getStagedImportJob(user, item.id))
   };
 }
+
+export function connectorHealth(user) {
+  owner(user);
+  const rows = db
+    .prepare(
+      `SELECT c.id,c.name,
+    MAX(CASE WHEN j.status='confirmed' THEN j.confirmed_at END) AS last_import_at,
+    COALESCE(SUM(CASE WHEN j.status='confirmed' THEN j.imported_rows ELSE 0 END),0) AS imported_rows,
+    (SELECT j2.rejected_rows FROM integration_runs r2 JOIN import_jobs j2 ON j2.id=r2.import_job_id WHERE r2.connector_id=c.id ORDER BY r2.id DESC LIMIT 1) AS rejected_rows,
+    (SELECT j2.status FROM integration_runs r2 JOIN import_jobs j2 ON j2.id=r2.import_job_id WHERE r2.connector_id=c.id ORDER BY r2.id DESC LIMIT 1) AS latest_status
+    FROM integration_connectors c LEFT JOIN integration_runs r ON r.connector_id=c.id LEFT JOIN import_jobs j ON j.id=r.import_job_id
+    WHERE c.organization_id=? AND c.restaurant_id=? GROUP BY c.id ORDER BY c.id DESC LIMIT 100`
+    )
+    .all(user.organization_id, user.restaurant_id);
+  return {
+    sources: rows.map((row) => ({
+      id: row.id,
+      name: row.name,
+      liveConnection: false,
+      mode: "file_import",
+      status:
+        row.rejected_rows > 0 && row.latest_status === "preview_ready"
+          ? "needs_review"
+          : row.last_import_at
+            ? "imported"
+            : "awaiting_import",
+      lastImportAt: row.last_import_at,
+      importedRows: row.imported_rows,
+      rejectedRows: row.rejected_rows || 0,
+      nextSyncAt: null
+    }))
+  };
+}

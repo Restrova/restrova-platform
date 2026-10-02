@@ -36,6 +36,11 @@ function Workspace({ scopeKey, copy: c, locale }) {
     queryFn: ({ signal }) => api("/integrations", { signal }),
     retry: false
   });
+  const health = useQuery({
+    queryKey: ["integration-health", scopeKey],
+    queryFn: ({ signal }) => api("/integrations/health", { signal }),
+    retry: false
+  });
   const history = useQuery({
     queryKey: ["integration-history", scopeKey, selected],
     queryFn: ({ signal }) => api(`/integrations/${selected}/history`, { signal }),
@@ -48,6 +53,7 @@ function Workspace({ scopeKey, copy: c, locale }) {
     try {
       await task();
       await client.invalidateQueries({ queryKey: ["integration-history"] });
+      await client.invalidateQueries({ queryKey: ["integration-health", scopeKey] });
     } catch {
       setError(true);
     } finally {
@@ -63,7 +69,32 @@ function Workspace({ scopeKey, copy: c, locale }) {
       <h1>{c.title}</h1>
       <p>{c.intro}</p>
       <Link to="/app/imports">{c.imports}</Link>
-      {(error || list.isError || history.isError) && <p role="alert">{c.error}</p>}
+      {(error || list.isError || history.isError || health.isError) && <p role="alert">{c.error}</p>}
+      <section aria-label={c.health}>
+        <h2>{c.health}</h2>
+        {health.data?.sources?.map((row) => (
+          <article className="report-schedule" key={row.id}>
+            <h3>{row.name}</h3>
+            <p>
+              {c[row.status]} · {c.manual}
+            </p>
+            <p>
+              {c.lastImport}:{" "}
+              {row.lastImportAt
+                ? new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(
+                    new Date(row.lastImportAt.endsWith("Z") ? row.lastImportAt : row.lastImportAt + "Z")
+                  )
+                : c.none}
+            </p>
+            <p>
+              {c.records}: {row.importedRows} · {c.rejected}: {row.rejectedRows}
+            </p>
+            <p>
+              {c.nextSync}: {c.manual}
+            </p>
+          </article>
+        ))}
+      </section>
       <form
         className="intelligence-toolbar"
         onSubmit={(e) => {

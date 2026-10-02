@@ -55,6 +55,7 @@ beforeEach(() => {
   auth.user.role = "owner";
   restaurant.selectedBranchId = "101";
   api.mockImplementation(async (path, options) => {
+    if (path === "/reports/schedules") return { schedules: [], runs: [] };
     if (path.includes("/evidence/")) return { source: { data: { ledgerId: "IMPORTED-EVIDENCE" } } };
     if (path === "/copilot/threads")
       return { threads: [{ id: 1, title: "Saved question", scope: "branch", branchId: 101, version: 1 }] };
