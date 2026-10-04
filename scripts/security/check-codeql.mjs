@@ -10,7 +10,10 @@ export function evaluateCodeql(report) {
     if (!Array.isArray(run.results) || !Array.isArray(run.tool?.driver?.rules)) throw new Error("Invalid CodeQL run");
     for (const result of run.results) {
       total++;
-      const rule = run.tool.driver.rules.find((entry) => entry.id === result.ruleId);
+      const componentIndex = result.rule?.toolComponent?.index;
+      const component = componentIndex === undefined ? run.tool.driver : run.tool.extensions?.[componentIndex];
+      const ruleId = result.ruleId ?? result.rule?.id;
+      const rule = component?.rules?.find((entry) => entry.id === ruleId);
       if (!rule) throw new Error("Missing result rule metadata");
       const raw = rule.properties?.["security-severity"];
       // Non-security diagnostics are retained for review, not assigned an invented CVSS score.

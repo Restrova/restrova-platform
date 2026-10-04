@@ -16,6 +16,7 @@ COPY 02-backend/server/package.json ./02-backend/server/package.json
 COPY 03-frontend/web/package.json ./03-frontend/web/package.json
 RUN pnpm install --prod --filter server --frozen-lockfile
 COPY 02-backend/server/src ./02-backend/server/src
+COPY 02-backend/server/db ./02-backend/server/db
 COPY 02-backend/server/scripts ./02-backend/server/scripts
 COPY --from=build /app/03-frontend/web/dist ./03-frontend/web/dist
 ENV NODE_ENV=production

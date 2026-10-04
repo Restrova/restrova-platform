@@ -45,3 +45,14 @@ test("container gate accepts clean evidence and rejects missing evidence", () =>
   for (const report of [{}, { SchemaVersion: 2, Results: [] }, container([{ Severity: "HIGH" }])])
     assert.throws(() => evaluateContainer(report));
 });
+
+test("source gate resolves CodeQL extension rule metadata", () => {
+  const report = source(["8"]);
+  const run = report.runs[0];
+  run.tool.extensions = [{ name: "codeql/javascript-queries", rules: run.tool.driver.rules }];
+  run.tool.driver.rules = [];
+  run.results[0].rule = { id: "rule-0", index: 0, toolComponent: { index: 0 } };
+  assert.deepEqual(evaluateCodeql(report), { total: 1, blocking: 1 });
+  run.results[0].rule.toolComponent.index = 1;
+  assert.throws(() => evaluateCodeql(report));
+});

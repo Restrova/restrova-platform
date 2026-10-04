@@ -39,10 +39,9 @@ export function serializeMe(user) {
 
 export function authenticateBearerHeader(authHeader = "") {
   const match = authHeader.match(/^Bearer\s+(.+)$/i);
-  if (!match) throw authRequired();
   let token;
   try {
-    token = jwt.verify(match[1], config.jwt.secret, {
+    token = jwt.verify(match?.[1], config.jwt.secret, {
       algorithms: ["HS256"],
       issuer: config.jwt.issuer,
       audience: config.jwt.audience,
