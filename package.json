@@ -27,10 +27,11 @@
     "test:unit": "pnpm --filter web test",
     "test:integration": "pnpm --filter server test",
     "build": "pnpm --filter web build",
-    "validate": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm test && pnpm build"
+    "validate": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm test && pnpm build",
+    "security:audit": "pnpm audit --audit-level low"
   },
   "devDependencies": {
-    "concurrently": "^9.2.1",
+    "concurrently": "^9.2.3",
     "prettier": "^3.9.6"
   }
 }

@@ -7,3 +7,6 @@ allowBuilds:
 onlyBuiltDependencies:
   - better-sqlite3
   - esbuild
+# GHSA-395f-4hp3-45gv: concurrently still constrains shell-quote to the affected minor.
+overrides:
+  "shell-quote@<1.9.0": ^1.9.0
