@@ -22,6 +22,8 @@ If no fix is available, document containment, exposure, a named owner and a revi
 
 ## 4 October 2026 remediation
 
-The initial production dependency audit reported nine advisories (five high, four moderate). The full-tree fix command addressed 27 advisory findings across production and development dependencies. One high advisory remained in `concurrently > shell-quote`: GHSA-395f-4hp3-45gv. A conditional override resolves affected `shell-quote` versions to the patched 1.9.x range; upstream `concurrently` still constrains the affected minor. Remove this override after the upstream range accepts a safe version, then re-audit.
+The initial production dependency audit reported nine advisories (five high, four moderate). The full-tree fix command addressed 27 advisory findings across production and development dependencies. One high advisory remained in `concurrently > shell-quote`: GHSA-395f-4hp3-45gv. A conditional override resolves affected `shell-quote` versions to the patched >=1.9.0 <2.0.0 range (currently resolved to 1.12.0); upstream `concurrently` still constrains the affected minor. Remove this override after the upstream range accepts a safe version, then re-audit.
 
 Sources: [pnpm audit documentation](https://pnpm.io/cli/audit) and [shell-quote advisory](https://github.com/advisories/GHSA-395f-4hp3-45gv). These sources describe the update mechanism and patched range; the registry results and repository tests provide the project-specific evidence.
+
+Verification on the remediation tree: frozen-lockfile install, `pnpm security:audit` (no known vulnerabilities), `pnpm validate` (154 frontend tests, 227 backend tests, 106 AI evaluations and production build), and parsing both existing dev commands with the patched shell-quote passed. GitHub dependency-security also passed after workspace manifests were included with their corresponding lockfile updates.
