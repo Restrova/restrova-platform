@@ -121,7 +121,7 @@ test("keyboard drawer isolation, locale switch and resize cleanup", async ({ pag
   expect(await page.locator(".app-shell__content").evaluate((node) => node.inert)).toBeFalsy();
   await opener.click();
   await page.setViewportSize({ width: 1440, height: 900 });
-  await expect(dialog).toHaveCount(0);
+  await expect(page.locator(".mobile-drawer")).toHaveCount(0);
   expect(await page.evaluate(() => document.body.style.overflow)).not.toBe("hidden");
 });
 

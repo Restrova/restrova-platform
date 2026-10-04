@@ -54,7 +54,7 @@ export function DataPage() {
   return (
     <section className="simple-page">
       <header>
-        <p className="simple-eyebrow">RESTROVA / DATA</p>
+        <p className="simple-eyebrow">RESTROVA / {c.data}</p>
         <h1>{c.data}</h1>
         <p>{c.dataIntro}</p>
       </header>
@@ -198,7 +198,7 @@ export function SettingsPage() {
   const tab = tabs.includes(params.get("tab")) ? params.get("tab") : "restaurant";
   return (
     <section className="simple-page">
-      <p className="simple-eyebrow">RESTROVA / SETTINGS</p>
+      <p className="simple-eyebrow">RESTROVA / {c.settings}</p>
       <h1>{c.settings}</h1>
       <div className="settings-tabs" role="tablist" aria-label={c.settings}>
         {tabs.map((key) => (

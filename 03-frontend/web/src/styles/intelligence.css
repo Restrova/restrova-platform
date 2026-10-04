@@ -1,5 +1,6 @@
 .intelligence-page {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 1.25rem;
   max-width: 90rem;
   margin-inline: auto;
@@ -137,7 +138,7 @@
   }
   .intelligence-toolbar {
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .intelligence-page {
     gap: 1rem;
@@ -456,4 +457,9 @@ html[lang="zh-CN"] .intelligence-page {
   border: 1px solid var(--color-border);
   border-radius: 1rem;
   overflow-wrap: anywhere;
+}
+
+.intelligence-page > *,
+.intelligence-page .ui-card {
+  min-inline-size: 0;
 }
