@@ -376,3 +376,47 @@
     transition: none !important;
   }
 }
+
+/* Directional controls follow the reading direction; charts retain data order. */
+.directional-arrow {
+  display: inline-block;
+  flex-shrink: 0;
+}
+[dir="rtl"] .directional-arrow {
+  transform: scaleX(-1);
+}
+.simple-page,
+.simple-kpi,
+.simple-kpi > span,
+.simple-kpi strong,
+.data-status-name,
+.settings-facts dd {
+  min-inline-size: 0;
+}
+.simple-kpi {
+  gap: 12px;
+}
+.settings-facts dd {
+  margin-inline-start: 0;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 700px) {
+  .simple-kpi {
+    flex-wrap: wrap;
+  }
+  .simple-kpi strong {
+    max-inline-size: 100%;
+  }
+  .simple-attention {
+    flex-wrap: wrap;
+  }
+  .settings-branch-card {
+    flex-wrap: wrap;
+  }
+  .simple-chart {
+    overscroll-behavior-inline: contain;
+  }
+  .simple-manual input {
+    font-size: 1rem;
+  }
+}

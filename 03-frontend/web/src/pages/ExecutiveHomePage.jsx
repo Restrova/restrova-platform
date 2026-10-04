@@ -113,7 +113,7 @@ export function ExecutiveHomePage() {
           <Link to={`/app/${path}`} className="simple-kpi" key={label}>
             <span>
               {label}
-              <ArrowUpRight size={18} />
+              <ArrowUpRight className="directional-arrow" size={18} aria-hidden="true" />
             </span>
             <strong>{value}</strong>
           </Link>
@@ -123,13 +123,20 @@ export function ExecutiveHomePage() {
       {data.alert && (
         <Link className="simple-attention" to="/app/alerts">
           <strong>{c.important}</strong>
-          <span>{data.alert.snapshot?.title || c.details} →</span>
+          <span>
+            {data.alert.snapshot?.title || c.details}{" "}
+            <span className="directional-arrow" aria-hidden="true">
+              →
+            </span>
+          </span>
         </Link>
       )}
       <Link className="simple-ask" to="/app/assistant">
         <Sparkles size={23} />
         {c.ask}
-        <span aria-hidden="true">→</span>
+        <span className="directional-arrow" aria-hidden="true">
+          →
+        </span>
       </Link>
       <section className="simple-panel">
         <h2>{c.trend}</h2>
@@ -173,7 +180,12 @@ export function ExecutiveHomePage() {
                 : c.noAlert}
           </p>
           {action?.item?.name && <p>{action.item.name}</p>}
-          <Link to={action ? "/app/recommendations" : "/app/data"}>{c.details} →</Link>
+          <Link to={action ? "/app/recommendations" : "/app/data"}>
+            {c.details}{" "}
+            <span className="directional-arrow" aria-hidden="true">
+              →
+            </span>
+          </Link>
         </div>
       </section>
     </section>
