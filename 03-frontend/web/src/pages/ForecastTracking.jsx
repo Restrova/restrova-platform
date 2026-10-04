@@ -67,7 +67,7 @@ export function ForecastTracking({ filters, locale, money, branchId, branches = 
           {message && <p role="status">{message}</p>}
           {(failed || scores.isError || seasons.isError) && <p role="alert">{c.error}</p>}
           {scores.isPending && <p>{c.loading}</p>}
-          <div className="operations-table-scroll">
+          <div className="operations-table-scroll" tabIndex={0} role="region" aria-label={c.accuracy}>
             <table className="operations-table">
               <thead>
                 <tr>

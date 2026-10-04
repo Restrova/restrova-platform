@@ -139,7 +139,7 @@ export function DecisionEvidence({ rec, currency }) {
 export function ScenarioResults({ result, currency }) {
   const { c, money } = useMoney(currency);
   return (
-    <div className="operations-table-scroll">
+    <div className="operations-table-scroll" tabIndex={0} role="region" aria-label={c.projected}>
       <table className="operations-table">
         <thead>
           <tr>

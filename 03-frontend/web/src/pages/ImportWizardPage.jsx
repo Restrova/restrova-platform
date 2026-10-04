@@ -282,7 +282,7 @@ function DatasetEvaluation({ evaluation, locale, onReset, onFinish, supportsRepo
       {evaluation.numericColumns?.length > 0 && (
         <details className="import-manual-choice import-evaluation-columns">
           <summary>{tr("View detailed statistics (optional)")}</summary>
-          <div className="import-table-wrap">
+          <div className="import-table-wrap" tabIndex={0} role="region" aria-label={tr("Preview")}>
             <table className="import-table import-evaluation-table">
               <thead>
                 <tr>
@@ -359,7 +359,7 @@ function MappingEditor({ job, mappings, onChange, onSave, loading }) {
         </Badge>
       </div>
       <Card>
-        <CardContent className="import-table-wrap">
+        <CardContent className="import-table-wrap" tabIndex={0} role="region" aria-label={tr("Import restaurant data")}>
           <table className="import-table">
             <thead>
               <tr>
@@ -450,7 +450,7 @@ function IssueTable({ title, rows, warning = false }) {
             : tr("Fix these rows and upload again before confirming.")}
         </CardDescription>
       </CardHeader>
-      <CardContent className="import-table-wrap">
+      <CardContent className="import-table-wrap" tabIndex={0} role="region" aria-label={tr("Import restaurant data")}>
         <table className="import-table">
           <thead>
             <tr>
@@ -534,7 +534,7 @@ function PreviewTable({ job }) {
         </div>
       </div>
       <Card>
-        <CardContent className="import-table-wrap">
+        <CardContent className="import-table-wrap" tabIndex={0} role="region" aria-label={tr("Import restaurant data")}>
           <table className="import-table import-table--preview">
             <thead>
               <tr>

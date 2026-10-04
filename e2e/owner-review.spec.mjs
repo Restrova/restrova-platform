@@ -101,6 +101,18 @@ test("owner pages render across language and viewport matrix", async ({ page, re
         const width = await name.evaluate((node) => node.getBoundingClientRect().width);
         expect(width, "Long branch names need usable reading width").toBeGreaterThan(100);
       }
+      if (route === "forecasts" || route === "sales-comparison") {
+        for (const table of await page.locator(".operations-table").all()) {
+          expect(await table.evaluate((node) => node.getBoundingClientRect().width)).toBeGreaterThanOrEqual(600);
+        }
+      }
+      if (route === "team") {
+        const status = page.locator(".ui-card__header .ui-badge").last();
+        expect(await status.evaluate((node) => node.getBoundingClientRect().height)).toBeLessThan(80);
+      }
+      if (route === "workspace" && locale === "zh-CN") {
+        await expect(page.getByRole("button", { name: "分析我导入的数据", exact: true })).toBeVisible();
+      }
       if (route === "imports") {
         await expect(page.locator(".import-page__header h1")).toHaveText(
           locale === "ar" ? "استيراد بيانات المطعم" : locale === "zh-CN" ? "导入餐厅数据" : "Import restaurant data"

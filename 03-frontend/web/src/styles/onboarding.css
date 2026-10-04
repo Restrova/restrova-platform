@@ -438,3 +438,16 @@
     justify-self: start;
   }
 }
+
+.management-page .ui-card__header {
+  flex-wrap: wrap;
+}
+
+.management-page .ui-card__header > div:first-child {
+  flex: 1 1 10rem;
+  min-inline-size: 0;
+}
+
+.management-page .ui-card__header > div + div {
+  flex: 0 0 auto;
+}

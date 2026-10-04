@@ -200,3 +200,19 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Keep table columns readable; the named region owns horizontal scrolling. */
+.operations-table {
+  min-inline-size: 40rem;
+}
+
+.operations-table th:first-child,
+.operations-table td:first-child {
+  min-inline-size: 10rem;
+}
+
+.operations-table button {
+  min-inline-size: 12rem;
+  max-inline-size: 18rem;
+  white-space: normal;
+}

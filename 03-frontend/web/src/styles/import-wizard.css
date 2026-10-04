@@ -521,3 +521,20 @@
     justify-self: start;
   }
 }
+
+/* Wide preview tables scroll within their cards instead of widening the page. */
+.import-page,
+.import-section {
+  grid-template-columns: minmax(0, 1fr);
+  min-inline-size: 0;
+}
+
+.import-page {
+  inline-size: 100%;
+}
+
+.import-page .ui-card,
+.import-table-wrap {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}

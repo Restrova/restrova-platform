@@ -122,7 +122,7 @@ const zh = {
   disclaimer: "数据来自当前分店。请在执行建议前进行审核。",
   sendError: "消息发送失败，请重试。",
   malformed: "回复不完整，请重试。",
-  prompts: ["Analyze my imported data", "Which dishes sell best?", "What needs my attention?"],
+  prompts: ["分析我导入的数据", "哪些菜品最畅销？", "哪些事项需要我关注？"],
   feedback: "回复是否准确且有帮助？",
   approve: "有帮助",
   correct: "纠正",
