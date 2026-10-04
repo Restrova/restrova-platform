@@ -12,12 +12,12 @@
   },
   "dependencies": {
     "@tanstack/react-query": "^5.101.4",
-    "@vitejs/plugin-react": "^5.0.2",
+    "@vitejs/plugin-react": "^5.2.0",
     "lucide-react": "^0.542.0",
-    "react": "^19.1.1",
-    "react-dom": "^19.1.1",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
     "react-router-dom": "^7.18.2",
-    "vite": "^7.1.5"
+    "vite": "^7.3.6"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -30,6 +30,6 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "globals": "^17.8.0",
     "jsdom": "^30.0.1",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.11"
   }
 }
