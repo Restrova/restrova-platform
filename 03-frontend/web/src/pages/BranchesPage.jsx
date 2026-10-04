@@ -236,8 +236,12 @@ export function BranchesPage() {
                 </div>
                 <div className="management-list-item__body">
                   <div className="management-list-item__title">
-                    <strong>{branch.name}</strong>
-                    <Badge>{branch.code}</Badge>
+                    <strong>
+                      <bdi>{branch.name}</bdi>
+                    </strong>
+                    <Badge>
+                      <bdi>{branch.code}</bdi>
+                    </Badge>
                   </div>
                   <span>
                     <MapPin size={14} /> {branch.city}

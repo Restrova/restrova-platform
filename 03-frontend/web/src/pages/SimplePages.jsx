@@ -239,11 +239,11 @@ export function SettingsPage() {
               </div>
               <div>
                 <dt>{c.currency}</dt>
-                <dd>{auth.session?.restaurant?.currency || "—"}</dd>
+                <dd>{auth.session?.organization?.currency || "—"}</dd>
               </div>
               <div>
                 <dt>{c.timezone}</dt>
-                <dd>{auth.session?.restaurant?.timezone || "—"}</dd>
+                <dd>{auth.session?.organization?.timezone || "—"}</dd>
               </div>
             </dl>
             {owner && (

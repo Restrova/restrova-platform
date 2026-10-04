@@ -20,7 +20,7 @@ Implementation owner: frontend maintenance. Backend permissions, API queries, im
 
 ## Completed verification
 
-`pnpm validate` passed: lint, repository formatting, frontend tests (154), backend tests (227), AI evaluations (106), and production build. The repository's typecheck script invokes workspace checks only where configured; it is not a claim of full TypeScript coverage.
+`pnpm validate` passed: lint, repository formatting, frontend tests (156), backend tests (227), AI evaluations (106), and production build. The repository's typecheck script invokes workspace checks only where configured; it is not a claim of full TypeScript coverage.
 
 Translation parity and nonempty values were checked for the shared dictionary and nine page/legacy copy groups in Arabic and Chinese. This checks completeness, not native-speaker linguistic approval.
 
@@ -37,15 +37,18 @@ The fixture creates isolated restaurants through the real registration API and u
 
 Additional findings from actual traces/screenshots:
 
-| Finding                                                                             | Severity | Fix                                                                           | Verification                                                                  |
-| ----------------------------------------------------------------------------------- | -------- | ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| Vite development startup crashed on React lazy initialization                       | High     | Import React lazy before route declarations                                   | Every owner route renders without page errors                                 |
-| Import, branch and team pages nested main landmarks and duplicated the skip-link ID | Medium   | Use sections inside the shell's single main landmark                          | Matrix locates one main target and verifies its width                         |
-| Sales comparison and Forecasts clipped their grids on narrow screens                | High     | Bound grid tracks and card minimum sizes; stack narrow comparison metrics     | All three locales pass main/document width checks                             |
-| Large Arabic KPI amounts split decimal digits across lines                          | High     | Size values against their card width, prevent wrapping, and isolate bidi text | Real 9,999,999,999.99 CNY fixture fits without clipping                       |
-| Sidebar role and route-state screens exposed English labels                         | Medium   | Shared role translations and localized session/404/permission states          | Translation parity, unit checks and locale matrix                             |
-| WebKit resize hid the drawer before desktop cleanup completed                       | Medium   | Layout-phase cleanup plus a resize listener; test actual DOM unmount          | Touch WebKit returns focus, clears inert and releases scrolling               |
-| Safe-area CSS lacked viewport-fit activation and lateral padding                    | Medium   | Activate viewport-fit and respect top/side/bottom insets                      | Configuration/CSS review; hardware inset verification remains a release check |
+| Finding                                                                             | Severity | Fix                                                                                                                 | Verification                                                                  |
+| ----------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| Vite development startup crashed on React lazy initialization                       | High     | Import React lazy before route declarations                                                                         | Every owner route renders without page errors                                 |
+| Import, branch and team pages nested main landmarks and duplicated the skip-link ID | Medium   | Use sections inside the shell's single main landmark                                                                | Matrix locates one main target and verifies its width                         |
+| Sales comparison and Forecasts clipped their grids on narrow screens                | High     | Bound grid tracks and card minimum sizes; stack narrow comparison metrics                                           | All three locales pass main/document width checks                             |
+| Large Arabic KPI amounts split decimal digits across lines                          | High     | Size values against their card width, prevent wrapping, and isolate bidi text                                       | Real 9,999,999,999.99 CNY fixture fits without clipping                       |
+| Sidebar role and route-state screens exposed English labels                         | Medium   | Shared role translations and localized session/404/permission states                                                | Translation parity, unit checks and locale matrix                             |
+| WebKit resize hid the drawer before desktop cleanup completed                       | Medium   | Layout-phase cleanup plus a resize listener; test actual DOM unmount                                                | Touch WebKit returns focus, clears inert and releases scrolling               |
+| Import wizard exposed English labels after locale selection                         | Medium   | Translate upload, mapping, validation, confirmation and completion labels, including standard template descriptions | Arabic/Chinese confirmation regressions and real CSV browser flow             |
+| Long branch names collapsed into a one-character column on phones                   | High     | Wrap name/code within the available width and move the edit control to a separate row                               | Browser check enforces usable name width across the matrix                    |
+| Settings showed empty currency and timezone despite configured values               | Medium   | Read organization currency/timezone from the actual session API contract                                            | Real registration verifies CNY and Asia/Shanghai in Settings                  |
+| Safe-area CSS lacked viewport-fit activation and lateral padding                    | Medium   | Activate viewport-fit and respect top/side/bottom insets                                                            | Configuration/CSS review; hardware inset verification remains a release check |
 
 ## Limits and release follow-up
 

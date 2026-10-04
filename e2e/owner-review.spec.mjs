@@ -92,6 +92,20 @@ test("owner pages render across language and viewport matrix", async ({ page, re
       await expect(page.locator(".app-topbar h1")).toBeVisible();
       await page.waitForLoadState("networkidle");
       await checkLayout(page, locale);
+      if (route === "settings") {
+        await expect(page.locator(".settings-facts")).toContainText("CNY");
+        await expect(page.locator(".settings-facts")).toContainText("Asia/Shanghai");
+      }
+      if (route === "branches") {
+        const name = page.locator(".management-list-item__title strong").first();
+        const width = await name.evaluate((node) => node.getBoundingClientRect().width);
+        expect(width, "Long branch names need usable reading width").toBeGreaterThan(100);
+      }
+      if (route === "imports") {
+        await expect(page.locator(".import-page__header h1")).toHaveText(
+          locale === "ar" ? "استيراد بيانات المطعم" : locale === "zh-CN" ? "导入餐厅数据" : "Import restaurant data"
+        );
+      }
       await page.screenshot({
         scale: "css",
         type: "jpeg",
@@ -241,4 +255,51 @@ test("large amounts reflow and API failures remain usable", async ({ page, reque
   await page.unroute("**/api/experience/overview*");
   await page.getByRole("alert").locator("..").getByRole("button").click();
   await expect(page.locator(".simple-kpi")).toHaveCount(3);
+});
+
+test("localized staged import validates and confirms real CSV data", async ({ page, request }, testInfo) => {
+  const locale = await signIn(page, request, testInfo);
+  const copy = {
+    ar: {
+      upload: "تحليل الملف وتقييمه",
+      validation: "نتائج التحقق",
+      confirm: "تأكيد الاستيراد",
+      complete: "اكتمل الاستيراد"
+    },
+    en: {
+      upload: "Analyze and evaluate file",
+      validation: "Validation results",
+      confirm: "Confirm import",
+      complete: "Import completed"
+    },
+    "zh-CN": { upload: "分析并评估文件", validation: "验证结果", confirm: "确认导入", complete: "导入完成" }
+  }[locale];
+  await page.goto("/app/imports");
+  await expect(page.getByRole("button", { name: copy.upload })).toBeVisible();
+  await page.locator('input[type="file"]').setInputFiles({
+    name: "branches.csv",
+    mimeType: "text/csv",
+    buffer: Buffer.from("branch_code,name,city\nREVIEW,Reviewed branch — فرع المراجعة — 审核分店,Guangzhou\n")
+  });
+  await page.getByRole("button", { name: copy.upload }).click();
+  await expect(page.getByRole("heading", { name: copy.validation })).toBeVisible();
+  await checkLayout(page, locale);
+  await page.getByRole("button", { name: copy.confirm, exact: true }).scrollIntoViewIfNeeded();
+  await page.screenshot({
+    scale: "css",
+    type: "jpeg",
+    quality: 85,
+    path: testInfo.outputPath("import-confirm.jpg"),
+    fullPage: true
+  });
+  await page.getByRole("button", { name: copy.confirm, exact: true }).click();
+  await expect(page.getByRole("heading", { name: copy.complete })).toBeVisible();
+  await checkLayout(page, locale);
+  await page.screenshot({
+    scale: "css",
+    type: "jpeg",
+    quality: 85,
+    path: testInfo.outputPath("import-complete.jpg"),
+    fullPage: true
+  });
 });
