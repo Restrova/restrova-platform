@@ -28,7 +28,8 @@
     "test:integration": "pnpm --filter server test",
     "build": "pnpm --filter web build",
     "validate": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm test && pnpm build",
-    "security:audit": "pnpm audit --audit-level low"
+    "security:audit": "pnpm audit --audit-level low",
+    "security:test": "node --test scripts/security/*.test.mjs"
   },
   "devDependencies": {
     "concurrently": "^9.2.3",
