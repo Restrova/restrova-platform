@@ -19,6 +19,9 @@ playwright-report/
 *.db-journal
 *.sqlite
 *.sqlite3
+*.restrova-backup
+.restrova-backup-*/
+.restrova-restore-*/
 
 # OS/editor
 .DS_Store

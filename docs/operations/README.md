@@ -24,6 +24,9 @@ Operations documentation belongs here when it affects production readiness.
 
 ## Backup and recovery
 
+- [Encrypted database backup and restore](database-backup-restore.md): operator commands, retention/security policy and controlled recovery tests. Production scheduling and off-service storage still require configuration.
+- [Persistent SQLite on Render](persistent-sqlite-render.md): disk provisioning and migration checks.
+
 Before real restaurant data is stored, create and test:
 
 - Backup schedule.
