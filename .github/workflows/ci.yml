@@ -57,6 +57,9 @@ jobs:
       - name: Type and static checks
         run: pnpm typecheck
 
+      - name: Security scan gate tests
+        run: pnpm security:test
+
       - name: Backend tests
         run: pnpm --filter server test:unit
 
