@@ -2,15 +2,21 @@ services:
   - type: web
     name: ai-restaurant-manager
     runtime: node
-    plan: free
+    plan: starter
+    numInstances: 1
+    region: oregon
+    disk:
+      name: restrova-data
+      mountPath: /var/data
+      sizeGB: 1
     buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm build
     startCommand: pnpm start
-    healthCheckPath: /api/health
-    autoDeployTrigger: commit
+    healthCheckPath: /api/ready
+    autoDeployTrigger: checksPass
     envVars:
       - key: NODE_ENV
         value: production
       - key: JWT_SECRET
-        generateValue: true
+        sync: false
       - key: DATABASE_PATH
-        value: /tmp/restrova/restaurant.db
+        value: /var/data/restrova/restaurant.db
