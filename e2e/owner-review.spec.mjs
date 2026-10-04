@@ -161,6 +161,12 @@ test("large amounts reflow and API failures remain usable", async ({ page, reque
   const locale = await signIn(page, request, testInfo, { populate: true });
   await page.goto("/app/dashboard");
   await expect(page.locator(".simple-kpi")).toHaveCount(3);
+  for (const value of await page.locator(".simple-kpi strong").all()) {
+    expect(
+      await value.evaluate((node) => node.scrollWidth <= node.clientWidth + 1),
+      "Large KPI value must fit without clipping"
+    ).toBeTruthy();
+  }
   await checkLayout(page, locale);
   await page.screenshot({ type: "jpeg", quality: 85, path: testInfo.outputPath("large-amounts.jpg"), fullPage: true });
   await page.setViewportSize({ width: 720, height: 450 });

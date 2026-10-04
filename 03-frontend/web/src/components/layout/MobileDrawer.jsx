@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
 import { X } from "lucide-react";
 import { useLocale } from "../../contexts/LocaleContext.jsx";
 import { useRestaurant } from "../../contexts/RestaurantContext.jsx";
@@ -15,7 +15,7 @@ export function MobileDrawer({ open, onClose }) {
   const panelRef = useRef(null);
   const previousFocus = useRef(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!open) return undefined;
     previousFocus.current = document.activeElement;
     // Keep the background out of keyboard and assistive-technology navigation.

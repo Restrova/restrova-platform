@@ -43,6 +43,7 @@
   margin-block: 20px 10px;
 }
 .simple-kpi {
+  container-type: inline-size;
   background: #fff;
   border: 1px solid #e0e9e5;
   border-radius: 18px;
@@ -59,9 +60,10 @@
 }
 .simple-kpi strong {
   display: block;
-  font-size: clamp(1.45rem, 2.5vw, 2.2rem);
+  font-size: clamp(1rem, 7cqi, 2.2rem);
   margin-block-start: 16px;
-  overflow-wrap: anywhere;
+  white-space: nowrap;
+  overflow-wrap: normal;
 }
 .simple-ask,
 .simple-primary {
@@ -343,7 +345,7 @@
   }
   .simple-kpi strong {
     margin: 0;
-    font-size: 1.7rem;
+    font-size: clamp(1rem, 7cqi, 1.7rem);
   }
   .simple-kpi svg {
     display: none;

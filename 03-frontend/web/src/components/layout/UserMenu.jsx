@@ -21,8 +21,10 @@ export function UserMenu({ compact = false }) {
       <div className="user-menu__identity">
         <UserCircle size={22} aria-hidden="true" />
         <span>
-          <b>{name}</b>
-          {!compact && role && <small>{role}</small>}
+          <b title={name}>
+            <bdi>{name}</bdi>
+          </b>
+          {!compact && role && <small>{t(`team.roles.${role}`)}</small>}
         </span>
       </div>
       <Button variant="ghost" onClick={logout} aria-label={t("navigation.logout")} title={t("navigation.logout")}>

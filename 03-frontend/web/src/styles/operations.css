@@ -1,5 +1,6 @@
 .operations-page {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 1.25rem;
   min-width: 0;
 }
@@ -187,5 +188,15 @@
   .operations-table th,
   .operations-table td {
     padding: 0.65rem;
+  }
+}
+
+.operations-page > *,
+.operations-page .ui-card {
+  min-inline-size: 0;
+}
+@media (max-width: 520px) {
+  .operations-metrics {
+    grid-template-columns: 1fr;
   }
 }
