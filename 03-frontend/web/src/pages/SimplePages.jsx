@@ -6,6 +6,7 @@ import { useRestaurant } from "../contexts/RestaurantContext.jsx";
 import { useLocale } from "../contexts/LocaleContext.jsx";
 import { api } from "../lib/api.js";
 import { announceDataChange } from "../lib/dataRefresh.js";
+import { formatDateTime } from "../lib/formatters.js";
 import { simpleCopy } from "./simpleCopy.js";
 import { LanguageSwitcher } from "../components/layout/LanguageSwitcher.jsx";
 import { Button } from "../components/ui/Button.jsx";
@@ -33,7 +34,10 @@ export function ConnectChoices({ c }) {
   return (
     <div className="connect-choices">
       <Link className="simple-primary" to="/app/integrations">
-        <Link2 size={20} aria-hidden="true" /> {c.connect} <span aria-hidden="true">→</span>
+        <Link2 size={20} aria-hidden="true" /> {c.connect}{" "}
+        <span className="directional-arrow" aria-hidden="true">
+          →
+        </span>
       </Link>
       <p>{c.connectionNote}</p>
       <Link className="simple-secondary" to="/app/imports">
@@ -88,7 +92,10 @@ export function DataPage() {
                   </div>
                 </div>
                 <small>
-                  {c.updated}: <bdi>{query.data.status[key].updatedAt || "—"}</bdi>
+                  {c.updated}:{" "}
+                  <bdi>
+                    {formatDateTime(query.data.status[key].updatedAt, { locale, timezone: query.data.timezone })}
+                  </bdi>
                 </small>
               </article>
             ))}
@@ -179,7 +186,7 @@ function ManualSummary({ c, overview }) {
   );
 }
 export function SettingsPage() {
-  const { locale } = useLocale(),
+  const { locale, direction, t } = useLocale(),
     c = simpleCopy[locale] || simpleCopy.en,
     auth = useAuth(),
     restaurant = useRestaurant(),
@@ -198,6 +205,20 @@ export function SettingsPage() {
           <button
             role="tab"
             aria-selected={tab === key}
+            tabIndex={tab === key ? 0 : -1}
+            onKeyDown={(event) => {
+              const forward = direction === "rtl" ? "ArrowLeft" : "ArrowRight";
+              const backward = direction === "rtl" ? "ArrowRight" : "ArrowLeft";
+              let index = tabs.indexOf(key);
+              if (event.key === forward) index = (index + 1) % tabs.length;
+              else if (event.key === backward) index = (index - 1 + tabs.length) % tabs.length;
+              else if (event.key === "Home") index = 0;
+              else if (event.key === "End") index = tabs.length - 1;
+              else return;
+              event.preventDefault();
+              setParams({ tab: tabs[index] });
+              document.getElementById(`settings-${tabs[index]}`)?.focus();
+            }}
             aria-controls="settings-panel"
             id={`settings-${key}`}
             key={key}
@@ -232,7 +253,10 @@ export function SettingsPage() {
                   <p>{restaurant.selectedBranch?.name || c.restaurant}</p>
                 </div>
                 <Link to="/app/branches">
-                  {c.manage} {c.branches} →
+                  {c.manage} {c.branches}{" "}
+                  <span className="directional-arrow" aria-hidden="true">
+                    →
+                  </span>
                 </Link>
               </div>
             )}
@@ -243,7 +267,10 @@ export function SettingsPage() {
             <h2>{c[tab]}</h2>
             {tab === "integrations" && <p>{c.connectionNote}</p>}
             <Link className="simple-primary" to={`/app/${tab}`}>
-              {c.manage} {c[tab]} →
+              {c.manage} {c[tab]}{" "}
+              <span className="directional-arrow" aria-hidden="true">
+                →
+              </span>
             </Link>
           </>
         )}
@@ -251,8 +278,10 @@ export function SettingsPage() {
         {tab === "account" && (
           <>
             <h2>{auth.user?.name}</h2>
-            <p>{auth.user?.email}</p>
-            <p>{auth.user?.role}</p>
+            <p>
+              <bdi>{auth.user?.email}</bdi>
+            </p>
+            <p>{t(`team.roles.${auth.user?.role}`)}</p>
           </>
         )}
       </section>

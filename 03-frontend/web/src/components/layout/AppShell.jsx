@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Outlet } from "react-router-dom";
 import { useCurrentRoute } from "../../hooks/useCurrentRoute.js";
 import { MobileDrawer } from "./MobileDrawer.jsx";
@@ -19,6 +19,7 @@ export function AppShell() {
   const [collapsed, setCollapsed] = useState(getInitialCollapsed);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const route = useCurrentRoute();
+  const closeDrawer = useCallback(() => setDrawerOpen(false), []);
 
   useEffect(() => {
     localStorage.setItem(SIDEBAR_KEY, collapsed ? "true" : "false");
@@ -28,7 +29,7 @@ export function AppShell() {
     <div className={`app-shell ${collapsed ? "is-sidebar-collapsed" : ""}`.trim()}>
       <SkipLink />
       <Sidebar collapsed={collapsed} onCollapsedChange={setCollapsed} />
-      <MobileDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
+      <MobileDrawer open={drawerOpen} onClose={closeDrawer} />
       <div className="app-shell__content">
         <Topbar onOpenMobileNavigation={() => setDrawerOpen(true)} />
         <PageContainer fullBleed={route.fullBleed}>

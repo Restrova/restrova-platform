@@ -86,6 +86,45 @@ describe("AppShell", () => {
     expect(trigger).toHaveFocus();
   });
 
+  it("keeps drawer focus stable across locale changes and restores background interaction", async () => {
+    renderWithShell();
+    const trigger = await screen.findByRole("button", { name: "فتح التنقل" });
+    await userEvent.click(trigger);
+    const dialog = screen.getByRole("dialog");
+    const switcher = dialog.querySelector(".language-switcher select");
+    switcher.focus();
+    await userEvent.selectOptions(switcher, "zh-CN");
+    expect(switcher).toHaveFocus();
+    expect(document.documentElement.dir).toBe("ltr");
+    expect(document.querySelector(".app-shell__content").inert).toBe(true);
+    await userEvent.keyboard("{Escape}");
+    expect(document.querySelector(".app-shell__content").inert).toBeFalsy();
+    expect(document.body.style.overflow).toBe("");
+    expect(trigger).toHaveFocus();
+  });
+
+  it("closes the mobile drawer when resizing to desktop and releases scroll lock", async () => {
+    let listener;
+    const removeEventListener = vi.fn();
+    vi.stubGlobal(
+      "matchMedia",
+      vi.fn(() => ({
+        addEventListener: (_, callback) => {
+          listener = callback;
+        },
+        removeEventListener
+      }))
+    );
+    renderWithShell();
+    await userEvent.click(await screen.findByRole("button", { name: "فتح التنقل" }));
+    expect(document.body.style.overflow).toBe("hidden");
+    const { act } = await import("@testing-library/react");
+    act(() => listener({ matches: true }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(document.body.style.overflow).toBe("");
+    expect(removeEventListener).toHaveBeenCalled();
+  });
+
   it("mobile bottom navigation has exactly the four primary destinations", async () => {
     renderWithShell();
     await screen.findByText("Outlet content");

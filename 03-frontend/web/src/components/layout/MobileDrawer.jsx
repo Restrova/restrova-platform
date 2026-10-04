@@ -18,6 +18,18 @@ export function MobileDrawer({ open, onClose }) {
   useEffect(() => {
     if (!open) return undefined;
     previousFocus.current = document.activeElement;
+    // Keep the background out of keyboard and assistive-technology navigation.
+    const siblings = [...panelRef.current.parentElement.parentElement.children]
+      .filter((node) => node !== panelRef.current.parentElement)
+      .map((node) => [node, node.inert]);
+    siblings.forEach(([node]) => {
+      node.inert = true;
+    });
+    const desktop = window.matchMedia?.("(min-width: 1024px)");
+    const onViewportChange = (event) => {
+      if (event.matches) onClose();
+    };
+    desktop?.addEventListener("change", onViewportChange);
     const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const focusable = panelRef.current?.querySelector(
@@ -47,6 +59,10 @@ export function MobileDrawer({ open, onClose }) {
     return () => {
       document.removeEventListener("keydown", onKeyDown);
       document.body.style.overflow = originalOverflow;
+      desktop?.removeEventListener("change", onViewportChange);
+      siblings.forEach(([node, inert]) => {
+        node.inert = inert;
+      });
       previousFocus.current?.focus?.();
     };
   }, [onClose, open]);
