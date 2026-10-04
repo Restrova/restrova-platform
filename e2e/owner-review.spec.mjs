@@ -1,8 +1,27 @@
 import { test, expect } from "@playwright/test";
 
-const routes = ["dashboard", "data", "settings", "imports", "assistant", "reports", "profit"];
+const routes = [
+  "dashboard",
+  "data",
+  "settings",
+  "imports",
+  "assistant",
+  "reports",
+  "profit",
+  "today",
+  "branches",
+  "team",
+  "menu-profitability",
+  "sales-comparison",
+  "alerts",
+  "recommendations",
+  "forecasts",
+  "integrations",
+  "workspace"
+];
 async function signIn(page, request, testInfo, { populate = false } = {}) {
-  const locale = testInfo.project.name.split("-")[0];
+  const language = testInfo.project.name.split("-")[0];
+  const locale = language === "zh" ? "zh-CN" : language;
   const response = await request.post("http://127.0.0.1:4000/api/auth/register", {
     data: {
       name: "Owner — مالك المطعم — 餐厅所有者",
@@ -73,7 +92,7 @@ test("owner pages render across language and viewport matrix", async ({ page, re
       await expect(page.locator(".app-topbar h1")).toBeVisible();
       await page.waitForLoadState("networkidle");
       await checkLayout(page, locale);
-      await page.screenshot({ path: testInfo.outputPath(`${route}.png`), fullPage: true });
+      await page.screenshot({ type: "jpeg", quality: 85, path: testInfo.outputPath(`${route}.jpg`), fullPage: true });
     });
   }
   expect(errors).toEqual([]);
@@ -93,9 +112,9 @@ test("keyboard drawer isolation, locale switch and resize cleanup", async ({ pag
   expect(await dialog.evaluate((node) => node.contains(document.activeElement))).toBeTruthy();
   const language = dialog.locator(".language-switcher select");
   await language.focus();
-  await language.selectOption("zh");
+  await language.selectOption("zh-CN");
   await expect(language).toBeFocused();
-  await page.screenshot({ path: testInfo.outputPath("drawer-zh.png"), fullPage: true });
+  await page.screenshot({ type: "jpeg", quality: 85, path: testInfo.outputPath("drawer-zh.jpg"), fullPage: true });
   await page.keyboard.press("Escape");
   await expect(dialog).toHaveCount(0);
   await expect(opener).toBeFocused();
@@ -121,15 +140,21 @@ test("settings tabs follow locale keyboard direction", async ({ page, request },
 });
 
 test("login fits narrow and landscape layouts", async ({ page }, testInfo) => {
-  const locale = testInfo.project.name.split("-")[0];
+  const language = testInfo.project.name.split("-")[0];
+  const locale = language === "zh" ? "zh-CN" : language;
   await page.addInitScript((locale) => localStorage.setItem("locale", locale), locale);
   await page.goto("/login");
   await expect(page.locator("input[type=email]")).toBeVisible();
   await checkLayout(page, locale);
-  await page.screenshot({ path: testInfo.outputPath("login.png"), fullPage: true });
+  await page.screenshot({ type: "jpeg", quality: 85, path: testInfo.outputPath("login.jpg"), fullPage: true });
   await page.setViewportSize({ width: 844, height: 390 });
   await checkLayout(page, locale);
-  await page.screenshot({ path: testInfo.outputPath("login-landscape.png"), fullPage: true });
+  await page.screenshot({
+    type: "jpeg",
+    quality: 85,
+    path: testInfo.outputPath("login-landscape.jpg"),
+    fullPage: true
+  });
 });
 
 test("large amounts reflow and API failures remain usable", async ({ page, request }, testInfo) => {
@@ -137,10 +162,10 @@ test("large amounts reflow and API failures remain usable", async ({ page, reque
   await page.goto("/app/dashboard");
   await expect(page.locator(".simple-kpi")).toHaveCount(3);
   await checkLayout(page, locale);
-  await page.screenshot({ path: testInfo.outputPath("large-amounts.png"), fullPage: true });
+  await page.screenshot({ type: "jpeg", quality: 85, path: testInfo.outputPath("large-amounts.jpg"), fullPage: true });
   await page.setViewportSize({ width: 720, height: 450 });
   await checkLayout(page, locale);
-  await page.screenshot({ path: testInfo.outputPath("reflow-720.png"), fullPage: true });
+  await page.screenshot({ type: "jpeg", quality: 85, path: testInfo.outputPath("reflow-720.jpg"), fullPage: true });
   await page.route("**/api/experience/overview*", (route) =>
     route.fulfill({
       status: 503,
@@ -151,7 +176,7 @@ test("large amounts reflow and API failures remain usable", async ({ page, reque
   await page.reload();
   await expect(page.getByRole("alert")).toBeVisible();
   await checkLayout(page, locale);
-  await page.screenshot({ path: testInfo.outputPath("api-failure.png"), fullPage: true });
+  await page.screenshot({ type: "jpeg", quality: 85, path: testInfo.outputPath("api-failure.jpg"), fullPage: true });
   await page.unroute("**/api/experience/overview*");
   await page.getByRole("alert").locator("..").getByRole("button").click();
   await expect(page.locator(".simple-kpi")).toHaveCount(3);

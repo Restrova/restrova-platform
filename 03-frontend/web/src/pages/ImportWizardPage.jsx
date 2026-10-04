@@ -854,14 +854,14 @@ export function ImportWizardPage() {
 
   if (job?.status === "confirmed" || job?.status === "cancelled") {
     return (
-      <main className="import-page" id="main-content">
+      <section className="import-page">
         <Completion job={job} onReset={resetImport} />
-      </main>
+      </section>
     );
   }
 
   return (
-    <main className="import-page" id="main-content">
+    <section className="import-page">
       <header className="import-page__header">
         <div>
           <Badge variant="info">Safe staged import</Badge>
@@ -957,6 +957,6 @@ export function ImportWizardPage() {
           )}
         </>
       )}
-    </main>
+    </section>
   );
 }

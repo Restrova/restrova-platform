@@ -132,19 +132,19 @@ export function TeamPage() {
 
   if (!owner) {
     return (
-      <main className="management-page" id="main-content">
+      <section className="management-page">
         <Card>
           <CardHeader>
             <CardTitle>{t("errors.permissionTitle")}</CardTitle>
             <CardDescription>{t("errors.permissionDescription")}</CardDescription>
           </CardHeader>
         </Card>
-      </main>
+      </section>
     );
   }
 
   return (
-    <main className="management-page" id="main-content">
+    <section className="management-page">
       <header className="management-page__header">
         <div>
           <Badge variant="info">{t("team.badge")}</Badge>
@@ -347,6 +347,6 @@ export function TeamPage() {
           </CardContent>
         </Card>
       </section>
-    </main>
+    </section>
   );
 }

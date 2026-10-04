@@ -185,19 +185,19 @@ export function BranchesPage() {
 
   if (!owner) {
     return (
-      <main className="management-page" id="main-content">
+      <section className="management-page">
         <Card>
           <CardHeader>
             <CardTitle>{t("errors.permissionTitle")}</CardTitle>
             <CardDescription>{t("errors.permissionDescription")}</CardDescription>
           </CardHeader>
         </Card>
-      </main>
+      </section>
     );
   }
 
   return (
-    <main className="management-page" id="main-content">
+    <section className="management-page">
       <header className="management-page__header">
         <div>
           <Badge variant="info">{t("branches.badge")}</Badge>
@@ -305,6 +305,6 @@ export function BranchesPage() {
           </form>
         </Card>
       )}
-    </main>
+    </section>
   );
 }

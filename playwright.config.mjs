@@ -11,12 +11,29 @@ export default defineConfig({
   retries: 0,
   reporter: [["list"], ["html", { open: "never" }]],
   use: { baseURL: "http://127.0.0.1:5173", trace: "retain-on-failure", screenshot: "only-on-failure" },
-  projects: ["ar", "en", "zh"].flatMap((locale) =>
-    widths.map((width) => ({
-      name: `${locale}-${width}`,
-      use: { browserName: "chromium", locale, viewport: { width, height: width < 768 ? 844 : 900 } }
+  projects: [
+    ...["ar", "en", "zh"].flatMap((language) =>
+      widths.map((width) => ({
+        name: `${language}-${width}`,
+        use: {
+          browserName: "chromium",
+          locale: language === "zh" ? "zh-CN" : language,
+          viewport: { width, height: width < 768 ? 844 : 900 }
+        }
+      }))
+    ),
+    ...["ar", "en", "zh"].map((language) => ({
+      name: `${language}-webkit-touch`,
+      use: {
+        browserName: "webkit",
+        locale: language === "zh" ? "zh-CN" : language,
+        viewport: { width: 390, height: 844 },
+        isMobile: true,
+        hasTouch: true,
+        deviceScaleFactor: 3
+      }
     }))
-  ),
+  ],
   webServer: [
     { command: "node e2e/server.mjs", url: "http://127.0.0.1:4000/api/health", reuseExistingServer: false },
     {
