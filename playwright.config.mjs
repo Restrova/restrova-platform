@@ -3,7 +3,8 @@ import { defineConfig } from "@playwright/test";
 const widths = [320, 390, 768, 1024, 1440];
 export default defineConfig({
   testDir: "./e2e",
-  timeout: 90000,
+  timeout: 45000,
+  maxFailures: 8,
   expect: { timeout: 10000 },
   fullyParallel: true,
   workers: 3,

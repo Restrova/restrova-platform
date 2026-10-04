@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 
 const routes = ["dashboard", "data", "settings", "imports", "assistant", "reports", "profit"];
-async function signIn(page, request, testInfo) {
+async function signIn(page, request, testInfo, { populate = false } = {}) {
   const locale = testInfo.project.name.split("-")[0];
   const response = await request.post("http://127.0.0.1:4000/api/auth/register", {
     data: {
@@ -17,6 +17,27 @@ async function signIn(page, request, testInfo) {
   });
   expect(response.ok()).toBeTruthy();
   const session = await response.json();
+  if (populate) {
+    const headers = { Authorization: `Bearer ${session.token}` };
+    const overview = await request.get(
+      `http://127.0.0.1:4000/api/experience/overview?branchId=${session.branches[0].id}`,
+      { headers }
+    );
+    expect(overview.ok()).toBeTruthy();
+    const { date } = await overview.json();
+    const saved = await request.post("http://127.0.0.1:4000/api/experience/daily", {
+      headers,
+      data: {
+        branchId: session.branches[0].id,
+        date,
+        sales: "9999999999.99",
+        orders: 9999999,
+        costs: "8888888888.88",
+        waste: "7777777777.77"
+      }
+    });
+    expect(saved.ok()).toBeTruthy();
+  }
   await page.addInitScript(
     ({ session, locale }) => {
       localStorage.setItem("token", session.token);
@@ -35,6 +56,11 @@ async function checkLayout(page, locale) {
     scroll: document.documentElement.scrollWidth
   }));
   expect(size.scroll, "Page must not scroll horizontally").toBeLessThanOrEqual(size.width + 1);
+  const main = page.locator("#main-content");
+  if (await main.count()) {
+    const size = await main.evaluate((node) => ({ width: node.clientWidth, scroll: node.scrollWidth }));
+    expect(size.scroll, "Main content must not clip horizontally").toBeLessThanOrEqual(size.width + 1);
+  }
 }
 
 test("owner pages render across language and viewport matrix", async ({ page, request }, testInfo) => {
@@ -104,4 +130,29 @@ test("login fits narrow and landscape layouts", async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 844, height: 390 });
   await checkLayout(page, locale);
   await page.screenshot({ path: testInfo.outputPath("login-landscape.png"), fullPage: true });
+});
+
+test("large amounts reflow and API failures remain usable", async ({ page, request }, testInfo) => {
+  const locale = await signIn(page, request, testInfo, { populate: true });
+  await page.goto("/app/dashboard");
+  await expect(page.locator(".simple-kpi")).toHaveCount(3);
+  await checkLayout(page, locale);
+  await page.screenshot({ path: testInfo.outputPath("large-amounts.png"), fullPage: true });
+  await page.setViewportSize({ width: 720, height: 450 });
+  await checkLayout(page, locale);
+  await page.screenshot({ path: testInfo.outputPath("reflow-720.png"), fullPage: true });
+  await page.route("**/api/experience/overview*", (route) =>
+    route.fulfill({
+      status: 503,
+      contentType: "application/json",
+      body: JSON.stringify({ error: "Review fixture: unavailable" })
+    })
+  );
+  await page.reload();
+  await expect(page.getByRole("alert")).toBeVisible();
+  await checkLayout(page, locale);
+  await page.screenshot({ path: testInfo.outputPath("api-failure.png"), fullPage: true });
+  await page.unroute("**/api/experience/overview*");
+  await page.getByRole("alert").locator("..").getByRole("button").click();
+  await expect(page.locator(".simple-kpi")).toHaveCount(3);
 });
