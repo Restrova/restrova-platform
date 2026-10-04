@@ -92,7 +92,31 @@ test("owner pages render across language and viewport matrix", async ({ page, re
       await expect(page.locator(".app-topbar h1")).toBeVisible();
       await page.waitForLoadState("networkidle");
       await checkLayout(page, locale);
-      await page.screenshot({ type: "jpeg", quality: 85, path: testInfo.outputPath(`${route}.jpg`), fullPage: true });
+      await page.screenshot({
+        scale: "css",
+        type: "jpeg",
+        quality: 85,
+        path: testInfo.outputPath(`${route}.jpg`),
+        fullPage: true
+      });
+      const main = page.locator("#main-content");
+      const height = await main.evaluate((node) => ({ viewport: node.clientHeight, total: node.scrollHeight }));
+      for (
+        let offset = height.viewport, frame = 1;
+        offset < height.total && frame <= 8;
+        offset += height.viewport, frame++
+      ) {
+        await main.evaluate((node, offset) => {
+          node.scrollTop = offset;
+        }, offset);
+        await page.screenshot({
+          scale: "css",
+          type: "jpeg",
+          quality: 85,
+          path: testInfo.outputPath(`${route}-scroll-${frame}.jpg`),
+          fullPage: true
+        });
+      }
     });
   }
   expect(errors).toEqual([]);
@@ -114,7 +138,13 @@ test("keyboard drawer isolation, locale switch and resize cleanup", async ({ pag
   await language.focus();
   await language.selectOption("zh-CN");
   await expect(language).toBeFocused();
-  await page.screenshot({ type: "jpeg", quality: 85, path: testInfo.outputPath("drawer-zh.jpg"), fullPage: true });
+  await page.screenshot({
+    scale: "css",
+    type: "jpeg",
+    quality: 85,
+    path: testInfo.outputPath("drawer-zh.jpg"),
+    fullPage: true
+  });
   await page.keyboard.press("Escape");
   await expect(dialog).toHaveCount(0);
   await expect(opener).toBeFocused();
@@ -146,10 +176,17 @@ test("login fits narrow and landscape layouts", async ({ page }, testInfo) => {
   await page.goto("/login");
   await expect(page.locator("input[type=email]")).toBeVisible();
   await checkLayout(page, locale);
-  await page.screenshot({ type: "jpeg", quality: 85, path: testInfo.outputPath("login.jpg"), fullPage: true });
+  await page.screenshot({
+    scale: "css",
+    type: "jpeg",
+    quality: 85,
+    path: testInfo.outputPath("login.jpg"),
+    fullPage: true
+  });
   await page.setViewportSize({ width: 844, height: 390 });
   await checkLayout(page, locale);
   await page.screenshot({
+    scale: "css",
     type: "jpeg",
     quality: 85,
     path: testInfo.outputPath("login-landscape.jpg"),
@@ -168,10 +205,22 @@ test("large amounts reflow and API failures remain usable", async ({ page, reque
     ).toBeTruthy();
   }
   await checkLayout(page, locale);
-  await page.screenshot({ type: "jpeg", quality: 85, path: testInfo.outputPath("large-amounts.jpg"), fullPage: true });
+  await page.screenshot({
+    scale: "css",
+    type: "jpeg",
+    quality: 85,
+    path: testInfo.outputPath("large-amounts.jpg"),
+    fullPage: true
+  });
   await page.setViewportSize({ width: 720, height: 450 });
   await checkLayout(page, locale);
-  await page.screenshot({ type: "jpeg", quality: 85, path: testInfo.outputPath("reflow-720.jpg"), fullPage: true });
+  await page.screenshot({
+    scale: "css",
+    type: "jpeg",
+    quality: 85,
+    path: testInfo.outputPath("reflow-720.jpg"),
+    fullPage: true
+  });
   await page.route("**/api/experience/overview*", (route) =>
     route.fulfill({
       status: 503,
@@ -182,7 +231,13 @@ test("large amounts reflow and API failures remain usable", async ({ page, reque
   await page.reload();
   await expect(page.getByRole("alert")).toBeVisible();
   await checkLayout(page, locale);
-  await page.screenshot({ type: "jpeg", quality: 85, path: testInfo.outputPath("api-failure.jpg"), fullPage: true });
+  await page.screenshot({
+    scale: "css",
+    type: "jpeg",
+    quality: 85,
+    path: testInfo.outputPath("api-failure.jpg"),
+    fullPage: true
+  });
   await page.unroute("**/api/experience/overview*");
   await page.getByRole("alert").locator("..").getByRole("button").click();
   await expect(page.locator(".simple-kpi")).toHaveCount(3);
