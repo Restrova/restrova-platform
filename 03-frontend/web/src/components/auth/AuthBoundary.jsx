@@ -1,14 +1,16 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
+import { useLocale } from "../../contexts/LocaleContext.jsx";
 import { useAuth } from "../../contexts/AuthContext.jsx";
 
 export function AuthBoundary() {
   const auth = useAuth();
+  const { t } = useLocale();
   const location = useLocation();
 
   if (auth.status === "checking") {
     return (
       <main className="route-state" aria-live="polite">
-        <p>Checking your restaurant session...</p>
+        <p>{t("common.checkingSession")}</p>
       </main>
     );
   }

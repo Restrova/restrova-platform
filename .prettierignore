@@ -9,3 +9,6 @@ data
 *.db-*
 *.log
 pnpm-lock.yaml
+
+playwright-report
+test-results

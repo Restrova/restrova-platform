@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
 import { X } from "lucide-react";
 import { useLocale } from "../../contexts/LocaleContext.jsx";
 import { useRestaurant } from "../../contexts/RestaurantContext.jsx";
@@ -15,7 +15,7 @@ export function MobileDrawer({ open, onClose }) {
   const panelRef = useRef(null);
   const previousFocus = useRef(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!open) return undefined;
     previousFocus.current = document.activeElement;
     // Keep the background out of keyboard and assistive-technology navigation.
@@ -30,6 +30,10 @@ export function MobileDrawer({ open, onClose }) {
       if (event.matches) onClose();
     };
     desktop?.addEventListener("change", onViewportChange);
+    const onViewportResize = () => {
+      if (window.innerWidth >= 1024) onClose();
+    };
+    window.addEventListener("resize", onViewportResize);
     const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const focusable = panelRef.current?.querySelector(
@@ -60,6 +64,7 @@ export function MobileDrawer({ open, onClose }) {
       document.removeEventListener("keydown", onKeyDown);
       document.body.style.overflow = originalOverflow;
       desktop?.removeEventListener("change", onViewportChange);
+      window.removeEventListener("resize", onViewportResize);
       siblings.forEach(([node, inert]) => {
         node.inert = inert;
       });

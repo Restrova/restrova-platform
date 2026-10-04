@@ -28,7 +28,14 @@ export const dictionaries = {
       unknown: "غير معروف",
       open: "فتح",
       reload: "إعادة تحميل",
-      productName: "Restrova Platform"
+      productName: "Restrova Platform",
+      checkingSession: "جارٍ التحقق من جلسة المطعم…",
+      pageNotFound: "الصفحة غير موجودة",
+      notFoundDescription: "هذه الصفحة ليست ضمن مساحة إدارة المطعم.",
+      openWorkspace: "فتح مساحة العمل",
+      accessLimited: "الوصول محدود",
+      permissionRequired: "يلزم إذن للوصول",
+      permissionDescription: "لا يملك حسابك صلاحية الوصول إلى هذا القسم من المطعم."
     },
     navigation: {
       home: "الرئيسية",
@@ -358,7 +365,14 @@ export const dictionaries = {
       unknown: "Unknown",
       open: "Open",
       reload: "Reload",
-      productName: "Restrova Platform"
+      productName: "Restrova Platform",
+      checkingSession: "Checking your restaurant session…",
+      pageNotFound: "Page not found",
+      notFoundDescription: "This page is not part of the restaurant management workspace.",
+      openWorkspace: "Open workspace",
+      accessLimited: "Access limited",
+      permissionRequired: "Permission required",
+      permissionDescription: "Your account does not have access to this restaurant area."
     },
     navigation: {
       home: "Home",
@@ -695,7 +709,14 @@ export const dictionaries = {
       unknown: "未知",
       open: "打开",
       reload: "重新加载",
-      productName: "Restrova Platform"
+      productName: "Restrova Platform",
+      checkingSession: "正在验证餐厅会话…",
+      pageNotFound: "页面未找到",
+      notFoundDescription: "此页面不属于餐厅管理工作区。",
+      openWorkspace: "打开工作区",
+      accessLimited: "访问受限",
+      permissionRequired: "需要访问权限",
+      permissionDescription: "您的账号没有访问此餐厅区域的权限。"
     },
     navigation: {
       home: "首页",

@@ -115,7 +115,9 @@ export function ExecutiveHomePage() {
               {label}
               <ArrowUpRight className="directional-arrow" size={18} aria-hidden="true" />
             </span>
-            <strong>{value}</strong>
+            <strong>
+              <bdi>{value}</bdi>
+            </strong>
           </Link>
         ))}
       </div>

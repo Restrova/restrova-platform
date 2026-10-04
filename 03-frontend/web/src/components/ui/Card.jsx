@@ -31,8 +31,12 @@ export function CardDescription({ children }) {
   return <p className="ui-card__description">{children}</p>;
 }
 
-export function CardContent({ children, className = "" }) {
-  return <div className={`ui-card__content ${className}`.trim()}>{children}</div>;
+export function CardContent({ children, className = "", ...props }) {
+  return (
+    <div className={`ui-card__content ${className}`.trim()} {...props}>
+      {children}
+    </div>
+  );
 }
 
 export function CardFooter({ children, className = "" }) {

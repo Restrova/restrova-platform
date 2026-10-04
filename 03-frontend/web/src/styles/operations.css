@@ -1,5 +1,6 @@
 .operations-page {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 1.25rem;
   min-width: 0;
 }
@@ -188,4 +189,30 @@
   .operations-table td {
     padding: 0.65rem;
   }
+}
+
+.operations-page > *,
+.operations-page .ui-card {
+  min-inline-size: 0;
+}
+@media (max-width: 520px) {
+  .operations-metrics {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Keep table columns readable; the named region owns horizontal scrolling. */
+.operations-table {
+  min-inline-size: 40rem;
+}
+
+.operations-table th:first-child,
+.operations-table td:first-child {
+  min-inline-size: 10rem;
+}
+
+.operations-table button {
+  min-inline-size: 12rem;
+  max-inline-size: 18rem;
+  white-space: normal;
 }

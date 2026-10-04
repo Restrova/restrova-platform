@@ -2,20 +2,23 @@ import { render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AuthBoundary } from "../components/auth/AuthBoundary.jsx";
+import { LocaleProvider } from "../contexts/LocaleContext.jsx";
 import { AuthProvider } from "../contexts/AuthContext.jsx";
 
 function renderProtectedRoute(initialPath = "/app/workspace") {
   return render(
-    <AuthProvider>
-      <MemoryRouter initialEntries={[initialPath]}>
-        <Routes>
-          <Route path="/login" element={<p>Login route</p>} />
-          <Route element={<AuthBoundary />}>
-            <Route path="/app/workspace" element={<p>Protected workspace</p>} />
-          </Route>
-        </Routes>
-      </MemoryRouter>
-    </AuthProvider>
+    <LocaleProvider>
+      <AuthProvider>
+        <MemoryRouter initialEntries={[initialPath]}>
+          <Routes>
+            <Route path="/login" element={<p>Login route</p>} />
+            <Route element={<AuthBoundary />}>
+              <Route path="/app/workspace" element={<p>Protected workspace</p>} />
+            </Route>
+          </Routes>
+        </MemoryRouter>
+      </AuthProvider>
+    </LocaleProvider>
   );
 }
 

@@ -29,9 +29,11 @@
     "build": "pnpm --filter web build",
     "validate": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm test && pnpm build",
     "security:audit": "pnpm audit --audit-level low",
-    "security:test": "node --test scripts/security/*.test.mjs"
+    "security:test": "node --test scripts/security/*.test.mjs",
+    "test:browser": "playwright test"
   },
   "devDependencies": {
+    "@playwright/test": "1.63.0",
     "concurrently": "^9.2.3",
     "prettier": "^3.9.6"
   }

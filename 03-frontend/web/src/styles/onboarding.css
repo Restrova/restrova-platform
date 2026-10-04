@@ -314,7 +314,18 @@
 }
 
 .management-list-item__title {
-  justify-content: space-between;
+  flex-wrap: wrap;
+  min-inline-size: 0;
+}
+
+.management-list-item__title strong {
+  flex: 1 1 10rem;
+  min-inline-size: 0;
+}
+
+.management-list-item__title .ui-badge {
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 
 .management-list-item__body > span {
@@ -414,4 +425,29 @@
   .team-member > .ui-button {
     justify-self: start;
   }
+}
+
+@media (max-width: 520px) {
+  .management-list-item {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .management-list-item > .ui-button {
+    grid-column: 2;
+    justify-self: start;
+  }
+}
+
+.management-page .ui-card__header {
+  flex-wrap: wrap;
+}
+
+.management-page .ui-card__header > div:first-child {
+  flex: 1 1 10rem;
+  min-inline-size: 0;
+}
+
+.management-page .ui-card__header > div + div {
+  flex: 0 0 auto;
 }

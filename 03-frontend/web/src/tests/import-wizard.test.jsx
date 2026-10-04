@@ -257,4 +257,38 @@ describe("ImportWizardPage", () => {
     expect(screen.getByRole("button", { name: "Continue to decision center" })).toBeEnabled();
     expect(screen.getByRole("button", { name: "Analyze another file" })).toBeEnabled();
   });
+  it.each([
+    [
+      "ar",
+      "استيراد بيانات المطعم",
+      "ملف CSV أو XLSX",
+      "تحليل الملف وتقييمه",
+      "نتائج التحقق",
+      "تأكيد الاستيراد",
+      "اكتمل الاستيراد"
+    ],
+    ["zh-CN", "导入餐厅数据", "CSV 或 XLSX 文件", "分析并评估文件", "验证结果", "确认导入", "导入完成"]
+  ])(
+    "keeps the %s import workflow localized through confirmation",
+    async (locale, title, fileLabel, uploadLabel, validation, confirmLabel, completed) => {
+      localStorage.setItem("locale", locale);
+      importsApi.previewImportFile.mockResolvedValue(readyJob);
+      importsApi.confirmImportJob.mockResolvedValue({
+        ...readyJob,
+        status: "confirmed",
+        statistics: { ...readyJob.statistics, imported: 1 }
+      });
+      const user = userEvent.setup();
+      renderPage();
+      expect(await screen.findByRole("heading", { name: title })).toBeInTheDocument();
+      const file = new File(["Branch Code,Name,City\nMAIN,Main,Riyadh\n"], "branches.csv", { type: "text/csv" });
+      await user.upload(await screen.findByLabelText(fileLabel), file);
+      await user.click(screen.getByRole("button", { name: uploadLabel }));
+      expect(await screen.findByRole("heading", { name: validation })).toBeInTheDocument();
+      expect(screen.queryByText("Ready to confirm")).not.toBeInTheDocument();
+      await user.click(screen.getByRole("button", { name: confirmLabel }));
+      expect(await screen.findByRole("heading", { name: completed })).toBeInTheDocument();
+      expect(importsApi.confirmImportJob).toHaveBeenCalledWith(12, "confirm-me");
+    }
+  );
 });

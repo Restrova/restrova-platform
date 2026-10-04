@@ -301,7 +301,10 @@
   .app-shell,
   .app-shell.is-sidebar-collapsed {
     grid-template-columns: minmax(0, 1fr);
+    padding-block-start: env(safe-area-inset-top);
     padding-block-end: calc(var(--mobile-navigation-height) + env(safe-area-inset-bottom));
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
   }
 
   .app-sidebar {
@@ -432,6 +435,8 @@
   border-block-start: 1px solid var(--color-border);
   background: var(--color-surface);
   padding-block-end: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
 }
 
 .mobile-bottom-nav__item {
