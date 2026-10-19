@@ -32,7 +32,7 @@ describe("AuthBoundary", () => {
   });
 
   it("renders protected routes after restoring a valid session", async () => {
-    localStorage.setItem("token", "test-token");
+    sessionStorage.setItem("token", "test-token");
     vi.stubGlobal(
       "fetch",
       vi.fn(async () => ({

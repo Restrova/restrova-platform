@@ -11,7 +11,12 @@ export function auth(req, _res, next) {
 }
 
 export const requireRole = (role) => (req, _res, next) => {
-  if (roleRank[req.user.role] < roleRank[role]) return next(forbidden("Permission denied"));
+  if (
+    !Object.hasOwn(roleRank, req.user?.role) ||
+    !Object.hasOwn(roleRank, role) ||
+    roleRank[req.user.role] < roleRank[role]
+  )
+    return next(forbidden("Permission denied"));
   return next();
 };
 

@@ -55,11 +55,11 @@ describe("full-stack restaurant onboarding", () => {
       <QueryClientProvider client={queryClient}>
         <LocaleProvider>
           <AuthProvider>
-            <RestaurantProvider>
-              <MemoryRouter initialEntries={["/register?next=/app/branches"]}>
+            <MemoryRouter initialEntries={["/register?next=/app/branches"]}>
+              <RestaurantProvider>
                 <AppRoutes />
-              </MemoryRouter>
-            </RestaurantProvider>
+              </RestaurantProvider>
+            </MemoryRouter>
           </AuthProvider>
         </LocaleProvider>
       </QueryClientProvider>
@@ -94,9 +94,9 @@ describe("full-stack restaurant onboarding", () => {
     expect(await screen.findByRole("heading", { name: "Branch management" })).toBeInTheDocument();
     expect(await screen.findByText("Riyadh QA Main")).toBeInTheDocument();
     expect(await screen.findByText("RUH-QA")).toBeInTheDocument();
-    expect(localStorage.getItem("token")).toBeTruthy();
+    expect(sessionStorage.getItem("token")).toBeTruthy();
 
-    const token = localStorage.getItem("token");
+    const token = sessionStorage.getItem("token");
     const sessionResponse = await nativeFetch(`${apiOrigin}/api/auth/me`, {
       headers: { Authorization: `Bearer ${token}` }
     });
@@ -149,11 +149,11 @@ describe("full-stack restaurant onboarding", () => {
       <QueryClientProvider client={queryClient}>
         <LocaleProvider>
           <AuthProvider>
-            <RestaurantProvider>
-              <MemoryRouter initialEntries={["/login?next=/app/branches"]}>
+            <MemoryRouter initialEntries={["/login?next=/app/branches"]}>
+              <RestaurantProvider>
                 <AppRoutes />
-              </MemoryRouter>
-            </RestaurantProvider>
+              </RestaurantProvider>
+            </MemoryRouter>
           </AuthProvider>
         </LocaleProvider>
       </QueryClientProvider>
@@ -165,7 +165,7 @@ describe("full-stack restaurant onboarding", () => {
 
     expect(await screen.findByRole("heading", { name: "Branch management" })).toBeInTheDocument();
     expect(await screen.findByText("Login Main")).toBeInTheDocument();
-    expect(localStorage.getItem("token")).toBeTruthy();
+    expect(sessionStorage.getItem("token")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Login" })).not.toBeInTheDocument();
   }, 15_000);
 });

@@ -1,5 +1,5 @@
 import { api } from "./api.js";
-import { setStoredSession, setToken } from "./storage.js";
+import { getToken, setStoredSession, setToken } from "./storage.js";
 
 export function checkEmailAvailabilityRequest(email) {
   return api("/auth/email-availability", { method: "POST", body: JSON.stringify({ email }) });
@@ -26,8 +26,9 @@ export async function registerRequest(payload) {
 }
 
 export async function restoreSessionRequest() {
+  const requestToken = getToken();
   const session = await api("/auth/me");
-  setStoredSession(session);
+  if (requestToken && getToken() === requestToken) setStoredSession(session);
   return session;
 }
 

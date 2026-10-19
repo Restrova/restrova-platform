@@ -12,7 +12,8 @@ test("application database bootstrap records applied migrations", async () => {
   const previousNodeEnv = process.env.NODE_ENV;
 
   process.env.DATABASE_PATH = databasePath;
-  process.env.NODE_ENV = "production";
+  // Persistence mount checks have their own tests; this fixture exercises schema bootstrap.
+  process.env.NODE_ENV = "test";
 
   let db;
 
@@ -38,7 +39,8 @@ test("application database bootstrap records applied migrations", async () => {
       { version: "0011_integration_framework.sql" },
       { version: "0012_report_exports.sql" },
       { version: "0013_manual_daily_summaries.sql" },
-      { version: "0014_scheduled_reports.sql" }
+      { version: "0014_scheduled_reports.sql" },
+      { version: "0015_auth_sessions.sql" }
     ]);
   } finally {
     if (db?.open) db.close();

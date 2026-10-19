@@ -12,10 +12,13 @@ export function createOwnerIdentity(email, passwordHash, name) {
   return db.prepare("SELECT id,email,name FROM owners WHERE id=?").get(id);
 }
 
-export function upsertOrganizationUser(organizationId, ownerId, role, branchId) {
-  db.prepare(
-    "INSERT INTO organization_users(organization_id,owner_id,role,branch_id) VALUES (?,?,?,?) ON CONFLICT(organization_id,owner_id) DO UPDATE SET role=excluded.role,branch_id=excluded.branch_id"
-  ).run(organizationId, ownerId, role, branchId || null);
+export function insertOrganizationUser(organizationId, ownerId, role, branchId) {
+  db.prepare("INSERT INTO organization_users(organization_id,owner_id,role,branch_id) VALUES (?,?,?,?)").run(
+    organizationId,
+    ownerId,
+    role,
+    branchId || null
+  );
 }
 
 export function listUsers(organizationId) {

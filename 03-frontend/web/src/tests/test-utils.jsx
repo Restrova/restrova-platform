@@ -68,7 +68,7 @@ export function renderWithShell({
   outlet = <p>Outlet content</p>,
   publicRoutes = true
 } = {}) {
-  localStorage.setItem("token", "test-token");
+  sessionStorage.setItem("token", "test-token");
   const fetchMock = stubAuthenticatedFetch(session);
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const result = render(

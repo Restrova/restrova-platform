@@ -24,7 +24,8 @@ test("database migrations apply and are idempotent", () => {
     { version: "0011_integration_framework.sql" },
     { version: "0012_report_exports.sql" },
     { version: "0013_manual_daily_summaries.sql" },
-    { version: "0014_scheduled_reports.sql" }
+    { version: "0014_scheduled_reports.sql" },
+    { version: "0015_auth_sessions.sql" }
   ]);
 
   assert.ok(

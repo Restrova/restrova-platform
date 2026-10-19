@@ -1,0 +1,11 @@
+[Unit]
+Description=Daily Restrova backup at 02:00 UTC
+
+[Timer]
+OnCalendar=*-*-* 02:00:00 UTC
+Persistent=true
+RandomizedDelaySec=60
+Unit=restrova-backup.service
+
+[Install]
+WantedBy=timers.target

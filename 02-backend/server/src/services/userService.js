@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import { config } from "../config/appConfig.js";
-import { notFound, validationError } from "../errors/appError.js";
+import { conflict, notFound, validationError } from "../errors/appError.js";
+import { db } from "../db.js";
 import * as userRepository from "../repositories/userRepository.js";
 import { assertBranchAccess } from "./branchService.js";
 import { generateTemporaryPassword } from "./authService.js";
@@ -11,27 +12,36 @@ export function inviteUser(user, body) {
   if (parsed.role === "branch_manager" && !parsed.branchId) throw validationError("Branch manager requires a branch.");
   if (parsed.branchId && !assertBranchAccess(user, parsed.branchId)) throw notFound("Branch not found");
 
-  let invited = userRepository.findOwnerIdentityByEmail(parsed.email);
-  const existingAccount = Boolean(invited);
-  let temporaryPassword = null;
-  if (!invited) {
-    temporaryPassword = generateTemporaryPassword();
-    invited = userRepository.createOwnerIdentity(
-      parsed.email,
-      bcrypt.hashSync(temporaryPassword, config.bcryptCost),
-      parsed.name || parsed.email.split("@")[0]
-    );
-  }
-  userRepository.upsertOrganizationUser(user.organization_id, invited.id, parsed.role, parsed.branchId || null);
-  return {
-    id: invited.id,
-    email: invited.email,
-    name: invited.name,
-    role: parsed.role,
-    branch_id: parsed.branchId || null,
-    temporaryPassword,
-    existingAccount
-  };
+  return db
+    .transaction(() => {
+      let invited = userRepository.findOwnerIdentityByEmail(parsed.email);
+      const existingAccount = Boolean(invited);
+      // Invitations only add memberships. Role changes must use updateUserRole,
+      // which protects the last owner and checks the target branch assignment.
+      if (invited && userRepository.findMembership(user.organization_id, invited.id)) {
+        throw conflict("User already belongs to this organization. Use the role update endpoint.");
+      }
+      let temporaryPassword = null;
+      if (!invited) {
+        temporaryPassword = generateTemporaryPassword();
+        invited = userRepository.createOwnerIdentity(
+          parsed.email,
+          bcrypt.hashSync(temporaryPassword, config.bcryptCost),
+          parsed.name || parsed.email.split("@")[0]
+        );
+      }
+      userRepository.insertOrganizationUser(user.organization_id, invited.id, parsed.role, parsed.branchId || null);
+      return {
+        id: invited.id,
+        email: invited.email,
+        name: invited.name,
+        role: parsed.role,
+        branch_id: parsed.branchId || null,
+        temporaryPassword,
+        existingAccount
+      };
+    })
+    .immediate();
 }
 
 export function listUsers(user) {

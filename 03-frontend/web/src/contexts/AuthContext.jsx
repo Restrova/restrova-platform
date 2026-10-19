@@ -7,7 +7,7 @@ const AuthContext = createContext(null);
 
 function getInitialState() {
   const token = getToken();
-  const session = getStoredSession();
+  const session = token ? getStoredSession() : null;
   return {
     status: token ? "checking" : "unauthenticated",
     session,
@@ -32,7 +32,8 @@ export function AuthProvider({ children }) {
   }, []);
 
   const restore = useCallback(async () => {
-    if (!getToken()) {
+    const requestToken = getToken();
+    if (!requestToken) {
       setState({ status: "unauthenticated", session: null, error: null });
       return null;
     }
@@ -41,9 +42,11 @@ export function AuthProvider({ children }) {
 
     try {
       const session = await restoreSessionRequest();
+      if (getToken() !== requestToken) return null;
       setState({ status: "authenticated", session, error: null });
       return session;
     } catch (error) {
+      if (getToken() !== requestToken) return null;
       if (error instanceof ApiError && error.status === 403) {
         setState({ status: "forbidden", session: null, error });
         return null;
@@ -93,7 +96,9 @@ export function AuthProvider({ children }) {
   }, []);
 
   const logout = useCallback(async () => {
+    const requestToken = getToken();
     await logoutRequest();
+    if (getToken() && getToken() !== requestToken) return;
     clearAuthStorage();
     setState({ status: "unauthenticated", session: null, error: null });
     notifyAuthChange();

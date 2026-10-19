@@ -1,0 +1,18 @@
+[Unit]
+Description=Check Restrova last verified off-service backup age and job status
+OnFailure=restrova-backup-alert@%n.service
+
+[Service]
+Type=oneshot
+User=restrova
+Group=restrova
+WorkingDirectory=/opt/restrova/02-backend/server
+Environment=RESTROVA_BACKUP_WORK_DIR=/var/lib/restrova-backup
+ExecStart=/usr/bin/node scripts/offsite-backup.js check
+StateDirectory=restrova-backup
+StateDirectoryMode=0700
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict

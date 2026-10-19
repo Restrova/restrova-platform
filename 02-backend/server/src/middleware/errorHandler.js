@@ -8,7 +8,7 @@ export function errorHandler(error, req, res, _next) {
   }
   logError(appError, appError.status, {
     requestId: req.requestId,
-    route: req.originalUrl?.split("?")[0],
+    route: req.route?.path || "unmatched",
     organizationId: req.user?.organization_id,
     userId: req.user?.owner_id
   });

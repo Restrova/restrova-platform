@@ -1,0 +1,10 @@
+[Unit]
+Description=Hourly check of Restrova backup freshness
+
+[Timer]
+OnCalendar=hourly
+Persistent=true
+Unit=restrova-backup-monitor.service
+
+[Install]
+WantedBy=timers.target

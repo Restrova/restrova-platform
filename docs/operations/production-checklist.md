@@ -4,10 +4,11 @@
 
 - `NODE_ENV=production`
 - `JWT_SECRET` strong random value, at least 32 characters
-- `DATABASE_PATH` points to durable storage
+- Absolute `DATABASE_PATH` lies inside the writable, separately mounted `DATABASE_VOLUME_PATH`
 - `CLIENT_ORIGIN` set to the public frontend origin
 - `BCRYPT_COST=12` or higher within supported limits
-- OpenAI variables only on the backend service if OpenAI mode is used
+- `TRUST_PROXY_HOPS=0` for direct ingress; use `1` only for a verified fixed single trusted proxy path
+- Optional Ollama credentials remain backend-only; no external model is required
 
 ## Before launch
 
@@ -17,7 +18,7 @@
 - Secret scanning enabled
 - Dependabot enabled
 - Persistent storage attached
-- Backup and restore process tested
+- [Operator handoff](production-operator-handoff.md) completed, including encrypted off-service backups, daily scheduling, retention, independent alerts and measured recovery
 - `/api/health` returns `status: ok`
 - `/api/ready` returns `status: ready`
 

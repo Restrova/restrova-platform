@@ -19,10 +19,12 @@ export function Providers({ children }) {
     <QueryClientProvider client={queryClient}>
       <LocaleProvider>
         <AuthProvider>
-          <RestaurantProvider>
-            <ImportDataBridge />
-            <BrowserRouter>{children}</BrowserRouter>
-          </RestaurantProvider>
+          <BrowserRouter>
+            <RestaurantProvider>
+              <ImportDataBridge />
+              {children}
+            </RestaurantProvider>
+          </BrowserRouter>
         </AuthProvider>
       </LocaleProvider>
     </QueryClientProvider>

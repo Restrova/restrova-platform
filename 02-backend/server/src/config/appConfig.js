@@ -26,6 +26,15 @@ const importMaxColumns = integerEnv("IMPORT_MAX_COLUMNS", 100);
 const importMaxCellLength = integerEnv("IMPORT_MAX_CELL_LENGTH", 10_000);
 const importPreviewRows = integerEnv("IMPORT_PREVIEW_ROWS", 20);
 const importConfirmationTokenTtlSeconds = integerEnv("IMPORT_CONFIRMATION_TOKEN_TTL_SECONDS", 30 * 60);
+const trustProxyHops = integerEnv("TRUST_PROXY_HOPS", 0);
+if (trustProxyHops < 0 || trustProxyHops > 3) failStartup("TRUST_PROXY_HOPS must be between 0 and 3.");
+const jwtExpiresIn = process.env.JWT_EXPIRES_IN || "12h";
+const jwtDuration = jwtExpiresIn.match(/^([1-9]\d*)(s|m|h|d)$/);
+const jwtLifetimeSeconds = jwtDuration
+  ? Number(jwtDuration[1]) * { s: 1, m: 60, h: 3600, d: 86400 }[jwtDuration[2]]
+  : 0;
+if (!Number.isSafeInteger(jwtLifetimeSeconds) || jwtLifetimeSeconds < 1 || jwtLifetimeSeconds > 86400)
+  failStartup("JWT_EXPIRES_IN must be a positive duration with s/m/h/d units, no longer than 24 hours.");
 function platformOrigin(hostname) {
   if (!hostname || !/^[a-z0-9.-]+$/i.test(hostname)) return null;
   return `https://${hostname}`;
@@ -75,9 +84,10 @@ export const config = {
   isTest,
   port: process.env.PORT || 4000,
   requestBodyLimit: process.env.REQUEST_BODY_LIMIT || "3mb",
+  trustProxyHops,
   jwt: {
     secret: process.env.JWT_SECRET || crypto.randomBytes(32).toString("hex"),
-    expiresIn: process.env.JWT_EXPIRES_IN || "12h",
+    expiresIn: jwtExpiresIn,
     issuer: process.env.JWT_ISSUER || "ai-restaurant-manager",
     audience: process.env.JWT_AUDIENCE || "restaurant-manager-api"
   },

@@ -145,9 +145,9 @@ describe("AppShell", () => {
   });
 
   it("keeps the real legacy workspace rendered inside the shell", async () => {
-    localStorage.setItem("token", "test-token");
-    localStorage.setItem("restaurant", "Harbor Demo");
-    localStorage.setItem("me", JSON.stringify(createTestSession()));
+    sessionStorage.setItem("token", "test-token");
+    sessionStorage.setItem("restaurant", "Harbor Demo");
+    sessionStorage.setItem("me", JSON.stringify(createTestSession()));
     stubAuthenticatedFetch(createTestSession());
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     render(
@@ -171,9 +171,9 @@ describe("AppShell", () => {
 
   it("keeps an authenticated user in the workspace when dashboard data is temporarily unavailable", async () => {
     const session = createTestSession();
-    localStorage.setItem("token", "test-token");
-    localStorage.setItem("restaurant", session.restaurant.name);
-    localStorage.setItem("me", JSON.stringify(session));
+    sessionStorage.setItem("token", "test-token");
+    sessionStorage.setItem("restaurant", session.restaurant.name);
+    sessionStorage.setItem("me", JSON.stringify(session));
     vi.stubGlobal(
       "fetch",
       vi.fn(async (url) => {

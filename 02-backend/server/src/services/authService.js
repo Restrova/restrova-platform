@@ -10,7 +10,8 @@ import { emailAvailabilitySchema, loginSchema, registerSchema, validate } from "
 export const roleRank = { viewer: 1, branch_manager: 2, owner: 3 };
 
 export function signContext(context) {
-  return jwt.sign(
+  const sessionId = crypto.randomUUID();
+  const signedToken = jwt.sign(
     {
       ownerId: context.owner_id,
       restaurantId: context.restaurant_id,
@@ -18,8 +19,17 @@ export function signContext(context) {
       role: context.role
     },
     config.jwt.secret,
-    { algorithm: "HS256", expiresIn: config.jwt.expiresIn, issuer: config.jwt.issuer, audience: config.jwt.audience }
+    {
+      algorithm: "HS256",
+      expiresIn: config.jwt.expiresIn,
+      issuer: config.jwt.issuer,
+      audience: config.jwt.audience,
+      jwtid: sessionId
+    }
   );
+  const { iat, exp } = jwt.decode(signedToken);
+  authRepository.createAuthSession(sessionId, context, iat, exp);
+  return signedToken;
 }
 
 export function serializeMe(user) {
@@ -38,10 +48,30 @@ export function serializeMe(user) {
 }
 
 export function authenticateBearerHeader(authHeader = "") {
-  const match = authHeader.match(/^Bearer\s+(.+)$/i);
+  // Bound all token work and parse the fixed scheme without a backtracking regex.
+  if (
+    typeof authHeader !== "string" ||
+    authHeader.length > 8192 ||
+    authHeader.length <= 7 ||
+    authHeader.slice(0, 7).toLowerCase() !== "bearer "
+  )
+    throw authRequired();
+  const bearerToken = authHeader.slice(7);
+  for (let index = 0; index < bearerToken.length; index++) {
+    const code = bearerToken.charCodeAt(index);
+    if (!(
+      (code >= 65 && code <= 90) ||
+      (code >= 97 && code <= 122) ||
+      (code >= 48 && code <= 57) ||
+      code === 45 ||
+      code === 95 ||
+      code === 46
+    ))
+      throw authRequired();
+  }
   let token;
   try {
-    token = jwt.verify(match?.[1], config.jwt.secret, {
+    token = jwt.verify(bearerToken, config.jwt.secret, {
       algorithms: ["HS256"],
       issuer: config.jwt.issuer,
       audience: config.jwt.audience,
@@ -53,12 +83,21 @@ export function authenticateBearerHeader(authHeader = "") {
   if (
     !Number.isInteger(token.ownerId) ||
     !Number.isInteger(token.organizationId) ||
-    !Number.isInteger(token.restaurantId)
+    !Number.isInteger(token.restaurantId) ||
+    typeof token.jti !== "string" ||
+    !token.jti
   )
     throw authRequired();
+  const session = authRepository.findActiveAuthSession(token, Math.floor(Date.now() / 1000));
+  if (!session) throw authRequired();
   const context = authRepository.getAuthContext(token.ownerId, token.organizationId, token.restaurantId);
-  if (!context) throw authRequired();
-  return context;
+  if (!context || context.membership_id !== session.membership_id) throw authRequired();
+  return { ...context, session_id: token.jti };
+}
+
+export function logout(user) {
+  authRepository.revokeAuthSession(user.session_id);
+  return { ok: true };
 }
 
 export function checkEmailAvailability(body) {

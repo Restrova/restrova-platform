@@ -54,7 +54,7 @@ test("encrypted online backup restores committed WAL rows and preserves separate
   );
 });
 
-test("full application restore retains every table, schema, accounts and scheduled-report state", async (t) => {
+test("full application restore retains tables, accounts and reports while invalidating sessions", async (t) => {
   const f = fixture(t);
   await db.backup(f.source);
   const live = new Database(f.source);
@@ -71,7 +71,9 @@ test("full application restore retains every table, schema, accounts and schedul
     )
     .run(scheduleId, JSON.stringify({ sales: 12050, orders: 90, insight: "بيانات تجريبية" }));
   const tables = live.prepare("SELECT name,sql FROM sqlite_master WHERE type='table' ORDER BY name").all();
-  const counts = tables.map(({ name }) => live.prepare(`SELECT count(*) n FROM "${name}"`).get().n);
+  const counts = tables.map(({ name }) =>
+    name === "auth_sessions" ? 0 : live.prepare(`SELECT count(*) n FROM "${name}"`).get().n
+  );
   await createDatabaseBackup(f);
   await restoreDatabaseBackup({ source: f.destination, destination: f.restored, key: f.key });
   const restored = new Database(f.restored, { readonly: true });
@@ -115,6 +117,26 @@ test("full application restore retains every table, schema, accounts and schedul
         .prepare("SELECT restaurant_id,sum(total_price) revenue,sum(cost) cost FROM orders GROUP BY restaurant_id")
         .all()
     );
+  } finally {
+    restored.close();
+  }
+});
+
+test("restore cannot resurrect sessions revoked since the snapshot", async (t) => {
+  const f = fixture(t);
+  const live = new Database(f.source);
+  live.exec(
+    "CREATE TABLE auth_sessions(id TEXT PRIMARY KEY, revoked_at INTEGER); INSERT INTO auth_sessions VALUES('old-token',NULL)"
+  );
+  live.close();
+  await createDatabaseBackup(f);
+  const changed = new Database(f.source);
+  changed.exec("UPDATE auth_sessions SET revoked_at=1");
+  changed.close();
+  await restoreDatabaseBackup({ source: f.destination, destination: f.restored, key: f.key });
+  const restored = new Database(f.restored, { readonly: true });
+  try {
+    assert.equal(restored.prepare("SELECT count(*) n FROM auth_sessions").get().n, 0);
   } finally {
     restored.close();
   }

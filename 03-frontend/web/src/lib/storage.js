@@ -2,9 +2,15 @@ const TOKEN_KEY = "token";
 const RESTAURANT_KEY = "restaurant";
 const ME_KEY = "me";
 
+function clearLegacyAuthStorage() {
+  // Persistent bearer credentials from older versions must require a new login.
+  for (const key of [TOKEN_KEY, RESTAURANT_KEY, ME_KEY]) localStorage.removeItem(key);
+}
+
 function readJson(key) {
   try {
-    const value = localStorage.getItem(key);
+    clearLegacyAuthStorage();
+    const value = sessionStorage.getItem(key);
     return value ? JSON.parse(value) : null;
   } catch {
     return null;
@@ -12,19 +18,23 @@ function readJson(key) {
 }
 
 export function getToken() {
-  return localStorage.getItem(TOKEN_KEY);
+  clearLegacyAuthStorage();
+  return sessionStorage.getItem(TOKEN_KEY);
 }
 
 export function setToken(token) {
-  if (token) localStorage.setItem(TOKEN_KEY, token);
+  clearLegacyAuthStorage();
+  if (token) sessionStorage.setItem(TOKEN_KEY, token);
 }
 
 export function getRestaurantName() {
-  return localStorage.getItem(RESTAURANT_KEY);
+  clearLegacyAuthStorage();
+  return sessionStorage.getItem(RESTAURANT_KEY);
 }
 
 export function setRestaurantName(name) {
-  if (name) localStorage.setItem(RESTAURANT_KEY, name);
+  clearLegacyAuthStorage();
+  if (name) sessionStorage.setItem(RESTAURANT_KEY, name);
 }
 
 export function getStoredSession() {
@@ -33,14 +43,16 @@ export function getStoredSession() {
 
 export function setStoredSession(session) {
   if (!session) return;
-  localStorage.setItem(ME_KEY, JSON.stringify(session));
+  clearLegacyAuthStorage();
+  const identity = { ...session };
+  delete identity.token;
+  sessionStorage.setItem(ME_KEY, JSON.stringify(identity));
   setRestaurantName(session.restaurant?.name);
 }
 
 export function clearAuthStorage() {
-  localStorage.removeItem(TOKEN_KEY);
-  localStorage.removeItem(RESTAURANT_KEY);
-  localStorage.removeItem(ME_KEY);
+  clearLegacyAuthStorage();
+  for (const key of [TOKEN_KEY, RESTAURANT_KEY, ME_KEY]) sessionStorage.removeItem(key);
 }
 
 export function notifyAuthChange() {

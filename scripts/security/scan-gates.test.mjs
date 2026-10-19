@@ -15,14 +15,18 @@ const source = (scores) => ({
 const container = (findings) => ({
   SchemaVersion: 2,
   Metadata: { OS: { Family: "debian" } },
-  Results: [{ Vulnerabilities: findings }]
+  Results: [{ Target: "restrova (debian 13)", Type: "debian", Vulnerabilities: findings }]
 });
 test("source gate blocks both new and existing high/critical findings", () => {
   assert.deepEqual(evaluateCodeql(source(["6.9", "7", "9.8"])), { total: 3, blocking: 2 });
   assert.deepEqual(evaluateCodeql(source([])), { total: 0, blocking: 0 });
 });
 test("source gate fails closed for missing scan output or malformed severity", () => {
-  for (const report of [{}, { runs: [] }, source(["bad"]), source([""]), source(["11"])])
+  for (const report of [
+    {},
+    { runs: [] },
+    ...["bad", "", " ", "11", null, false, [], ["8"], {}].map((severity) => source([severity]))
+  ])
     assert.throws(() => evaluateCodeql(report));
   const report = source(["8"]);
   report.runs[0].tool.driver.rules = [];
@@ -55,4 +59,20 @@ test("source gate resolves CodeQL extension rule metadata", () => {
   assert.deepEqual(evaluateCodeql(report), { total: 1, blocking: 1 });
   run.results[0].rule.toolComponent.index = 1;
   assert.throws(() => evaluateCodeql(report));
+});
+
+test("container gate rejects empty or malformed scan results rather than reporting a clean scan", () => {
+  for (const results of [[], [null], [{}], [{ Target: "restrova", Type: "debian", Vulnerabilities: {} }]])
+    assert.throws(() => evaluateContainer({ ...container([]), Results: results }));
+  for (const os of [null, {}, { Family: "" }, { Family: true }])
+    assert.throws(() => evaluateContainer({ ...container([]), Metadata: { OS: os } }));
+  const report = container([]);
+  delete report.Results[0].Vulnerabilities;
+  assert.deepEqual(evaluateContainer(report), { total: 0, blocking: 0, unfixed: 0 });
+});
+
+test("source gate preserves non-security diagnostics without inventing security severity", () => {
+  const report = source(["8"]);
+  delete report.runs[0].tool.driver.rules[0].properties["security-severity"];
+  assert.deepEqual(evaluateCodeql(report), { total: 1, blocking: 0 });
 });

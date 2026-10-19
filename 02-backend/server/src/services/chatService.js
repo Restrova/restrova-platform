@@ -1,4 +1,4 @@
-import { notFound, validationError } from "../errors/appError.js";
+import { forbidden, notFound, validationError } from "../errors/appError.js";
 import { getAssistantReply } from "../ai.js";
 import { executeTool } from "../tools.js";
 import * as chatRepository from "../repositories/chatRepository.js";
@@ -74,6 +74,10 @@ export function saveFeedback(user, body) {
 }
 
 export function exportTrainingFeedback(user) {
+  // Exports span every branch of the restaurant and can contain private questions.
+  // Keep this check in the service as well as the route so other callers cannot
+  // accidentally give a branch-scoped member restaurant-wide access.
+  if (user.role !== "owner") throw forbidden("Training exports require owner access.");
   return chatRepository.exportFeedback(user.restaurant_id).map((row) => ({
     question: row.question,
     correct_tools: JSON.parse(row.correct_tools),

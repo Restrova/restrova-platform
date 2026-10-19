@@ -28,7 +28,9 @@ export function logError(error, status, fields = {}) {
 }
 
 export function requestLogger(req, res, next) {
-  const requestId = req.headers["x-request-id"] || crypto.randomUUID();
+  const suppliedId = req.headers["x-request-id"];
+  const requestId =
+    typeof suppliedId === "string" && /^[A-Za-z0-9_-]{1,128}$/.test(suppliedId) ? suppliedId : crypto.randomUUID();
   const started = process.hrtime.bigint();
   req.requestId = requestId;
   res.setHeader("X-Request-Id", requestId);
@@ -37,7 +39,8 @@ export function requestLogger(req, res, next) {
     logInfo("http_request", {
       requestId,
       method: req.method,
-      route: req.route?.path || req.originalUrl,
+      // Unknown paths may contain user-supplied secrets too. Log only registered route templates.
+      route: req.route?.path || "unmatched",
       status: res.statusCode,
       durationMs: Number(durationMs.toFixed(2))
     });

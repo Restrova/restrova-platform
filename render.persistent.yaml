@@ -3,10 +3,11 @@ services:
     name: restrova-platform
     runtime: node
     plan: starter
+    numInstances: 1
     buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm build
     startCommand: pnpm start
-    healthCheckPath: /api/health
-    autoDeployTrigger: commit
+    healthCheckPath: /api/ready
+    autoDeployTrigger: checksPass
     envVars:
       - key: NODE_ENV
         value: production
@@ -14,6 +15,10 @@ services:
         generateValue: true
       - key: DATABASE_PATH
         value: /var/data/restaurant.db
+      - key: DATABASE_VOLUME_PATH
+        value: /var/data
+      - key: TRUST_PROXY_HOPS
+        value: "1"
     disk:
       name: restaurant-data
       mountPath: /var/data
