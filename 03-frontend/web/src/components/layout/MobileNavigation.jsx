@@ -2,6 +2,7 @@ import { Link, useLocation } from "react-router-dom";
 import { mobilePriorityItems, roleCanAccess, isNavigationItemActive } from "../../app/navigation.js";
 import { useLocale } from "../../contexts/LocaleContext.jsx";
 import { useRestaurant } from "../../contexts/RestaurantContext.jsx";
+import { BrandMark } from "../brand/BrandMark.jsx";
 
 export function MobileNavigation() {
   const { pathname } = useLocation();
@@ -21,7 +22,7 @@ export function MobileNavigation() {
             className={`mobile-bottom-nav__item ${isNavigationItemActive(item, pathname) ? "is-active" : ""}`}
             aria-current={isNavigationItemActive(item, pathname) ? "page" : undefined}
           >
-            <Icon size={18} aria-hidden="true" />
+            {item.id === "dashboard" ? <BrandMark size={22} monochrome /> : <Icon size={18} aria-hidden="true" />}
             <span>{label}</span>
           </Link>
         );

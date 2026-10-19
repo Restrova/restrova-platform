@@ -2,6 +2,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useLocale } from "../../contexts/LocaleContext.jsx";
 import { useRestaurant } from "../../contexts/RestaurantContext.jsx";
+import { BrandMark, BrandPixels } from "../brand/BrandMark.jsx";
 import { Badge } from "../ui/Badge.jsx";
 import { Button } from "../ui/Button.jsx";
 import { RestaurantSwitcher } from "./RestaurantSwitcher.jsx";
@@ -22,12 +23,14 @@ export function Sidebar({ collapsed, onCollapsedChange }) {
     >
       <div className="app-sidebar__product">
         <Link to="/app/dashboard" className="product-mark" aria-label={t("common.productName")}>
-          <img src="/images/restrova/brand-mark.webp" alt="" width="40" height="40" />
+          <BrandMark size={44} />
         </Link>
         {!collapsed && (
-          <div>
-            <strong>{t("common.productName")}</strong>
-            <small>{t("navigation.productSubtitle")}</small>
+          <div className="app-sidebar__wordmark" lang="en" dir="ltr">
+            <strong>RESTROVA</strong>
+            <small>
+              BUSINESS <BrandPixels />
+            </small>
           </div>
         )}
       </div>

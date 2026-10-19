@@ -29,3 +29,10 @@
   font-display: swap;
   src: url("/fonts/noto-sans-arabic-700.ttf") format("truetype");
 }
+@font-face {
+  font-family: "Barlow Condensed";
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("/fonts/barlow-condensed-800.ttf") format("truetype");
+}

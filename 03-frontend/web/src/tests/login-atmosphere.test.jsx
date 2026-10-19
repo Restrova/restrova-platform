@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, expect, it, vi } from "vitest";
@@ -22,28 +22,18 @@ function show({ desktop = true, reduced = false } = {}) {
     </LocaleProvider>
   );
 }
-it.each([{ desktop: false }, { reduced: true }])(
-  "avoids fetching motion media on small screens or reduced motion: %j",
+it.each([{ desktop: false }, { reduced: true }, { desktop: true }])(
+  "uses static Restrova artwork without autoplay media: %j",
   (settings) => {
     const { container } = show(settings);
     expect(container.querySelector("video")).toBeNull();
-    expect(container.querySelector(".auth-atmosphere__poster")).toHaveAttribute(
-      "src",
-      "/static/images/restrova-login-poster.webp"
-    );
+    expect(container.querySelector(".brand-story__art img")).toHaveAttribute("src", "/images/restrova/brand-hero.webp");
+    expect(screen.getByRole("complementary", { name: "عالم Restrova" })).toBeInTheDocument();
+    expect(container.querySelectorAll(".brand-family__product")).toHaveLength(3);
+    expect(container.querySelectorAll(".brand-family a")).toHaveLength(0);
+    expect(screen.getAllByText("قريبًا")).toHaveLength(2);
   }
 );
-it("uses a muted inline video on desktop and falls back to the poster when it fails", () => {
-  const { container } = show();
-  const video = container.querySelector("video");
-  expect(video).toHaveAttribute("autoplay");
-  expect(video.muted).toBe(true);
-  expect(video).toHaveAttribute("playsinline");
-  expect(video).toHaveAttribute("preload", "metadata");
-  fireEvent.error(video);
-  expect(container.querySelector("video")).toBeNull();
-  expect(container.querySelector(".auth-atmosphere__poster")).toBeInTheDocument();
-});
 it("switches the public form from Arabic RTL to English LTR and preserves the password toggle", async () => {
   show();
   const user = userEvent.setup();

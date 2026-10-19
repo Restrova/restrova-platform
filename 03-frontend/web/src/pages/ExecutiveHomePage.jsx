@@ -7,6 +7,7 @@ import { useRestaurant } from "../contexts/RestaurantContext.jsx";
 import { useLocale } from "../contexts/LocaleContext.jsx";
 import { api } from "../lib/api.js";
 import { Button } from "../components/ui/Button.jsx";
+import { BrandPixels } from "../components/brand/BrandMark.jsx";
 import { simpleCopy } from "./simpleCopy.js";
 import { actionCopy } from "./decisionCopy.js";
 import { useOverview, ConnectChoices } from "./SimplePages.jsx";
@@ -57,9 +58,14 @@ export function ExecutiveHomePage() {
           <li>{c.analysisStep}</li>
         </ol>
         <div className="welcome-card">
-          <img src="/images/restrova/welcome-mascot.webp" alt="" width="180" height="180" />
+          <div className="welcome-card__art" aria-hidden="true">
+            <img src="/images/restrova/rivo-plush.webp" alt="" width="360" height="360" />
+            <BrandPixels />
+          </div>
           <div className="welcome-card__content">
-            <p className="simple-eyebrow">RESTROVA</p>
+            <p className="brand-overline" lang="en" dir="ltr">
+              <BrandPixels /> RESTROVA BUSINESS
+            </p>
             <h1>{c.welcome} 👋</h1>
             <p>{c.connectIntro}</p>
             <ConnectChoices c={c} />
@@ -79,6 +85,9 @@ export function ExecutiveHomePage() {
     <section className="simple-page simple-home">
       <header className="simple-home-heading">
         <div>
+          <p className="brand-overline" lang="en" dir="ltr">
+            <BrandPixels /> RESTROVA BUSINESS
+          </p>
           <p className="simple-eyebrow">
             {c.hello}
             {auth.user?.name ? `, ${auth.user.name}` : ""} 👋
@@ -168,7 +177,7 @@ export function ExecutiveHomePage() {
         )}
       </section>
       <section className="simple-panel simple-insight">
-        <img className="rivo-insight" src="/images/restrova/welcome-mascot.webp" alt="" width="84" height="84" />
+        <img className="rivo-insight" src="/images/restrova/rivo-plush.webp" alt="" width="84" height="84" />
         <div>
           <p className="simple-eyebrow">RIVO AI</p>
           <h2>{c.insight}</h2>
