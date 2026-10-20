@@ -1,0 +1,22 @@
+[Unit]
+Description=Restrova encrypted off-service SQLite backup and recovery verification
+RequiresMountsFor=/var/data/restrova /var/lib/restrova-backup
+OnFailure=restrova-backup-alert@%n.service
+
+[Service]
+Type=oneshot
+User=restrova
+Group=restrova
+WorkingDirectory=/opt/restrova/02-backend/server
+EnvironmentFile=/etc/restrova/backup.env
+Environment=RESTROVA_BACKUP_WORK_DIR=/var/lib/restrova-backup
+ExecStart=/usr/bin/node scripts/offsite-backup.js run
+StateDirectory=restrova-backup
+StateDirectoryMode=0700
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/restrova-backup /var/data/restrova
+TimeoutStartSec=1h

@@ -19,7 +19,13 @@ export function evaluateCodeql(report) {
       // Non-security diagnostics are retained for review, not assigned an invented CVSS score.
       if (raw === undefined) continue;
       const score = Number(raw);
-      if (raw === "" || !Number.isFinite(score) || score < 0 || score > 10)
+      if (
+        !["string", "number"].includes(typeof raw) ||
+        (typeof raw === "string" && raw.trim() === "") ||
+        !Number.isFinite(score) ||
+        score < 0 ||
+        score > 10
+      )
         throw new Error("Invalid security severity");
       if (score >= 7) blocking++;
     }

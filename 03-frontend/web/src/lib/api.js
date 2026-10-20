@@ -33,7 +33,7 @@ export async function api(path, options = {}) {
     options.responseType === "blob" && response.ok ? await response.blob() : parseResponseBody(await response.text());
 
   if (!response.ok) {
-    if (response.status === 401 && token) {
+    if (response.status === 401 && token && getToken() === token) {
       clearAuthStorage();
       window.dispatchEvent(new CustomEvent("auth-expired"));
       window.dispatchEvent(new Event("auth-change"));

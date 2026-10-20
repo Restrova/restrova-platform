@@ -20,3 +20,7 @@ services:
         sync: false
       - key: DATABASE_PATH
         value: /var/data/restrova/restaurant.db
+      - key: DATABASE_VOLUME_PATH
+        value: /var/data
+      - key: TRUST_PROXY_HOPS
+        value: "1"

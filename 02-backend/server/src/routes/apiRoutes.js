@@ -117,7 +117,7 @@ router.get("/ready", controller.ready);
 router.post("/auth/register", authRateLimit, asyncHandler(controller.register));
 router.post("/auth/email-availability", authRateLimit, asyncHandler(controller.checkEmailAvailability));
 router.post("/auth/login", authRateLimit, asyncHandler(controller.login));
-router.post("/auth/logout", controller.logout);
+router.post("/auth/logout", auth, controller.logout);
 router.get("/auth/me", auth, controller.me);
 
 router.post("/organizations", auth, requireRole("owner"), asyncHandler(controller.createOrganization));
@@ -212,6 +212,6 @@ router.get("/chat/sessions/:id/messages", auth, asyncHandler(controller.getChatM
 router.post("/chat", auth, asyncHandler(controller.sendChatMessage));
 router.post("/actions/:hash/confirm", auth, requireOwner, asyncHandler(controller.confirmAction));
 router.post("/feedback", auth, asyncHandler(controller.saveFeedback));
-router.get("/training/export", auth, controller.exportTraining);
+router.get("/training/export", auth, requireOwner, controller.exportTraining);
 
 export { router as apiRoutes };

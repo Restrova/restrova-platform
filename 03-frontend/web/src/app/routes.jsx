@@ -1,8 +1,8 @@
+import { lazy, Suspense } from "react";
 import { DataPage, SettingsPage } from "../pages/SimplePages.jsx";
 const ExecutiveHomePage = lazy(() =>
   import("../pages/ExecutiveHomePage.jsx").then((module) => ({ default: module.ExecutiveHomePage }))
 );
-import { lazy, Suspense } from "react";
 const RecommendationsPage = lazy(() =>
   import("../pages/RecommendationsPage.jsx").then((module) => ({ default: module.RecommendationsPage }))
 );

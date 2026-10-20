@@ -1,6 +1,7 @@
 import cors from "cors";
 import express from "express";
 import helmet from "helmet";
+import { ipKeyGenerator } from "express-rate-limit";
 import { config } from "../config/appConfig.js";
 import { rateLimited } from "../errors/appError.js";
 
@@ -13,7 +14,9 @@ export function isCorsOriginAllowed(origin, corsConfig = config.cors) {
 }
 
 function clientKey(req) {
-  return req.user?.owner_id ? `user:${req.user.owner_id}` : req.ip || req.socket?.remoteAddress || "unknown";
+  return req.user?.owner_id
+    ? `user:${req.user.owner_id}`
+    : ipKeyGenerator(req.ip || req.socket?.remoteAddress || "unknown", 56);
 }
 
 export function createRateLimiter({ windowMs, max, message, maxBuckets = 10000, now = Date.now }) {
@@ -83,7 +86,8 @@ export const importActionRateLimit = createRateLimiter({
 
 export function configureSecurity(app) {
   app.disable("x-powered-by");
-  if (config.isProduction) app.set("trust proxy", 1);
+  // Direct installations ignore forwarded IP headers. Operators must declare a fixed proxy path.
+  app.set("trust proxy", config.trustProxyHops);
 
   const cspDirectives = {
     defaultSrc: ["'self'"],

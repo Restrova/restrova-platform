@@ -27,6 +27,19 @@ function validateDatabase(file) {
   }
 }
 
+function invalidateRestoredSessions(file) {
+  const database = new Database(file, { fileMustExist: true });
+  try {
+    if (database.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name='auth_sessions'").get()) {
+      // A point-in-time restore must never resurrect sessions revoked after the
+      // snapshot. All users must authenticate again after any recovery.
+      database.exec("DELETE FROM auth_sessions");
+    }
+  } finally {
+    database.close();
+  }
+}
+
 function requireNewTarget(target) {
   for (const suffix of ["", "-wal", "-shm", "-journal"]) {
     if (fs.existsSync(target + suffix)) throw new Error("BACKUP_TARGET_EXISTS");
@@ -101,6 +114,8 @@ export async function restoreDatabaseBackup({ source, destination, key }) {
       fs.createWriteStream(snapshot, { flags: "wx", mode: 0o600 })
     );
     // No unauthenticated plaintext reaches the destination, even on corrupt input.
+    validateDatabase(snapshot);
+    invalidateRestoredSessions(snapshot);
     validateDatabase(snapshot);
     publish(snapshot, target);
     return { status: "backup_restored", integrity: "ok" };

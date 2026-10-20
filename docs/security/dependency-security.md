@@ -1,6 +1,6 @@
 # Dependency security maintenance
 
-Related: #129; dependency scanning contributes to #128. Code and container scanning remain separate outstanding work for #128.
+Related: #129; dependency scanning contributes to #128. Code and container scanning have separate gates and evidence described in [vulnerability-scanning.md](vulnerability-scanning.md).
 
 ## Gate and evidence
 
@@ -27,3 +27,14 @@ The initial production dependency audit reported nine advisories (five high, fou
 Sources: [pnpm audit documentation](https://pnpm.io/cli/audit) and [shell-quote advisory](https://github.com/advisories/GHSA-395f-4hp3-45gv). These sources describe the update mechanism and patched range; the registry results and repository tests provide the project-specific evidence.
 
 Verification on the remediation tree: frozen-lockfile install, `pnpm security:audit` (no known vulnerabilities), `pnpm validate` (154 frontend tests, 227 backend tests, 106 AI evaluations and production build), and parsing both existing dev commands with the patched shell-quote passed. GitHub dependency-security also passed after workspace manifests were included with their corresponding lockfile updates.
+
+## October 2026 follow-up remediation
+
+The later local audit of commit `7de92fa41f58963563c3622d96245a5c115d5d82` failed with two advisories:
+
+| Advisory                                                                                                    | Locked package        | Patched resolution | Exposure path                           |
+| ----------------------------------------------------------------------------------------------------------- | --------------------- | ------------------ | --------------------------------------- |
+| [GHSA-jqcg-44mw-7w3h](https://github.com/advisories/GHSA-jqcg-44mw-7w3h), critical IP spoofing              | `proxy-addr@2.0.7`    | `2.0.8`            | Express runtime/proxy client addressing |
+| [GHSA-68fv-2mgg-jv7q](https://github.com/advisories/GHSA-68fv-2mgg-jv7q), high event-loop denial of service | `source-map-js@1.2.1` | `1.2.2`            | Frontend build/test dependency paths    |
+
+Conditional transitive overrides in `pnpm-workspace.yaml` and the regenerated lockfile apply patched versions to all consumers. Existing integrity verification, the all-dependency audit and its `low` failure threshold are retained. Review upstream dependency ranges before removing the overrides, then rerun the audit. These findings reproduce the dependency gate failure on the inspected tree; detailed logs of historical GitHub runs require authenticated access, so their advisory contents must not be invented from the local result.

@@ -34,7 +34,7 @@ export const checkEmailAvailability = (req, res) => {
   return res.json(authService.checkEmailAvailability(req.body));
 };
 export const login = (req, res) => res.json(authService.login(req.body));
-export const logout = (_req, res) => res.json({ ok: true });
+export const logout = (req, res) => res.json(authService.logout(req.user));
 export const me = (req, res) => res.json(authService.serializeMe(req.user));
 
 export const createOrganization = (req, res) =>

@@ -4,11 +4,10 @@ import fs from "node:fs";
 import path from "node:path";
 import { migrate } from "../db/migrate.js";
 import { backfillImportedSalesLedger } from "../db/salesLedgerBackfill.js";
+import { assertProductionDatabasePersistence } from "./config/databasePersistence.js";
 
 const file = path.resolve(process.env.DATABASE_PATH || "./data/restaurant.db");
-if (process.env.NODE_ENV === "production" && !process.env.DATABASE_PATH) {
-  throw new Error("DATABASE_PATH is required in production and must point to durable storage.");
-}
+assertProductionDatabasePersistence(file);
 fs.mkdirSync(path.dirname(file), { recursive: true });
 export const db = new Database(file);
 db.pragma("journal_mode = WAL");
@@ -84,14 +83,18 @@ function ensureAccessRecords() {
 
   restaurants.forEach((restaurant) => {
     let organizationId = restaurant.organization_id;
+    const isLegacyRestaurant = !organizationId;
     if (!organizationId) {
       organizationId = Number(
         insertOrg.run(`${restaurant.name} Organization`, "CNY", "Asia/Shanghai", "ar").lastInsertRowid
       );
       updateRestaurant.run(organizationId, restaurant.id);
+      // Only pre-organization legacy records need an initial membership. Recreating
+      // memberships on every restart would undo intentional access revocation.
+      insertMembership.run(organizationId, restaurant.owner_id, "owner", null);
     }
     let branch = db.prepare("SELECT id FROM branches WHERE restaurant_id=? ORDER BY id LIMIT 1").get(restaurant.id);
-    if (!branch) {
+    if (!branch && isLegacyRestaurant) {
       insertBranch.run(
         organizationId,
         restaurant.id,
@@ -103,6 +106,9 @@ function ensureAccessRecords() {
       );
       branch = db.prepare("SELECT id FROM branches WHERE restaurant_id=? ORDER BY id LIMIT 1").get(restaurant.id);
     }
+    // A newly configured restaurant may not have branches yet. Do not invent
+    // branch data or collide with another restaurant's organization-wide code.
+    if (!branch) return;
     [
       "orders",
       "inventory",
@@ -118,7 +124,6 @@ function ensureAccessRecords() {
         restaurant.id
       );
     });
-    insertMembership.run(organizationId, restaurant.owner_id, "owner", null);
   });
 }
 

@@ -4,6 +4,7 @@ process.env.NODE_ENV = "test";
 const { app } = await import("../src/index.js");
 const { db } = await import("../src/db.js");
 const { signContext } = await import("../src/services/authService.js");
+const { getAuthContext } = await import("../src/repositories/authRepository.js");
 const { financialCategories } = await import("../src/services/financialService.js");
 const periodQuery =
   "period=custom&fromDate=2026-08-17&toDate=2026-08-23&anchor=2026-08-24T12:00:00Z&comparison=previous_period";
@@ -123,12 +124,9 @@ function roleToken(owner, role, branchId = null) {
     role,
     branchId
   );
-  return signContext({
-    owner_id: id,
-    organization_id: owner.organization.id,
-    restaurant_id: owner.restaurant.id,
-    role
-  });
+  const context = getAuthContext(id, owner.organization.id, owner.restaurant.id);
+  assert.ok(context, "Role fixture requires a valid membership and restaurant scope");
+  return signContext(context);
 }
 
 export { start, request, account, branch, sale, ledger, roleToken, periodQuery, db };

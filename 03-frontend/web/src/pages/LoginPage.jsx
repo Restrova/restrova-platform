@@ -11,7 +11,6 @@ import {
   LockKeyhole,
   LoaderCircle,
   Globe2,
-  Sparkles,
   Mail,
   MapPin,
   ShieldCheck,
@@ -23,6 +22,8 @@ import { LanguageSwitcher } from "../components/layout/LanguageSwitcher.jsx";
 import { useAuth } from "../contexts/AuthContext.jsx";
 import { useLocale } from "../contexts/LocaleContext.jsx";
 import { checkEmailAvailabilityRequest } from "../lib/auth.js";
+import { BrandMark } from "../components/brand/BrandMark.jsx";
+import { BrandStory } from "../components/brand/BrandStory.jsx";
 
 const defaultProfile = {
   name: "Restaurant Owner",
@@ -42,65 +43,6 @@ const stepIcons = [User, Building2, Store, MapPin, Check];
 
 function workspaceDestination(value) {
   return value === "/app" || value?.startsWith("/app/") ? value : "/app/dashboard";
-}
-
-function LoginAtmosphere() {
-  const { t } = useLocale();
-  const [playVideo, setPlayVideo] = useState(false);
-  const [videoFailed, setVideoFailed] = useState(false);
-
-  useEffect(() => {
-    if (!window.matchMedia) return;
-    const desktop = window.matchMedia("(min-width: 1024px)");
-    const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const update = () => setPlayVideo(desktop.matches && !motion.matches);
-    update();
-    desktop.addEventListener("change", update);
-    motion.addEventListener("change", update);
-    return () => {
-      desktop.removeEventListener("change", update);
-      motion.removeEventListener("change", update);
-    };
-  }, []);
-
-  return (
-    <aside className="auth-atmosphere">
-      <img className="auth-atmosphere__poster" src="/static/images/restrova-login-poster.webp" alt="" />
-      {playVideo && !videoFailed && (
-        <video
-          className="auth-atmosphere__video"
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="metadata"
-          poster="/static/images/restrova-login-poster.webp"
-          aria-hidden="true"
-          onError={() => setVideoFailed(true)}
-        >
-          <source src="/static/videos/restrova-login.mp4" type="video/mp4" onError={() => setVideoFailed(true)} />
-        </video>
-      )}
-      <div className="auth-atmosphere__content">
-        <span className="auth-ai-badge">
-          <Sparkles size={15} aria-hidden="true" />
-          {t("auth.premiumBadge")}
-        </span>
-        <h2>
-          {t("auth.premiumTitle")}
-          <em>{t("auth.premiumAccent")}</em>
-        </h2>
-        <p>{t("auth.premiumDescription")}</p>
-      </div>
-      <div className="auth-atmosphere__footer">
-        <img className="auth-mascot" src="/images/restrova/welcome-mascot.webp" alt="" width="170" height="170" />
-        <span>
-          <ShieldCheck size={17} aria-hidden="true" />
-          {t("auth.secureAccess")}
-        </span>
-      </div>
-    </aside>
-  );
 }
 
 export function LoginPage({ mode = "login" }) {
@@ -171,10 +113,12 @@ export function LoginPage({ mode = "login" }) {
         <div className="auth-toolbar">
           <div className="brand">
             <span>
-              <img src="/images/restrova/brand-mark.webp" alt="" width="40" height="40" />
+              <BrandMark size={44} />
             </span>
             <span className="login-brand-name">
-              <b>Restrova</b>
+              <b lang="en" dir="ltr">
+                RESTROVA<span className="brand-wordmark-dot">.</span>
+              </b>
               <small>{t("auth.brandSubtitle")}</small>
             </span>
           </div>
@@ -471,7 +415,7 @@ export function LoginPage({ mode = "login" }) {
           )}
         </div>
       </section>
-      <LoginAtmosphere />
+      <BrandStory />
     </main>
   );
 }

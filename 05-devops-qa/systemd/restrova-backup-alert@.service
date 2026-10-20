@@ -1,0 +1,9 @@
+[Unit]
+Description=Emit Restrova backup failure to monitored host journal
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/logger -p daemon.crit -t restrova-backup "Backup job or freshness check failed; inspect sanitized service logs."
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true

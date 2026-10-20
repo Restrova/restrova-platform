@@ -4,7 +4,7 @@ export function getAuthContext(ownerId, organizationId, restaurantId) {
   const membership = db
     .prepare(
       `
-    SELECT u.id owner_id,u.email,u.name,ou.role,ou.branch_id,o.id organization_id,o.name organization_name,o.currency,o.timezone,o.language,r.id restaurant_id,r.name restaurant_name
+    SELECT u.id owner_id,u.email,u.name,ou.id membership_id,ou.role,ou.branch_id,o.id organization_id,o.name organization_name,o.currency,o.timezone,o.language,r.id restaurant_id,r.name restaurant_name
     FROM organization_users ou
     JOIN owners u ON u.id=ou.owner_id
     JOIN organizations o ON o.id=ou.organization_id
@@ -12,28 +12,51 @@ export function getAuthContext(ownerId, organizationId, restaurantId) {
     WHERE u.id=?
       AND (? IS NULL OR o.id=?)
       AND (? IS NULL OR r.id=?)
+      AND (ou.role <> 'branch_manager' OR EXISTS (
+        SELECT 1 FROM branches b
+        WHERE b.id=ou.branch_id AND b.organization_id=o.id AND b.restaurant_id=r.id
+      ))
     ORDER BY ou.id
     LIMIT 1
   `
     )
     .get(ownerId, organizationId || null, organizationId || null, restaurantId || null, restaurantId || null);
-  if (membership) return membership;
-  const legacy = db
+  return membership || null;
+}
+
+export function createAuthSession(sessionId, context, issuedAt, expiresAt) {
+  return db.transaction(() => {
+    db.prepare("DELETE FROM auth_sessions WHERE expires_at<=?").run(issuedAt);
+    db.prepare(
+      `INSERT INTO auth_sessions(id,membership_id,owner_id,organization_id,restaurant_id,issued_at,expires_at)
+       VALUES (?,?,?,?,?,?,?)`
+    ).run(
+      sessionId,
+      context.membership_id,
+      context.owner_id,
+      context.organization_id,
+      context.restaurant_id,
+      issuedAt,
+      expiresAt
+    );
+  })();
+}
+
+export function findActiveAuthSession(token, now) {
+  return db
     .prepare(
-      "SELECT o.id owner_id,o.email,o.name,r.id restaurant_id,r.name restaurant_name,r.organization_id FROM owners o JOIN restaurants r ON r.owner_id=o.id WHERE o.id=? LIMIT 1"
+      `SELECT membership_id FROM auth_sessions
+       WHERE id=? AND owner_id=? AND organization_id=? AND restaurant_id=?
+         AND revoked_at IS NULL AND expires_at>?`
     )
-    .get(ownerId);
-  if (!legacy) return null;
-  return {
-    ...legacy,
-    role: "owner",
-    branch_id: null,
-    organization_id: legacy.organization_id,
-    organization_name: legacy.restaurant_name,
-    currency: "CNY",
-    timezone: "Asia/Shanghai",
-    language: "ar"
-  };
+    .get(token.jti, token.ownerId, token.organizationId, token.restaurantId, now);
+}
+
+export function revokeAuthSession(sessionId) {
+  db.prepare("UPDATE auth_sessions SET revoked_at=? WHERE id=? AND revoked_at IS NULL").run(
+    Math.floor(Date.now() / 1000),
+    sessionId
+  );
 }
 
 export function findOwnerByEmail(email) {

@@ -9,7 +9,10 @@
     "eval": "node ../../04-data-ai/evals/run-evals.js",
     "alerts:dispatch": "node scripts/dispatch-alert-notifications.js",
     "db:backup": "node scripts/database-backup.js create",
-    "db:restore": "node scripts/database-backup.js restore"
+    "db:restore": "node scripts/database-backup.js restore",
+    "db:backup:offsite": "node scripts/offsite-backup.js run",
+    "db:backup:check": "node scripts/offsite-backup.js check",
+    "db:backup:fetch": "node scripts/offsite-backup.js fetch"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

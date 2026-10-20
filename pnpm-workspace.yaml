@@ -10,3 +10,6 @@ onlyBuiltDependencies:
 # GHSA-395f-4hp3-45gv: concurrently still constrains shell-quote to the affected minor.
 overrides:
   "shell-quote@<1.9.0": ^1.9.0
+  # GHSA-jqcg-44mw-7w3h and GHSA-68fv-2mgg-jv7q: patch transitive consumers too.
+  "proxy-addr@<2.0.8": ^2.0.8
+  "source-map-js@<1.2.2": ^1.2.2

@@ -1,0 +1,117 @@
+/* Brand motion stays on introductions and controls, away from live restaurant data. */
+@keyframes restrova-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes restrova-rivo-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0);
+  }
+  50% {
+    transform: translateY(-8px) rotate(0.45deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .brand-story__intro h2 > span,
+  .brand-story__intro > p,
+  .brand-family__product,
+  .login-intro,
+  .login-entry .auth-tabs,
+  .login-entry .onboarding-fieldset,
+  .login-entry .onboarding-actions,
+  .welcome-card__content > h1,
+  .welcome-card__content > p,
+  .welcome-card__content > .brand-overline {
+    animation: restrova-reveal 520ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  }
+
+  .brand-story__intro h2 > span:nth-child(2),
+  .login-entry .auth-tabs {
+    animation-delay: 70ms;
+  }
+
+  .brand-story__intro > p,
+  .login-entry .onboarding-fieldset,
+  .welcome-card__content > p {
+    animation-delay: 140ms;
+  }
+
+  .login-entry .onboarding-actions,
+  .brand-family__product:nth-child(1) {
+    animation-delay: 210ms;
+  }
+
+  .brand-family__product:nth-child(2) {
+    animation-delay: 280ms;
+  }
+
+  .brand-family__product:nth-child(3) {
+    animation-delay: 350ms;
+  }
+
+  /* Settle within five seconds without requiring a pause control. */
+  .brand-story__art > img,
+  .welcome-card__art > img {
+    animation: restrova-rivo-float 4.2s ease-in-out 600ms 1;
+  }
+
+  .brand-family__product,
+  .ui-button,
+  .simple-primary,
+  .simple-secondary,
+  .simple-ask,
+  .login--premium form .onboarding-actions button {
+    transition: transform 180ms ease-out;
+  }
+
+  .brand-family__product:focus-within {
+    transform: translateY(-2px);
+  }
+
+  :is(.ui-button, .simple-primary, .simple-secondary, .simple-ask):focus-visible:not(:disabled) {
+    transform: translateY(-1px);
+  }
+
+  :is(.ui-button, .simple-primary, .simple-secondary, .simple-ask):active:not(:disabled),
+  .login--premium form .onboarding-actions button:active:not(:disabled) {
+    transform: translateY(0);
+  }
+}
+
+/* Hover is a pointer enhancement, never a prerequisite on touch screens. */
+@media (prefers-reduced-motion: no-preference) and (hover: hover) and (pointer: fine) {
+  .brand-family__product:hover {
+    transform: translateY(-2px);
+  }
+
+  :is(.ui-button, .simple-primary, .simple-secondary, .simple-ask):hover:not(:disabled, :active) {
+    transform: translateY(-1px);
+  }
+}
+
+/* Keep small screens still once the brief introduction has appeared. */
+@media (max-width: 760px) {
+  .brand-story__art > img,
+  .welcome-card__art > img {
+    animation: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

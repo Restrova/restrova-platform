@@ -27,6 +27,20 @@ export function RestaurantProvider({ children }) {
   const [selectedRestaurantId, setSelectedRestaurantIdState] = useState(() => getStoredId(RESTAURANT_KEY));
   const [selectedBranchId, setSelectedBranchIdState] = useState(() => getStoredId(BRANCH_KEY));
   const session = auth.session;
+  const authorizationScope = JSON.stringify([
+    auth.user?.id,
+    auth.user?.role,
+    auth.organization?.id,
+    auth.restaurant?.id,
+    auth.branches.map((branch) => branch.id).sort()
+  ]);
+  const [preparedScope, setPreparedScope] = useState(null);
+
+  useEffect(() => {
+    // Reset while children are unmounted, before queries for the new authorization can start.
+    queryClient.clear();
+    setPreparedScope({ authorizationScope, queryClient });
+  }, [authorizationScope, queryClient]);
 
   const restaurants = useMemo(() => {
     return session?.restaurant ? [{ ...session.restaurant, id: normalizeId(session.restaurant.id) }] : [];
@@ -135,7 +149,9 @@ export function RestaurantProvider({ children }) {
     ]
   );
 
-  return <RestaurantContext.Provider value={value}>{children}</RestaurantContext.Provider>;
+  const scopeReady =
+    preparedScope?.authorizationScope === authorizationScope && preparedScope?.queryClient === queryClient;
+  return <RestaurantContext.Provider value={value}>{scopeReady ? children : null}</RestaurantContext.Provider>;
 }
 
 export function useRestaurant() {

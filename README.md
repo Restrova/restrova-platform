@@ -160,13 +160,13 @@ This trains behavior safely through retrieval, expert feedback, and regression t
 
 ## Production notes
 
-Set a strong `JWT_SECRET`, use TLS, move SQLite to a durable volume (or swap to PostgreSQL), and configure `CLIENT_ORIGIN`. In production the app refuses to start without `JWT_SECRET` and `DATABASE_PATH`. Public demo seeding is disabled unless `ENABLE_DEMO_SEED=true` is explicitly set.
+Set a strong `JWT_SECRET`, use TLS, mount durable storage, and configure `CLIENT_ORIGIN`. In production startup requires an absolute `DATABASE_PATH` inside a separately mounted, writable `DATABASE_VOLUME_PATH`. Root/temporary filesystems and nested mounts shadowing that volume are rejected. Operators must still verify that the host/provider retains the volume across replacement and redeployment. Public demo seeding is disabled unless `ENABLE_DEMO_SEED=true` is explicitly set. See the [production operator handoff](docs/operations/production-operator-handoff.md), [session upgrade](docs/operations/authentication-sessions.md), and [encrypted off-service backup procedure](docs/operations/database-backup-restore.md).
 
 ## Deploy publicly
 
-The default `render.yaml` is a working free preview deployment: it builds the React frontend, serves it from Express, creates a generated JWT secret, and auto-deploys only after GitHub checks pass. Register a new owner account after the deployment opens.
+The default `render.yaml` describes a paid Starter deployment for the existing service with a persistent disk, a privately supplied JWT secret and checks-pass deployment gating. `render.persistent.yaml` is an alternative service definition with the same persistence and readiness requirements; do not import both and accidentally create duplicate production services.
 
-Render free web services cannot attach persistent disks, so preview accounts and data can disappear after a restart or redeploy. Do not store real restaurant data in the free preview. For durable SQLite, create a Blueprint using `render.persistent.yaml`; it selects a paid Starter service and mounts `/var/data`. A managed database is preferable before production scale.
+Render free web services cannot attach persistent disks. This production configuration intentionally refuses to start on ephemeral storage. The checked-in definitions prepare configuration only; they do not establish that any live service has a disk or working off-service backups. Keep SQLite to one writer instance and verify persistence during a controlled restart before accepting customer data.
 
 [Deploy to Render](https://render.com/deploy?repo=https://github.com/Restrova/restrova-platform)
 
@@ -198,7 +198,7 @@ The included `05-devops-qa/Dockerfile` and root `railway.json` also support depl
 
 1. Create a Railway project and choose **Deploy from GitHub repo**.
 2. Select `Restrova/restrova-platform`.
-3. Add `JWT_SECRET` and `DATABASE_PATH`.
+3. Add `JWT_SECRET`, `DATABASE_PATH=/data/restaurant.db` and `DATABASE_VOLUME_PATH=/data`. Configure `CLIENT_ORIGIN`; set `TRUST_PROXY_HOPS=1` only after verifying the platform's single ingress proxy overwrites forwarded client headers.
 4. Generate a public domain from the service networking settings.
 
-For durable SQLite data, mount a Railway volume at `/data` and set `DATABASE_PATH=/data/restaurant.db`. Without a volume, production startup should be treated as unsafe for real restaurant data.
+Mount a Railway volume at `/data` before startup. `railway.json` does not provision that volume, configure branch protection or prove the deployment is gated on successful security checks. Without the mount, production startup fails. Keep one instance and follow the operator handoff before enabling traffic.

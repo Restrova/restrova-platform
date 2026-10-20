@@ -1,0 +1,18 @@
+{
+  "Rules": [
+    {
+      "ID": "restrova-production-backup-expiry",
+      "Status": "Enabled",
+      "Filter": { "Prefix": "production/" },
+      "Expiration": { "Days": 34 },
+      "NoncurrentVersionExpiration": { "NoncurrentDays": 1 },
+      "AbortIncompleteMultipartUpload": { "DaysAfterInitiation": 1 }
+    },
+    {
+      "ID": "restrova-production-delete-markers",
+      "Status": "Enabled",
+      "Filter": { "Prefix": "production/" },
+      "Expiration": { "ExpiredObjectDeleteMarker": true }
+    }
+  ]
+}
