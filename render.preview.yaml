@@ -1,0 +1,20 @@
+# Separate, free visual preview. The existing application service is unchanged.
+services:
+  - type: web
+    name: restrova-visual-preview
+    runtime: static
+    repo: https://github.com/Restrova/restrova-platform
+    branch: feat/restrova-static-preview
+    buildCommand: node scripts/build-visual-preview.mjs
+    staticPublishPath: ./dist/visual-preview
+    autoDeployTrigger: checksPass
+    headers:
+      - path: /*
+        name: Content-Security-Policy
+        value: "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: no-referrer
