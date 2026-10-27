@@ -12,6 +12,7 @@ const files = [
   ["03-frontend/visual-preview/index.html", "index.html"],
   ["03-frontend/visual-preview/styles.css", "styles.css"],
   ["03-frontend/visual-preview/preview.js", "preview.js"],
+  ["docs/design/previews/home-ar.png", "assets/home-ar.png"],
   ["docs/design/previews/login-en.png", "assets/login-en.png"],
   ["docs/design/previews/login-ar.png", "assets/login-ar.png"],
   ["docs/design/previews/login-mobile.png", "assets/login-mobile.png"],

@@ -30,6 +30,7 @@ const FinancialDashboardPage = lazy(() =>
   import("../pages/FinancialDashboardPage.jsx").then((module) => ({ default: module.FinancialDashboardPage }))
 );
 import { MenuProfitabilityPage } from "../pages/MenuProfitabilityPage.jsx";
+import { LandingPage } from "../pages/LandingPage.jsx";
 import { LoginPage } from "../pages/LoginPage.jsx";
 import { NotFoundPage } from "../pages/NotFoundPage.jsx";
 import { PlaceholderPage } from "../pages/PlaceholderPage.jsx";
@@ -63,7 +64,7 @@ export function AppRoutes() {
 
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/app/dashboard" replace />} />
+      <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/unauthorized" element={<UnauthorizedPage />} />

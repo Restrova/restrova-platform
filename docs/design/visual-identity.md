@@ -109,3 +109,27 @@ The `prefers-reduced-motion: reduce` preference disables all interface animation
 transitions, and smooth scrolling, including existing loading animations. Loading
 states retain their text and accessibility semantics. Reduced motion never hides
 content or prevents form submission.
+
+## Presentation-inspired interface update
+
+The supplied HSIYC presentation was used as a visual reference, not as project
+instructions. Its dark scenes, large headlines, mint/coral accents and grouped
+cards inform the new direction. Restrova retains its green palette and original
+artwork; the presentation's logos and activity imagery are not republished.
+
+The public `/` route now presents the product family, restaurant journey and
+Business sign-in links in Arabic, English and Chinese. Market and Discover remain
+explicitly in development. `/app` retains its authenticated dashboard redirect.
+Login, registration, navigation, welcome panels, cards and table styling share
+the new identity through `world-identity.css`.
+
+Motion controls on the homepage, authentication pages and workspace stop CSS
+animations and transitions. The choice carries across client-side navigation;
+reduced-motion system preferences always take precedence. Decorative entrance
+and floating animations finish within five seconds.
+
+Local validation: 171 frontend tests, 263 backend tests and 106 evaluations passed;
+production build, lint and formatting passed. Browser checks covered 27 public
+page/language/width combinations and 28 authenticated route/width combinations.
+No horizontal overflow or JavaScript errors were observed. Workspace screenshots
+use a synthetic local tenant. These changes have not been deployed.

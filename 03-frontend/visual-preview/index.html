@@ -54,7 +54,8 @@
             <p>Application screenshots. Explore the design in English and Arabic.</p>
           </div>
           <div class="screens-nav" role="group" aria-label="Choose a screen" hidden>
-            <button type="button" data-screen="login" aria-controls="login" aria-pressed="true">English login</button>
+            <button type="button" data-screen="home" aria-controls="home" aria-pressed="true">Arabic homepage</button>
+            <button type="button" data-screen="login" aria-controls="login" aria-pressed="false">English login</button>
             <button type="button" data-screen="arabic" aria-controls="arabic" aria-pressed="false">Arabic login</button>
             <button type="button" data-screen="workspace" aria-controls="workspace" aria-pressed="false">
               Business workspace
@@ -66,9 +67,22 @@
           This is a visual preview. The screens below are images; login and saved data are not available here.
         </p>
         <noscript>
-          <p class="preview-note">All four screen previews are shown below.</p>
+          <p class="preview-note">All five screen previews are shown below.</p>
         </noscript>
         <div id="screens">
+          <figure id="home">
+            <div class="screen">
+              <img
+                src="./assets/home-ar.png"
+                alt="New Arabic Restrova homepage with forest-green hero, product cards and restaurant journey"
+                width="1440"
+                height="2695"
+              />
+            </div>
+            <figcaption>
+              Arabic homepage<a href="./assets/home-ar.png" download="restrova-home.png">Download image ↗</a>
+            </figcaption>
+          </figure>
           <figure id="login">
             <div class="screen">
               <img
@@ -125,7 +139,7 @@
                 src="./assets/login-mobile.png"
                 alt="Mobile login screen with the sign-in form above the green Rivo illustration"
                 width="390"
-                height="1595"
+                height="1553"
                 loading="lazy"
               />
             </div>

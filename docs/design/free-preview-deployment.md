@@ -31,7 +31,7 @@ security headers. If using a Blueprint, explicitly select this file. The root
 For a manually created Static Site, copy the headers from `render.preview.yaml`
 into the site's Headers settings.
 
-After deployment, open the public URL shown by Render and check all four
+After deployment, open the public URL shown by Render and check all five
 screenshot buttons, image downloads, mobile layout and reduced-motion behavior.
 The screenshots are static: buttons shown inside an image are not interactive.
 A successful Git push or local build does not establish a successful deployment.

@@ -15,7 +15,7 @@ preferences disable animations. Screenshots cannot demonstrate the motion.
 Desktop and mobile browser checks verified English and Arabic layouts,
 keyboard validation, loaded artwork, no horizontal overflow and no JavaScript
 errors. `pnpm validate` passed for this visual refinement: lint, formatting,
-168 frontend tests, 263 backend tests, 106 AI evaluations and the production
+171 frontend tests, 263 backend tests, 106 AI evaluations and the production
 build. The earlier security fixes and tests remain unchanged. Remote release
 checks and Render deployment require separate verification.
 
@@ -34,3 +34,7 @@ checks and Render deployment require separate verification.
 ## Mobile login
 
 ![Green login layout on a mobile viewport](previews/login-mobile.png)
+
+## New Arabic homepage
+
+![Arabic homepage](previews/home-ar.png)

@@ -1,3 +1,4 @@
+import { MotionControl } from "../brand/MotionControl.jsx";
 import { Menu } from "lucide-react";
 import { useLocale } from "../../contexts/LocaleContext.jsx";
 import { useRestaurant } from "../../contexts/RestaurantContext.jsx";
@@ -33,6 +34,7 @@ export function Topbar({ onOpenMobileNavigation }) {
       <div className="app-topbar__controls">
         {restaurant.demoMode && <Badge variant="warning">{t("navigation.demoMode")}</Badge>}
         <BranchSwitcher />
+        <MotionControl />
         <LanguageSwitcher compact />
         <NotificationButton />
         <UserMenu compact />
