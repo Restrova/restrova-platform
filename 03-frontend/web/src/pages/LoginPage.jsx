@@ -1,3 +1,4 @@
+import { MotionControl } from "../components/brand/MotionControl.jsx";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
@@ -124,6 +125,7 @@ export function LoginPage({ mode = "login" }) {
           </div>
           <div className="auth-language">
             <Globe2 size={17} aria-hidden="true" />
+            <MotionControl />
             <LanguageSwitcher compact />
           </div>
         </div>

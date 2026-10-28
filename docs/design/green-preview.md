@@ -1,36 +1,36 @@
-# Restrova green design preview
+# Restrova indigo and mint preview
 
-These are screenshots of the running application using the green identity.
-They show a local build, not a live Render deployment. The workspace uses a
-synthetic review tenant and contains no customer data.
+These screenshots show the running local application with the current restaurant-focused
+identity. The legacy filename is retained for existing links. They do not establish a live
+Render deployment. The Business workspace uses a synthetic review tenant without customer data.
 
-The interface uses forest green, fresh green, mint and cream. The refined hero
-has a transparent background and softer apricot details. Rounded forms and cards,
-quiet shadows and green-toned neutral text keep the experience cohesive. The
-workspace has a calm cream background, with the grid reserved for artwork.
-Headings and forms enter gently;
-Rivo settles within five seconds. Mobile artwork stays still, and reduced-motion
-preferences disable animations. Screenshots cannot demonstrate the motion.
+The interface uses deep indigo, mint, realistic restaurant objects and readable Arabic
+headlines. The cartoon mascot has been replaced. The workspace retains quiet surfaces for
+financial values, tables and forms. Screenshots do not demonstrate animation; the application
+includes a motion control and respects reduced-motion preferences.
 
-Desktop and mobile browser checks verified English and Arabic layouts,
-keyboard validation, loaded artwork, no horizontal overflow and no JavaScript
-errors. `pnpm validate` passed for this visual refinement: lint, formatting,
-168 frontend tests, 263 backend tests, 106 AI evaluations and the production
-build. The earlier security fixes and tests remain unchanged. Remote release
-checks and Render deployment require separate verification.
+Browser verification covered 36 public-page states (Arabic, English and Chinese at 320,
+390, 768 and 1440 pixels), 28 authenticated Business route/viewport states, and 20
+static/offline gallery selections. No JavaScript page errors, missing visible images or
+horizontal document overflow were observed. Motion pause, reduced-motion preference and
+the unauthenticated route guard were also checked. These checks use local synthetic data.
+
+## Arabic homepage
+
+![Arabic homepage with restaurant still life and indigo/mint identity](previews/home-ar.png)
 
 ## English login
 
-![English login with forest green controls and green Rivo artwork](previews/login-en.png)
+![English login with restaurant artwork](previews/login-en.png)
 
 ## Arabic login
 
-![Arabic login with right-to-left layout and the green identity](previews/login-ar.png)
+![Arabic login with right-to-left form](previews/login-ar.png)
 
 ## Business workspace
 
-![Business workspace with forest green navigation and green Rivo mascot](previews/workspace.png)
+![Business workspace with indigo navigation and a synthetic restaurant](previews/workspace.png)
 
 ## Mobile login
 
-![Green login layout on a mobile viewport](previews/login-mobile.png)
+![Responsive mobile login](previews/login-mobile.png)

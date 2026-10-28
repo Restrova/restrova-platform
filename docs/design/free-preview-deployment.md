@@ -1,9 +1,34 @@
 # Free Restrova visual preview
 
-This is a separate static website showing the green artwork and verified
+This is a separate static website showing the indigo and mint restaurant artwork and verified
 English, Arabic, mobile and Business workspace screenshots. It has no login,
 database, API, analytics or saved data. The workspace screenshot uses a synthetic
 review tenant. Market and Discover remain marked as coming soon.
+
+## Deploy on GitHub Pages
+
+The `gh-pages` branch contains only the built visual gallery and public design assets.
+It is separate from `main` and the application source branch. To activate it, a repository
+administrator opens **Settings → Pages** and selects:
+
+| Setting | Value                |
+| ------- | -------------------- |
+| Source  | Deploy from a branch |
+| Branch  | `gh-pages`           |
+| Folder  | `/ (root)`           |
+
+Click **Save** and wait for the Pages deployment to succeed. The default project URL is
+`https://restrova.github.io/restrova-platform/`. Use the URL GitHub displays in Settings →
+Pages if a custom domain or access policy applies. A branch push alone does not confirm a
+live site. If Pages is unavailable under the repository's current plan or visibility, use
+the free Render static-site option below; do not change repository visibility or upgrade a
+plan merely to publish this preview.
+
+For updates, run the build below and publish only `dist/visual-preview/` to `gh-pages`,
+with an empty `.nojekyll` file at its root. Never publish the repository root. The gallery
+uses relative asset paths, so it works below the project URL without a Vite base-path change.
+The Pages site contains screenshots; authentication and restaurant operations remain in
+the full application.
 
 ## Deploy on Render
 
@@ -31,7 +56,7 @@ security headers. If using a Blueprint, explicitly select this file. The root
 For a manually created Static Site, copy the headers from `render.preview.yaml`
 into the site's Headers settings.
 
-After deployment, open the public URL shown by Render and check all four
+After deployment, open the public URL shown by Render and check all five
 screenshot buttons, image downloads, mobile layout and reduced-motion behavior.
 The screenshots are static: buttons shown inside an image are not interactive.
 A successful Git push or local build does not establish a successful deployment.

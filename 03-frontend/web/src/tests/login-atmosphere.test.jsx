@@ -27,7 +27,10 @@ it.each([{ desktop: false }, { reduced: true }, { desktop: true }])(
   (settings) => {
     const { container } = show(settings);
     expect(container.querySelector("video")).toBeNull();
-    expect(container.querySelector(".brand-story__art img")).toHaveAttribute("src", "/images/restrova/brand-hero.webp");
+    expect(container.querySelector(".brand-story__art img")).toHaveAttribute(
+      "src",
+      "/images/restrova/restaurant-still-life.webp"
+    );
     expect(screen.getByRole("complementary", { name: "عالم Restrova" })).toBeInTheDocument();
     expect(container.querySelectorAll(".brand-family__product")).toHaveLength(3);
     expect(container.querySelectorAll(".brand-family a")).toHaveLength(0);

@@ -13,8 +13,8 @@
 }
 body {
   margin: 0;
-  color: #173e2f;
-  background: #fafbf4;
+  color: #202a68;
+  background: #f8f9ff;
   font:
     16px/1.65 system-ui,
     sans-serif;
@@ -25,7 +25,7 @@ a {
 }
 button:focus-visible,
 a:focus-visible {
-  outline: 3px solid #287a45;
+  outline: 3px solid #303fac;
   outline-offset: 4px;
 }
 a {
@@ -38,7 +38,7 @@ a {
   top: -100px;
   padding: 12px 20px;
   border-radius: 10px;
-  background: #173e2f;
+  background: #202a68;
   color: white;
 }
 .skip-link:focus {
@@ -74,7 +74,7 @@ header {
 }
 .edition {
   font-size: 12px;
-  border: 1px solid #cad9bf;
+  border: 1px solid #c4d8fa;
   border-radius: 99px;
   padding: 7px 13px;
   background: white;
@@ -101,11 +101,11 @@ header {
   margin: 18px 0 22px;
 }
 .hero h1 span {
-  color: #287a45;
+  color: #303fac;
 }
 .hero p {
   max-width: 420px;
-  color: #536759;
+  color: #53647f;
   font-size: 15px;
 }
 .hero img {
@@ -126,7 +126,7 @@ header {
   padding: 6px 10px;
   border-radius: 99px;
   background: white;
-  border: 1px solid #dce4d8;
+  border: 1px solid #dce5f4;
 }
 .swatch i {
   width: 13px;
@@ -135,17 +135,17 @@ header {
   border-radius: 50%;
 }
 .swatch-forest i {
-  background: #173e2f;
+  background: #202a68;
 }
 .swatch-fresh i {
-  background: #8edb70;
+  background: #59e0c1;
 }
 .swatch-mint i {
-  background: #eaf4e5;
+  background: #edf4ff;
 }
 .preview {
   padding-block: 25px 45px;
-  border-top: 1px solid #dce4d8;
+  border-top: 1px solid #dce5f4;
   scroll-margin-top: 20px;
 }
 .preview-head {
@@ -164,7 +164,7 @@ header {
 .preview-head p,
 .preview-note {
   font-size: 13px;
-  color: #536759;
+  color: #53647f;
 }
 .preview-head p {
   margin: 0;
@@ -177,8 +177,8 @@ header {
   display: flex;
   gap: 5px;
   padding: 6px;
-  background: #eaf4e5;
-  border: 1px solid #dce4d8;
+  background: #edf4ff;
+  border: 1px solid #dce5f4;
   border-radius: 14px;
   flex-wrap: wrap;
 }
@@ -189,31 +189,31 @@ header {
   background: transparent;
   border: 0;
   padding: 11px 15px;
-  color: #173e2f;
+  color: #202a68;
   border-radius: 10px;
   cursor: pointer;
   min-height: 44px;
 }
 .screens-nav button[aria-pressed="true"] {
-  background: #173e2f;
+  background: #202a68;
   color: white;
-  box-shadow: 0 3px 8px #173e2f14;
+  box-shadow: 0 3px 8px #202a6814;
 }
 .screens-nav button:hover {
-  background: #dcebd4;
+  background: #d8f6ed;
 }
 .screens-nav button[aria-pressed="true"]:hover {
-  background: #102d23;
+  background: #101943;
 }
 figure {
   margin: 24px 0 0;
 }
 .screen {
-  background: #edf3e6;
+  background: #eef1fb;
   padding: 12px;
-  border: 1px solid #dce4d8;
+  border: 1px solid #dce5f4;
   border-radius: 22px;
-  box-shadow: 0 22px 50px -32px #173e2f50;
+  box-shadow: 0 22px 50px -32px #202a6850;
 }
 .screen img {
   display: block;
@@ -231,21 +231,21 @@ figcaption {
   gap: 20px;
   padding: 16px 4px;
   font-size: 12px;
-  color: #536759;
+  color: #53647f;
 }
 figcaption a {
   font-weight: 600;
-  color: #173e2f;
+  color: #202a68;
   text-underline-offset: 4px;
 }
 footer {
   padding-block: 26px 45px;
-  border-top: 1px solid #dce4d8;
+  border-top: 1px solid #dce5f4;
   font-size: 12px;
-  color: #536759;
+  color: #53647f;
 }
 footer strong {
-  color: #173e2f;
+  color: #202a68;
 }
 .hero-art {
   position: relative;
@@ -255,7 +255,7 @@ footer strong {
   position: absolute;
   content: "";
   inset: 15% 5%;
-  background: #eaf4e5;
+  background: #edf4ff;
   border-radius: 50%;
   z-index: -1;
 }
@@ -327,5 +327,34 @@ footer strong {
   * {
     animation: none !important;
     transition: none !important;
+  }
+}
+
+.hero {
+  background: radial-gradient(ellipse at 80% 30%, #414bc2, #303fac);
+  color: #fff;
+  padding: 32px;
+  border-radius: 24px;
+  margin-block: 16px 36px;
+}
+.hero h1 span {
+  color: #59e0c1;
+}
+.hero p {
+  color: #edf4ff;
+}
+.hero-art::before {
+  background: transparent;
+}
+.swatch {
+  color: #202a68;
+}
+@media (max-width: 760px) {
+  .hero {
+    padding: 24px 18px;
+  }
+  .hero h1 {
+    font-size: 46px;
+    overflow-wrap: anywhere;
   }
 }

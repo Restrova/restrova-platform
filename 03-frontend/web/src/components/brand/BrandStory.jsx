@@ -10,7 +10,7 @@ const copy = {
     second: "قصّة نجاح.",
     description: "من تفاصيل يومك إلى خطوتك الجاية، خلّ الصورة أوضح مع Restrova.",
     note: "بيانات أوضح. قرارات أذكى.",
-    assistant: "حيّاك، أنا ريفو!",
+    assistant: "كل تفصيلة تصنع فرقًا.",
     available: "متاح الآن",
     soon: "قريبًا",
     business: "افهم مطعمك",
@@ -25,7 +25,7 @@ const copy = {
     second: "GREAT DECISIONS.",
     description: "A little more clarity for your everyday. A lot more possibility for your restaurant.",
     note: "YOUR NEXT CHAPTER STARTS HERE.",
-    assistant: "HEY, I'M RIVO!",
+    assistant: "GOOD TASTE. CLEAR THINKING.",
     available: "Available now",
     soon: "Coming soon",
     business: "Know your restaurant",
@@ -40,7 +40,7 @@ const copy = {
     second: "好决策。",
     description: "看清经营的每一天，让餐厅拥有更多可能。",
     note: "数据更清晰，决策更明智。",
-    assistant: "你好，我是 RIVO！",
+    assistant: "每个细节，都有价值。",
     available: "现已可用",
     soon: "即将推出",
     business: "了解你的餐厅",
@@ -72,7 +72,7 @@ export function BrandStory() {
           <span aria-hidden="true" /> {c.assistant}
         </span>
         <img
-          src="/images/restrova/brand-hero.webp"
+          src="/images/restrova/restaurant-still-life.webp"
           alt=""
           width="1536"
           height="1024"
