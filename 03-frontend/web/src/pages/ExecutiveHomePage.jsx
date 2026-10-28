@@ -59,7 +59,7 @@ export function ExecutiveHomePage() {
         </ol>
         <div className="welcome-card">
           <div className="welcome-card__art" aria-hidden="true">
-            <img src="/images/restrova/rivo-plush.webp" alt="" width="360" height="360" />
+            <img src="/images/restrova/restaurant-still-life.webp" alt="" width="360" height="360" />
             <BrandPixels />
           </div>
           <div className="welcome-card__content">
@@ -177,7 +177,7 @@ export function ExecutiveHomePage() {
         )}
       </section>
       <section className="simple-panel simple-insight">
-        <img className="rivo-insight" src="/images/restrova/rivo-plush.webp" alt="" width="84" height="84" />
+        <img className="rivo-insight" src="/brand-mark.svg" alt="" width="84" height="84" />
         <div>
           <p className="simple-eyebrow">RIVO AI</p>
           <h2>{c.insight}</h2>

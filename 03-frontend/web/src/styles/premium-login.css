@@ -1,4 +1,4 @@
-/* Restrova public identity: forest green, warm paper, and a welcoming restaurant companion. */
+/* Restrova public identity: deep indigo, mint, and restaurant still life. */
 .login--premium {
   display: grid;
   grid-template-columns: minmax(0, 1.12fr) minmax(420px, 0.88fr);
@@ -28,7 +28,7 @@
   border: 0;
   border-inline-start: 1px solid var(--color-border);
   border-radius: 0;
-  background: #fcfcf8;
+  background: #f8f9ff;
   box-shadow: none;
   backdrop-filter: none;
   overflow: visible;
@@ -151,9 +151,9 @@
   padding: 4px;
   margin-block-end: 22px;
   gap: 4px;
-  border: 1px solid #e9eee5;
+  border: 1px solid #edf4ff;
   border-radius: 14px;
-  background: #f3f6f0;
+  background: #edf4ff;
 }
 .login--premium .auth-tabs a {
   display: grid;
@@ -162,7 +162,7 @@
   padding: 8px 6px;
   font-size: 12px;
   border-radius: 10px;
-  color: #52654f;
+  color: #53647f;
 }
 .login--premium .auth-tabs a.active {
   color: var(--brand-forest);
@@ -197,11 +197,11 @@
   font-size: 14px;
 }
 .login--premium input::placeholder {
-  color: #647560;
+  color: #53647f;
   opacity: 1;
 }
 .login--premium :is(input, select):hover {
-  border-color: #71916a;
+  border-color: #53647f;
 }
 .login--premium :is(input, select):focus {
   border-color: var(--brand-leaf);
@@ -219,7 +219,7 @@
   padding-inline: 12px;
   border: 1px solid var(--color-input-border);
   border-radius: 12px;
-  color: #5c7358;
+  color: #53647f;
   background: #fff;
 }
 .auth-input-wrap:focus-within {
@@ -248,7 +248,7 @@
   margin: 0;
   padding: 4px;
   background: transparent;
-  color: #476340;
+  color: #53647f;
   border: 0;
   border-radius: 8px;
   box-shadow: none;
@@ -315,7 +315,7 @@
   justify-content: center;
   gap: 18px;
   margin-top: 24px;
-  color: #526b4e;
+  color: #53647f;
 }
 .login--premium .login-benefits > div {
   display: flex;
@@ -336,7 +336,7 @@
   gap: 4px;
 }
 .login--premium .onboarding-stepper small {
-  color: #596e53;
+  color: #53647f;
   font-size: 9px;
 }
 .login--premium .onboarding-stepper li.is-active,
@@ -364,7 +364,7 @@
   background: var(--brand-paper);
 }
 .login--premium form .quiet-note {
-  color: #596e53;
+  color: #53647f;
   font-size: 11px;
   line-height: 1.8;
 }
@@ -430,7 +430,7 @@
   margin-top: 18px;
   font-size: 14px;
   line-height: 1.8;
-  color: #4e6549;
+  color: #53647f;
 }
 [dir="rtl"] .brand-story__masthead {
   letter-spacing: 0;
@@ -477,7 +477,7 @@
   position: absolute;
   inset: 15% 3% 15%;
   z-index: -1;
-  border: 1px solid #c3d4bc;
+  border: 1px solid #edf4ff;
   border-radius: 50%;
   transform: rotate(-13deg);
 }
@@ -544,17 +544,17 @@
 .brand-family__product > span {
   grid-column: 1 / -1;
   font-size: 10px;
-  color: #4e6549;
+  color: #53647f;
 }
 .brand-family__product > small {
   grid-column: 1 / -1;
   justify-self: start;
   padding: 3px 7px;
   border-radius: 999px;
-  background: #eef2eb;
+  background: #edf4ff;
   font-size: 9px;
   line-height: 1.5;
-  color: #4e6549;
+  color: #53647f;
 }
 .brand-family__product--business {
   border-color: var(--brand-forest);
@@ -566,10 +566,10 @@
   color: var(--brand-green);
 }
 .brand-family__product--business > span {
-  color: #e3eddc;
+  color: #edf4ff;
 }
 .brand-family__product--business > small {
-  color: #d2f2c5;
+  color: #edf4ff;
   background: rgb(142 219 112 / 0.13);
 }
 .brand-family__product--market > svg {
@@ -586,7 +586,7 @@
   padding-top: 14px;
   border-top: 1px solid var(--color-border);
   font-size: 10px;
-  color: #526c4a;
+  color: #53647f;
 }
 @media (min-width: 1600px) {
   .login--premium .login-entry {

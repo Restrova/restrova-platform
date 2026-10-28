@@ -1,5 +1,5 @@
 export function BrandMark({ size = 48, className = "", title, monochrome = false }) {
-  const ink = monochrome ? "currentColor" : "#173e2f";
+  const ink = monochrome ? "currentColor" : "#202a68";
 
   return (
     <svg
@@ -18,16 +18,16 @@ export function BrandMark({ size = 48, className = "", title, monochrome = false
         cx="32"
         cy="32"
         r="22"
-        fill={monochrome ? "none" : "#8edb70"}
-        stroke={monochrome ? ink : "#c7e7b6"}
+        fill={monochrome ? "none" : "#59e0c1"}
+        stroke={monochrome ? ink : "#d8f6ed"}
         strokeWidth="2"
       />
       <path
         d="M20 17h13.5C41.5 17 46 21.1 46 28c0 4.7-2.3 8.1-6.3 9.8L48 48H37.5L30 38h-1v10h-9V17Zm9 8v5h4c2.6 0 4-.7 4-2.5S35.6 25 33 25h-4Z"
-        fill={monochrome ? ink : "#173e2f"}
+        fill={monochrome ? ink : "#202a68"}
         fillRule="evenodd"
       />
-      <rect x="48" y="6" width="9" height="9" rx="1" fill={monochrome ? ink : "#e49b7c"} />
+      <rect x="48" y="6" width="9" height="9" rx="1" fill={monochrome ? ink : "#59e0c1"} />
     </svg>
   );
 }

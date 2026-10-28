@@ -1,6 +1,6 @@
 # Free Restrova visual preview
 
-This is a separate static website showing the green artwork and verified
+This is a separate static website showing the indigo and mint restaurant artwork and verified
 English, Arabic, mobile and Business workspace screenshots. It has no login,
 database, API, analytics or saved data. The workspace screenshot uses a synthetic
 review tenant. Market and Discover remain marked as coming soon.

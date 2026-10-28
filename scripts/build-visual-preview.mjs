@@ -17,7 +17,7 @@ const files = [
   ["docs/design/previews/login-ar.png", "assets/login-ar.png"],
   ["docs/design/previews/login-mobile.png", "assets/login-mobile.png"],
   ["docs/design/previews/workspace.png", "assets/workspace.png"],
-  ["03-frontend/web/public/images/restrova/brand-hero.webp", "assets/brand-hero.webp"],
+  ["03-frontend/web/public/images/restrova/restaurant-still-life.webp", "assets/brand-hero.webp"],
   ["03-frontend/web/public/brand-mark.svg", "assets/brand-mark.svg"],
   ["03-frontend/web/public/fonts/barlow-condensed-800.ttf", "assets/barlow-condensed-800.ttf"],
   ["03-frontend/web/public/fonts/BarlowCondensed-OFL.txt", "assets/BarlowCondensed-OFL.txt"]

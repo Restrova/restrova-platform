@@ -9,9 +9,9 @@ const content = {
   ar: {
     nav: ["عالم Restrova", "منتجاتنا", "رحلتك"],
     login: "دخول",
-    tag: "من جدة، لكل حكاية تستحق النجاح",
-    title: ["شغفك بالمذاق.", "رؤيتك للمستقبل.", "عالمك Restrova."],
-    body: "وراء كل مطعم حكاية. نجمع تفاصيلها في صورة أوضح، لتمنح وقتك لما تحب وتصنع خطوتك القادمة بثقة.",
+    tag: "من جدة • لطموح كل مطعم",
+    title: ["وراء كل طبق", "حكاية نجاح.", "خلّ أرقامك تحكيها."],
+    body: "أنت تصنع المذاق. وريستروفا يجمع المبيعات والتكاليف في صورة أوضح، لتعرف أين يقف مطعمك وما خطوتك القادمة.",
     cta: "اكتشف Restrova Business",
     explore: "تعرّف على عالمنا",
     strip: "إدارة. تواصل. اكتشاف.",
@@ -40,8 +40,8 @@ const content = {
     nav: ["Our world", "Our products", "Your journey"],
     login: "Sign in",
     tag: "FROM JEDDAH. FOR YOUR NEXT CHAPTER.",
-    title: ["GOOD FOOD.", "BOLD AMBITION.", "YOUR WORLD."],
-    body: "Behind every restaurant is a story. Bring its details into focus, make room for what you love, and move forward with clarity.",
+    title: ["GOOD FOOD.", "CLEAR NUMBERS.", "BETTER DECISIONS."],
+    body: "You bring the flavour. Restrova brings sales, costs and restaurant performance into focus, so your next decision starts with clarity.",
     cta: "Explore Restrova Business",
     explore: "Meet our world",
     strip: "MANAGE. CONNECT. DISCOVER.",
@@ -158,17 +158,28 @@ export function LandingPage() {
           </div>
           <div className="world-art">
             <span className="world-ring" aria-hidden="true" />
-            <img src="/images/restrova/brand-hero.webp" width="1536" height="1024" alt="" fetchPriority="high" />
+            <img
+              src="/images/restrova/restaurant-still-life.webp"
+              width="1536"
+              height="1024"
+              alt=""
+              fetchPriority="high"
+            />
+            <div className="world-art-tags" aria-hidden="true">
+              {c.steps.map((step) => (
+                <span key={step}>{step}</span>
+              ))}
+            </div>
             <span className="world-art-label" lang="en">
-              A LITTLE CLARITY. A LOT OF POSSIBILITY. ↗
+              FROM THE PLATE. TO THE BIG PICTURE. ↗
             </span>
           </div>
         </section>
         <div className="world-ribbon" aria-label={c.strip}>
           <span>{c.strip}</span>
-          <b aria-hidden="true">✳</b>
+          <b aria-hidden="true">✦</b>
           <span aria-hidden="true">{c.strip}</span>
-          <b aria-hidden="true">✳</b>
+          <b aria-hidden="true">✦</b>
         </div>
         <section className="world-products" id="products">
           <div className="world-section-heading">
@@ -182,7 +193,13 @@ export function LandingPage() {
                 <div className="world-product-art">
                   <span className="world-product-number">0{i + 1}</span>
                   {i === 0 ? (
-                    <img src="/images/restrova/rivo-plush.webp" alt="" width="960" height="960" loading="lazy" />
+                    <img
+                      src="/images/restrova/restaurant-still-life.webp"
+                      alt=""
+                      width="1536"
+                      height="1024"
+                      loading="lazy"
+                    />
                   ) : (
                     <Icon size={96} strokeWidth={1} aria-hidden="true" />
                   )}
