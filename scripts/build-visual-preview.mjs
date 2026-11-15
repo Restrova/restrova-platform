@@ -12,14 +12,16 @@ const files = [
   ["03-frontend/visual-preview/index.html", "index.html"],
   ["03-frontend/visual-preview/styles.css", "styles.css"],
   ["03-frontend/visual-preview/preview.js", "preview.js"],
-  ["docs/design/previews/login-en.png", "assets/login-en.png"],
-  ["docs/design/previews/login-ar.png", "assets/login-ar.png"],
-  ["docs/design/previews/login-mobile.png", "assets/login-mobile.png"],
-  ["docs/design/previews/workspace.png", "assets/workspace.png"],
-  ["03-frontend/web/public/images/restrova/brand-hero.webp", "assets/brand-hero.webp"],
+  ["03-frontend/web/public/images/restrova/restaurant-hero.png", "assets/restaurant-hero.png"],
   ["03-frontend/web/public/brand-mark.svg", "assets/brand-mark.svg"],
-  ["03-frontend/web/public/fonts/barlow-condensed-800.ttf", "assets/barlow-condensed-800.ttf"],
-  ["03-frontend/web/public/fonts/BarlowCondensed-OFL.txt", "assets/BarlowCondensed-OFL.txt"]
+  ...[
+    "sora-variable.ttf",
+    "Sora-OFL.txt",
+    "inter-variable.ttf",
+    "Inter-OFL.txt",
+    "ibm-plex-sans-arabic-400.ttf",
+    "IBMPlexSansArabic-OFL.txt"
+  ].map((file) => [`03-frontend/web/public/fonts/${file}`, `assets/${file}`])
 ];
 
 // Validate every input before replacing any previously built preview.

@@ -41,7 +41,7 @@ export function CopilotPage({ report = false }) {
     <section className="intelligence-page" dir={language === "ar" ? "rtl" : "ltr"}>
       <header>
         <div className="rivo-heading">
-          {!report && <img src="/images/restrova/welcome-mascot.webp" alt="" width="62" height="62" />}
+          {!report && <img src="/brand-mark.svg" alt="" width="62" height="62" />}
           <h1>{report ? c.reportTitle : c.title}</h1>
         </div>
         <p>{report ? c.reportIntro : c.intro}</p>
@@ -293,7 +293,7 @@ function CopilotWorkspace({
               </div>
               <div className="executive-print">
                 <header className="report-brand">
-                  <img src="/images/restrova/brand-mark.webp" alt="Restrova" width="48" height="48" />
+                  <img src="/brand-mark.svg" alt="Restrova" width="48" height="48" />
                   <div>
                     <strong>RESTROVA</strong>
                     <h2>
@@ -352,7 +352,7 @@ function CopilotWorkspace({
               {!threadId && (
                 <>
                   <div className="copilot-empty">
-                    <img src="/images/restrova/welcome-mascot.webp" alt="" width="88" height="88" />
+                    <img src="/brand-mark.svg" alt="" width="88" height="88" />
                     <p>{c.empty}</p>
                   </div>
                   <div className="decision-links copilot-suggestions">

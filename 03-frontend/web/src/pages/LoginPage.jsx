@@ -117,7 +117,7 @@ export function LoginPage({ mode = "login" }) {
             </span>
             <span className="login-brand-name">
               <b lang="en" dir="ltr">
-                RESTROVA<span className="brand-wordmark-dot">.</span>
+                Restrova
               </b>
               <small>{t("auth.brandSubtitle")}</small>
             </span>

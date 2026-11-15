@@ -1,3 +1,5 @@
+> Historical design record. The active identity is now obsidian and orange; see [visual identity](visual-identity.md).
+
 # Restrova green design preview
 
 These are screenshots of the running application using the green identity.

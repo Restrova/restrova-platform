@@ -1,0 +1,281 @@
+/* Obsidian + orange identity. Semantic status colors retain their meaning. */
+:root {
+  color-scheme: dark;
+}
+h1,
+h2,
+h3,
+.login-brand-name b,
+.app-sidebar__product strong {
+  font-family: var(--font-family-display);
+  letter-spacing: -0.045em;
+}
+[dir="rtl"] :is(h1, h2, h3) {
+  letter-spacing: normal;
+}
+.ui-button {
+  --button-color: #fff;
+}
+.ui-button--primary:not(:disabled, [aria-disabled="true"]),
+.ui-button:not(
+  .ui-button--outline,
+  .ui-button--ghost,
+  .ui-button--secondary,
+  .ui-button--danger,
+  :disabled,
+  [aria-disabled="true"]
+) {
+  color: #0b0d12;
+  background: var(--brand-orange);
+  box-shadow: 0 5px 22px #ff6a0018;
+}
+.ui-button--outline,
+.ui-button--ghost {
+  color: var(--color-text-primary);
+}
+.sidebar-nav__item.is-active {
+  background: var(--brand-orange);
+  color: #0b0d12;
+  box-shadow: 0 4px 18px #ff6a0020;
+}
+.restaurant-compact {
+  color: var(--brand-cream);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+.app-topbar,
+.app-sidebar {
+  background: #0b0f14;
+}
+.app-topbar__title h1 {
+  font-family: var(--font-family-sans);
+  letter-spacing: normal;
+}
+:is(.ui-card, .simple-panel, .simple-kpi) {
+  background: linear-gradient(135deg, #171d24, #10151a);
+  border-color: var(--color-border);
+}
+.login--premium {
+  background: #0b0d12;
+  padding: 0;
+  gap: 0;
+}
+.login--premium > section {
+  background: #0b0d12;
+  border-color: #262c34;
+}
+.login--premium form {
+  background: #11161c;
+  border-color: #2a3038;
+  box-shadow: 0 24px 60px #0004;
+}
+.login--premium .auth-tabs {
+  background: #080c10;
+  border-color: #2a3038;
+}
+.login--premium .auth-tabs a {
+  color: #a4a8ad;
+}
+.login--premium .auth-tabs a.active {
+  background: #25201c;
+  color: #ff9b59;
+}
+.login--premium input,
+.login--premium select,
+.login--premium .input-with-icon {
+  background: #0b1016;
+  color: #fff7ed;
+  border-color: #38414c;
+}
+.login--premium input::placeholder {
+  color: #8b929b;
+}
+.login--premium .brand {
+  color: #fff7ed;
+}
+.login--premium .login-brand-name b {
+  font-size: 28px;
+  text-transform: none;
+}
+.login--premium > .brand-story {
+  position: relative;
+  isolation: isolate;
+  background: #101114;
+  color: #fff7ed;
+  overflow: hidden;
+  border-color: #262c34;
+  border-radius: 0;
+}
+.brand-story::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background:
+    linear-gradient(180deg, #080b0ef5 2%, #080b0e60 60%, #080b0efa),
+    url("/images/restrova/restaurant-hero.png") center/cover;
+}
+.brand-story h2 {
+  font: 650 clamp(32px, 3.7vw, 56px)/1.18 var(--font-family-display);
+  letter-spacing: -0.05em;
+}
+.brand-story h2 > span:last-child {
+  color: #ff7b24;
+}
+.login--premium .brand-story__intro > p,
+.brand-story__masthead {
+  color: #c0c1c4;
+}
+.brand-story__art {
+  min-height: 230px;
+}
+.brand-story__art > img {
+  border-radius: 16px;
+  mix-blend-mode: normal;
+  max-height: 300px;
+  object-fit: cover;
+  box-shadow: 0 20px 60px #0008;
+}
+.brand-story__art::before,
+.brand-story__orbit,
+.brand-story__callout {
+  display: none;
+}
+.brand-story__art-note {
+  color: #fff7ed !important;
+  background: #0b0d12e8 !important;
+  border-color: #ff6a0050 !important;
+}
+.brand-family__product {
+  background: #0b1018d9 !important;
+  border-color: #ffffff1a !important;
+  color: #fff7ed;
+}
+.brand-family__product small,
+.brand-family__product > span,
+.brand-story__footer {
+  color: #a4a8ad;
+}
+.brand-family__product svg {
+  color: #ff6a00;
+}
+.brand-story__footer {
+  border-color: #ffffff18;
+}
+.brand-pixel {
+  border-radius: 2px;
+}
+.brand-pixel:nth-child(1) {
+  background: #ff6a00;
+}
+.brand-pixel:nth-child(2) {
+  background: #e11d48;
+}
+.brand-pixel:nth-child(3) {
+  background: #f59e0b;
+}
+.welcome-card {
+  background: radial-gradient(ellipse at right, #47220e55, transparent 65%), #11161c;
+  border-color: #31353c;
+}
+.welcome-card__art {
+  background: #0b0d12;
+}
+.welcome-card__art img {
+  object-fit: contain;
+  max-height: 170px;
+}
+.rivo-insight,
+.rivo-heading img {
+  padding: 8px;
+  background: #191d23;
+  border: 1px solid #30363e;
+  border-radius: 18px;
+}
+.simple-page :is(h1, h2),
+.simple-panel h2 {
+  color: #fff7ed;
+}
+.simple-page :is(input, select, textarea),
+.app-topbar .shell-switcher select {
+  background: #10151b;
+  color: #fff7ed;
+  border-color: #38414c;
+}
+.mobile-bottom-nav,
+.mobile-drawer__panel {
+  background: #10151b;
+}
+.mobile-drawer .sidebar-nav__item.is-active {
+  background: #ff6a00;
+  color: #0b0d12;
+}
+.mobile-bottom-nav__item.is-active {
+  color: #ff954d;
+}
+@media (max-width: 760px) {
+  .login--premium > section {
+    border-radius: 0;
+  }
+  .brand-story h2 {
+    font-size: 36px;
+  }
+}
+.login--premium .auth-input-wrap {
+  background: #0b1016;
+  color: #a4a8ad;
+  border-color: #38414c;
+}
+.login--premium .auth-input-wrap input:focus {
+  background: transparent;
+}
+.login--premium form .auth-password-toggle {
+  color: #b0b7c1;
+}
+.login--premium form .onboarding-actions button {
+  border-color: #ff6a00;
+  background: #ff6a00;
+  color: #0b0d12;
+  box-shadow: 0 5px 22px #ff6a0018;
+}
+.login--premium form .onboarding-actions button.secondary {
+  background: #151a20;
+  color: #fff7ed;
+  border-color: #38414c;
+}
+.login--premium .login-benefits {
+  color: #a4a8ad;
+}
+.login--premium .onboarding-stepper small {
+  color: #a4a8ad;
+}
+.login--premium > .brand-story::after {
+  display: block;
+  opacity: 0.35;
+}
+.simple-primary,
+.welcome-steps [aria-current="step"]::before {
+  background: #ff6a00;
+  border-color: #ff6a00;
+  color: #0b0d12;
+}
+.simple-primary:hover {
+  background: #ff8a38;
+  border-color: #ff8a38;
+  color: #0b0d12;
+}
+.simple-secondary,
+.simple-actions[open],
+.data-status-list {
+  background: #11161c;
+  border-color: #2a3038;
+  color: #fff7ed;
+}
+.simple-page :is(th, td),
+.data-status-list li {
+  border-color: #2a3038;
+}
+.simple-banner {
+  background: #2c2110;
+  color: #fbbf24;
+}
