@@ -5,143 +5,438 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       name="description"
-      content="Explore Restrova’s green visual identity and English, Arabic, mobile and Business workspace designs. A visual preview with sample data."
+      content="Restrova Restaurant Intelligence. A unified view of operations, profitability, and smarter restaurant decisions. Explore the obsidian and orange product identity."
     />
-    <meta name="theme-color" content="#173e2f" />
-    <title>Restrova — Green visual identity</title>
+    <meta name="theme-color" content="#0b0d12" />
+    <title>Restrova — Restaurant Intelligence</title>
     <link rel="icon" href="./assets/brand-mark.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="./styles.css" />
     <script src="./preview.js" defer></script>
   </head>
   <body>
-    <a class="skip-link" href="#preview">Skip to screen previews</a>
-    <header>
-      <div class="wordmark">
-        <img src="./assets/brand-mark.svg" width="42" height="42" alt="" />
-        <strong>RESTROVA.</strong>
-      </div>
-      <span class="edition">Green identity · Visual preview</span>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <a class="wordmark" href="#" aria-label="Restrova home"
+        ><img src="./assets/brand-mark.svg" alt="" width="46" height="46" /><span
+          >Restrova<small>RESTAURANT INTELLIGENCE</small></span
+        ></a
+      >
+      <nav aria-label="Main navigation">
+        <a href="#experience">Product</a><a href="#intelligence">Intelligence</a><a href="#identity">Our identity</a>
+      </nav>
+      <a class="button button-small" href="#experience">Explore Restrova <span aria-hidden="true">↗</span></a>
     </header>
-    <main>
-      <section class="hero" aria-labelledby="identity-heading">
-        <div>
-          <div class="eyebrow">A little clarity. A lot of possibility.</div>
-          <h1 id="identity-heading">FRESH THINKING.<br /><span>ROOTED IN GREEN.</span></h1>
-          <p>
-            A warmer welcome to Restrova. Forest green, soft cream, thoughtful details and a little personality from
-            Rivo.
+    <main id="main">
+      <section class="hero" aria-labelledby="hero-title">
+        <div
+          class="hero-image"
+          role="img"
+          aria-label="A warm, softly lit restaurant with a beautifully plated dish"
+        ></div>
+        <div class="hero-shade"></div>
+        <svg class="hero-wave" viewBox="0 0 1400 800" preserveAspectRatio="none" aria-hidden="true">
+          <defs>
+            <linearGradient id="wave" x1="0" y1="1" x2="1" y2="0">
+              <stop stop-color="#e11d48" />
+              <stop offset=".5" stop-color="#ff6a00" />
+              <stop offset="1" stop-color="#f59e0b" />
+            </linearGradient>
+          </defs>
+          <path d="M350 800C1050 740 700 240 1380 20" fill="none" stroke="url(#wave)" stroke-width="2" />
+          <path
+            d="M370 820C1060 750 710 250 1400 30"
+            fill="none"
+            stroke="url(#wave)"
+            stroke-opacity=".2"
+            stroke-width="35"
+          />
+        </svg>
+        <div class="hero-content">
+          <p class="eyebrow"><span></span> BUILT FOR THE BUSINESS OF FOOD</p>
+          <h1 id="hero-title">Your restaurant.<br />A clearer picture.<br /><em>Real growth.</em></h1>
+          <p class="hero-description">
+            Turn everyday restaurant data into better decisions. One intelligent workspace for your operations,
+            profitability, and next move.
           </p>
-          <div class="palette" aria-label="Restrova colour palette">
-            <span class="swatch swatch-forest"><i aria-hidden="true"></i>Forest</span>
-            <span class="swatch swatch-fresh"><i aria-hidden="true"></i>Fresh green</span>
-            <span class="swatch swatch-mint"><i aria-hidden="true"></i>Mint</span>
+          <div class="hero-actions">
+            <a class="button" href="#experience">Explore the experience <span aria-hidden="true">→</span></a
+            ><a class="button button-outline" href="#intelligence"
+              ><span class="play" aria-hidden="true">▶</span> See what’s possible</a
+            >
+          </div>
+          <div class="hero-details">
+            <span>Manage</span><i></i><span>Analyze</span><i></i><span>Optimize</span><i></i><span>Grow</span>
           </div>
         </div>
-        <div class="hero-art">
-          <img
-            src="./assets/brand-hero.webp"
-            alt="Green Rivo restaurant companion with Jeddah-inspired architecture"
-            width="1536"
-            height="1024"
-            fetchpriority="high"
-          />
+        <div class="floating-insight">
+          <div class="insight-top"><span class="live-dot"></span> A clearer view of performance</div>
+          <div class="insight-label">Profit margin <span>Illustrative data</span></div>
+          <strong>42.9<span>%</span></strong
+          ><small>↗ +2.8 percentage points</small
+          ><svg viewBox="0 0 260 64" aria-hidden="true">
+            <path
+              d="M0 56L25 50 42 54 65 38 86 42 112 27 140 30 162 18 183 24 210 12 230 15 258 3"
+              fill="none"
+              stroke="#4ade80"
+              stroke-width="2"
+            />
+            <path
+              d="M0 56L25 50 42 54 65 38 86 42 112 27 140 30 162 18 183 24 210 12 230 15 258 3V64H0Z"
+              fill="#4ade8010"
+            />
+          </svg>
+        </div>
+        <div class="hero-bottom">
+          <span>RESTAURANT INTELLIGENCE, REIMAGINED.</span
+          ><a href="#experience">Discover the difference <span aria-hidden="true">↓</span></a>
         </div>
       </section>
-      <section class="preview" id="preview" aria-labelledby="preview-heading">
-        <div class="preview-head">
+      <section class="capabilities" id="intelligence" aria-label="Restaurant capabilities">
+        <div>
+          <span class="cap-icon">◫</span><span>One connected view<strong>Every branch. Every decision.</strong></span>
+        </div>
+        <div>
+          <span class="cap-icon">↗</span
+          ><span>Profitability in focus<strong>Know what moves your margin.</strong></span>
+        </div>
+        <div>
+          <span class="cap-icon">✧</span
+          ><span>Intelligence with context<strong>Grounded in your restaurant data.</strong></span>
+        </div>
+      </section>
+      <section class="experience section" id="experience" aria-labelledby="experience-title">
+        <div class="section-heading">
           <div>
-            <h2 id="preview-heading">Inside the experience.</h2>
-            <p>Application screenshots. Explore the design in English and Arabic.</p>
+            <p class="eyebrow"><span></span> THE RESTROVA EXPERIENCE</p>
+            <h2 id="experience-title">Built for the way<br /><em>you run your restaurant.</em></h2>
           </div>
-          <div class="screens-nav" role="group" aria-label="Choose a screen" hidden>
-            <button type="button" data-screen="login" aria-controls="login" aria-pressed="true">English login</button>
-            <button type="button" data-screen="arabic" aria-controls="arabic" aria-pressed="false">Arabic login</button>
-            <button type="button" data-screen="workspace" aria-controls="workspace" aria-pressed="false">
-              Business workspace
-            </button>
-            <button type="button" data-screen="mobile" aria-controls="mobile" aria-pressed="false">Mobile login</button>
-          </div>
+          <p>
+            Less noise. More understanding.<br />An intentional workspace that puts<br />your next decision in focus.
+          </p>
+        </div>
+        <div class="screens-nav" role="group" aria-label="Choose a product preview">
+          <button data-screen="workspace" aria-controls="workspace" aria-pressed="true">Business workspace</button
+          ><button data-screen="login" aria-controls="login" aria-pressed="false">English sign in</button
+          ><button data-screen="arabic" aria-controls="arabic" aria-pressed="false">العربية</button
+          ><button data-screen="mobile" aria-controls="mobile" aria-pressed="false">Mobile</button>
         </div>
         <p class="preview-note">
-          This is a visual preview. The screens below are images; login and saved data are not available here.
+          Interactive design preview · Sample figures for illustration. Account access and saved data are available in
+          the full application.
         </p>
-        <noscript>
-          <p class="preview-note">All four screen previews are shown below.</p>
-        </noscript>
         <div id="screens">
-          <figure id="login">
-            <div class="screen">
-              <img
-                src="./assets/login-en.png"
-                alt="English login screen with the green Rivo illustration and sign-in form"
-                width="1440"
-                height="1000"
-              />
-            </div>
-            <figcaption>
-              English login
-              <a href="./assets/login-en.png" download="restrova-login.png"
-                >Download image <span aria-hidden="true">↗</span></a
-              >
-            </figcaption>
-          </figure>
-          <figure id="arabic">
-            <div class="screen">
-              <img
-                src="./assets/login-ar.png"
-                alt="Arabic login screen with a right-to-left layout and green Restrova identity"
-                width="1440"
-                height="1000"
-                loading="lazy"
-              />
-            </div>
-            <figcaption>
-              Arabic login
-              <a href="./assets/login-ar.png" download="restrova-arabic.png"
-                >Download image <span aria-hidden="true">↗</span></a
-              >
-            </figcaption>
-          </figure>
           <figure id="workspace">
-            <div class="screen">
-              <img
-                src="./assets/workspace.png"
-                alt="Restrova Business workspace with a green navigation sidebar, welcome card and sample restaurant account"
-                width="1440"
-                height="1000"
-                loading="lazy"
-              />
+            <div class="dashboard-mock">
+              <aside class="mock-sidebar">
+                <div class="wordmark">
+                  <img src="./assets/brand-mark.svg" width="34" height="34" alt="" /><span>Restrova</span>
+                </div>
+                <small>WORKSPACE</small>
+                <div class="mock-nav active"><span>◫</span> Dashboard</div>
+                <div class="mock-nav"><span>↗</span> Sales</div>
+                <div class="mock-nav"><span>◈</span> Profitability</div>
+                <div class="mock-nav"><span>▤</span> Menu analysis</div>
+                <div class="mock-nav"><span>▣</span> Inventory</div>
+                <div class="mock-nav"><span>⌂</span> Branches</div>
+                <div class="mock-nav"><span>▥</span> Reports</div>
+                <div class="mock-nav"><span>✧</span> AI assistant</div>
+                <div class="mock-nav settings"><span>⚙</span> Settings</div>
+                <div class="sidebar-profile">
+                  <span class="avatar">SA</span><span>Sana’a Restaurant<small>Owner workspace</small></span>
+                </div>
+              </aside>
+              <div class="dashboard-body">
+                <div class="mock-toolbar">
+                  <span>Overview <span>/ Dashboard</span></span
+                  ><span>EN <span class="avatar">SA</span></span>
+                </div>
+                <div class="dashboard-content">
+                  <div class="dashboard-heading">
+                    <div>
+                      <p class="eyebrow">YOUR RESTAURANT AT A GLANCE</p>
+                      <h3>Good morning, Sana’a <span>✦</span></h3>
+                      <p>Here’s how your restaurant is performing today.</p>
+                    </div>
+                    <div class="branch-pill">⌂ Main branch <span>⌄</span></div>
+                  </div>
+                  <div class="kpi-grid">
+                    <article>
+                      <span>Sales</span><strong>¥42,680</strong><small>↗ +12.4% <span>vs. previous period</span></small
+                      ><svg viewBox="0 0 100 30" aria-hidden="true">
+                        <path d="M1 28 15 20 28 22 44 13 56 17 72 7 83 11 98 1" />
+                      </svg>
+                    </article>
+                    <article>
+                      <span>Gross profit</span><strong>¥18,320</strong
+                      ><small>↗ +15.8% <span>vs. previous period</span></small
+                      ><svg viewBox="0 0 100 30" aria-hidden="true">
+                        <path d="M1 28 15 25 28 15 44 19 56 10 72 14 83 5 98 1" />
+                      </svg>
+                    </article>
+                    <article>
+                      <span>Profit margin</span><strong>42.9<span>%</span></strong
+                      ><small class="orange">↗ +2.8 pp <span>vs. previous period</span></small
+                      ><svg viewBox="0 0 100 30" aria-hidden="true">
+                        <path d="M1 28 15 26 28 18 44 21 56 9 72 14 83 4 98 1" />
+                      </svg>
+                    </article>
+                    <article>
+                      <span>Orders</span><strong>286</strong><small>↗ +9.2% <span>vs. previous period</span></small
+                      ><svg viewBox="0 0 100 30" aria-hidden="true">
+                        <path d="M1 28 15 25 28 27 44 19 56 23 72 9 83 14 98 1" />
+                      </svg>
+                    </article>
+                  </div>
+                  <div class="chart-grid">
+                    <article class="trend-panel">
+                      <div class="panel-heading">
+                        <h4>Sales performance</h4>
+                        <span><i></i> Revenue <b>This month ⌄</b></span>
+                      </div>
+                      <div class="chart">
+                        <div class="chart-labels">
+                          <span>60K</span><span>45K</span><span>30K</span><span>15K</span><span>0</span>
+                        </div>
+                        <svg
+                          viewBox="0 0 600 210"
+                          preserveAspectRatio="none"
+                          role="img"
+                          aria-label="Illustrative revenue trend rising from January to June"
+                        >
+                          <defs>
+                            <linearGradient id="chart-fill" x1="0" y1="0" x2="0" y2="1">
+                              <stop stop-color="#ff6a00" stop-opacity=".35" />
+                              <stop offset="1" stop-color="#ff6a00" stop-opacity="0" />
+                            </linearGradient>
+                          </defs>
+                          <path d="M0 40H600M0 85H600M0 130H600M0 175H600" stroke="#ffffff09" />
+                          <path
+                            d="M0 185C20 180 30 155 50 160S80 177 105 140 145 130 170 116 200 126 225 92 250 110 280 94 310 80 335 85 360 45 385 53 415 63 440 30 475 48 500 21 540 28 562 9 600 10V210H0Z"
+                            fill="url(#chart-fill)"
+                          />
+                          <path
+                            d="M0 185C20 180 30 155 50 160S80 177 105 140 145 130 170 116 200 126 225 92 250 110 280 94 310 80 335 85 360 45 385 53 415 63 440 30 475 48 500 21 540 28 562 9 600 10"
+                            fill="none"
+                            stroke="#ff6a00"
+                            stroke-width="3"
+                          />
+                        </svg>
+                        <div class="chart-months">
+                          <span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span
+                          ><span>Jun</span>
+                        </div>
+                      </div>
+                    </article>
+                    <article class="menu-panel">
+                      <div class="panel-heading">
+                        <h4>Top profitable items</h4>
+                        <span>↗</span>
+                      </div>
+                      <div class="menu-row">
+                        <span class="dish">01</span>
+                        <div>
+                          <strong>Mandi</strong><small>Contribution margin 58%</small>
+                          <div class="progress"><i class="progress-1"></i></div>
+                        </div>
+                        <b>58%</b>
+                      </div>
+                      <div class="menu-row">
+                        <span class="dish">02</span>
+                        <div>
+                          <strong>Grilled chicken</strong><small>Contribution margin 52%</small>
+                          <div class="progress"><i class="progress-2"></i></div>
+                        </div>
+                        <b>52%</b>
+                      </div>
+                      <div class="menu-row">
+                        <span class="dish">03</span>
+                        <div>
+                          <strong>Kunafa</strong><small>Contribution margin 49%</small>
+                          <div class="progress"><i class="progress-3"></i></div>
+                        </div>
+                        <b>49%</b>
+                      </div>
+                      <div class="ai-note">
+                        <span>✧</span>
+                        <p>
+                          From numbers to your next move.<small
+                            >Explore branch-scoped insights with your assistant.</small
+                          >
+                        </p>
+                      </div>
+                    </article>
+                  </div>
+                  <div class="mock-bottom">
+                    <span><i class="live-dot"></i> Sample workspace</span><span>Clarity in every decision.</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <figcaption><span>RESTROVA BUSINESS</span><span>Designed for clarity. Built for action.</span></figcaption>
+          </figure>
+          <figure id="login">
+            <div class="auth-mock">
+              <div class="auth-art">
+                <p class="eyebrow">RESTAURANT INTELLIGENCE</p>
+                <h3>Your restaurant.<br /><em>Real growth.</em></h3>
+                <p>Manage. Analyze. Optimize. Grow.</p>
+                <img
+                  src="./assets/restaurant-hero.png"
+                  alt="Warm restaurant interior with a plated dish"
+                  width="1536"
+                  height="1024"
+                  loading="lazy"
+                />
+                <div class="auth-art-footer">A clearer picture of your business. <span>↗</span></div>
+              </div>
+              <div class="auth-form">
+                <div class="wordmark">
+                  <img src="./assets/brand-mark.svg" width="48" height="48" alt="" /><span
+                    >Restrova<small>RESTAURANT INTELLIGENCE</small></span
+                  >
+                </div>
+                <div class="auth-form-content">
+                  <p class="eyebrow">WELCOME TO YOUR WORKSPACE</p>
+                  <h3>Welcome back.</h3>
+                  <p>Your next great decision starts here.</p>
+                  <div class="auth-switch"><span class="selected">Sign in</span><span>Create restaurant</span></div>
+                  <div class="sample-field">
+                    <span>Email address</span>
+                    <div>you@restaurant.com</div>
+                  </div>
+                  <div class="sample-field">
+                    <span>Password</span>
+                    <div>•••••••••• <span>◉</span></div>
+                  </div>
+                  <div class="sample-submit">Sign in <span>→</span></div>
+                  <p class="auth-disclaimer">Design preview — sign in is available in the full application.</p>
+                </div>
+                <small class="auth-foot">Secure access. Restaurant-scoped intelligence.</small>
+              </div>
             </div>
             <figcaption>
-              Business workspace · Sample account
-              <a href="./assets/workspace.png" download="restrova-workspace.png"
-                >Download image <span aria-hidden="true">↗</span></a
-              >
+              <span>ENGLISH SIGN IN</span><span>Confidence from the very first interaction.</span>
+            </figcaption>
+          </figure>
+          <figure id="arabic" lang="ar" dir="rtl">
+            <div class="auth-mock">
+              <div class="auth-art">
+                <p class="eyebrow">ذكاء المطاعم</p>
+                <h3>مطعمك.<br /><em>نمو حقيقي.</em></h3>
+                <p>إدارة. تحليل. تحسين. نمو.</p>
+                <img
+                  src="./assets/restaurant-hero.png"
+                  alt="مطعم بإضاءة دافئة وطبق طعام"
+                  width="1536"
+                  height="1024"
+                  loading="lazy"
+                />
+                <div class="auth-art-footer">صورة أوضح لأعمالك. <span>↗</span></div>
+              </div>
+              <div class="auth-form">
+                <div class="wordmark" dir="ltr">
+                  <img src="./assets/brand-mark.svg" width="48" height="48" alt="" /><span
+                    >Restrova<small>RESTAURANT INTELLIGENCE</small></span
+                  >
+                </div>
+                <div class="auth-form-content">
+                  <p class="eyebrow">مرحبًا بك في مساحة عملك</p>
+                  <h3>أهلًا بعودتك.</h3>
+                  <p>قرارك القادم يبدأ من هنا.</p>
+                  <div class="auth-switch"><span class="selected">تسجيل الدخول</span><span>إنشاء مطعم</span></div>
+                  <div class="sample-field">
+                    <span>البريد الإلكتروني</span>
+                    <div dir="ltr">you@restaurant.com</div>
+                  </div>
+                  <div class="sample-field">
+                    <span>كلمة المرور</span>
+                    <div>•••••••••• <span>◉</span></div>
+                  </div>
+                  <div class="sample-submit">تسجيل الدخول <span>←</span></div>
+                  <p class="auth-disclaimer">معاينة للتصميم — تسجيل الدخول متاح في التطبيق الكامل.</p>
+                </div>
+                <small class="auth-foot">وصول آمن. ذكاء مخصص لمطعمك.</small>
+              </div>
+            </div>
+            <figcaption>
+              <span>واجهة تسجيل الدخول العربية</span><span>تجربة مصممة من اليمين إلى اليسار.</span>
             </figcaption>
           </figure>
           <figure id="mobile">
-            <div class="screen">
-              <img
-                src="./assets/login-mobile.png"
-                alt="Mobile login screen with the sign-in form above the green Rivo illustration"
-                width="390"
-                height="1595"
-                loading="lazy"
-              />
+            <div class="mobile-stage">
+              <div class="mobile-device">
+                <div class="phone-status"><span>9:41</span><span>● ▰</span></div>
+                <div class="mobile-art">
+                  <img src="./assets/restaurant-hero.png" alt="" width="1536" height="1024" loading="lazy" />
+                </div>
+                <div class="mobile-content">
+                  <img class="mobile-mark" src="./assets/brand-mark.svg" width="78" height="78" alt="" />
+                  <h3>Restrova</h3>
+                  <span class="mobile-subtitle">RESTAURANT INTELLIGENCE</span>
+                  <h4>Your restaurant.<br /><em>Real growth.</em></h4>
+                  <p>Clarity for every decision.<br />Wherever your day takes you.</p>
+                  <div class="sample-submit">Get started <span>→</span></div>
+                  <div class="sample-signin">Sign in</div>
+                  <small>English <span>العربية</span> 中文</small>
+                  <div class="phone-home"></div>
+                </div>
+              </div>
+              <div class="mobile-description">
+                <p class="eyebrow"><span></span> INTELLIGENCE IN YOUR POCKET</p>
+                <h3>A big picture.<br /><em>A smaller screen.</em></h3>
+                <p>A focused, responsive experience.<br />The same Restrova clarity, wherever you work.</p>
+              </div>
             </div>
             <figcaption>
-              Mobile login
-              <a href="./assets/login-mobile.png" download="restrova-mobile.png"
-                >Download image <span aria-hidden="true">↗</span></a
-              >
+              <span>THE MOBILE EXPERIENCE</span><span>Concept preview · No account creation on this page.</span>
             </figcaption>
           </figure>
         </div>
       </section>
+      <section class="identity section" id="identity" aria-labelledby="identity-heading">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow"><span></span> THE NEW RESTROVA</p>
+            <h2 id="identity-heading">A sharper identity.<br /><em>The same ambition.</em></h2>
+          </div>
+          <p>
+            Obsidian for focus. Orange for momentum.<br />An identity with the energy of the kitchen<br />and the
+            clarity of a great decision.
+          </p>
+        </div>
+        <div class="identity-grid">
+          <div class="logo-card">
+            <img
+              src="./assets/brand-mark.svg"
+              width="90"
+              height="90"
+              alt="Restrova R and restaurant cloche mark"
+            /><strong>Restrova<small>RESTAURANT INTELLIGENCE</small></strong>
+          </div>
+          <div class="palette-card">
+            <h3>Our signature palette</h3>
+            <div class="swatches">
+              <div><i class="swatch-obsidian"></i><strong>Obsidian</strong><span>#0B0D12</span></div>
+              <div><i class="swatch-orange"></i><strong>Orange</strong><span>#FF6A00</span></div>
+              <div><i class="swatch-crimson"></i><strong>Crimson</strong><span>#E11D48</span></div>
+              <div><i class="swatch-amber"></i><strong>Amber</strong><span>#F59E0B</span></div>
+              <div><i class="swatch-cream"></i><strong>Cream</strong><span>#FFF7ED</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section class="closing section">
+        <p class="eyebrow">THE NEXT CHAPTER OF RESTAURANT INTELLIGENCE</p>
+        <h2>Good food deserves<br /><em>great decisions.</em></h2>
+        <a href="#experience" class="button">Explore the new Restrova <span>↗</span></a>
+      </section>
     </main>
     <footer>
-      <strong>Restrova visual preview.</strong> The workspace screenshot uses a synthetic review account. Restrova
-      Market and Restrova Discover are coming soon. No accounts, orders or restaurant data can be created on this site.
+      <a class="wordmark" href="#"
+        ><img src="./assets/brand-mark.svg" width="34" height="34" alt="" /><span>Restrova</span></a
+      >
+      <p>Restaurant intelligence. Real possibility.</p>
+      <small>Visual identity preview · Illustrative data</small>
     </footer>
   </body>
 </html>

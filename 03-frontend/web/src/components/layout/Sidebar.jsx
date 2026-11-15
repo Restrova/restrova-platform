@@ -27,7 +27,7 @@ export function Sidebar({ collapsed, onCollapsedChange }) {
         </Link>
         {!collapsed && (
           <div className="app-sidebar__wordmark" lang="en" dir="ltr">
-            <strong>RESTROVA</strong>
+            <strong>Restrova</strong>
             <small>
               BUSINESS <BrandPixels />
             </small>

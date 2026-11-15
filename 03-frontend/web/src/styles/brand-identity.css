@@ -1,4 +1,4 @@
-/* Restrova: forest green, warm paper, and room to focus. */
+/* Shared brand component structure; current palette comes from semantic tokens. */
 :root {
   --restrova-brand: var(--brand-forest);
 }
@@ -172,7 +172,7 @@
 
 .app-topbar .shell-switcher select {
   border-radius: 0.75rem;
-  background: var(--white);
+  background: var(--color-surface);
 }
 
 .app-topbar .user-menu--compact {
@@ -217,7 +217,7 @@
 
 .mobile-bottom-nav {
   border-block-start: 1px solid var(--color-border);
-  background: var(--white);
+  background: var(--color-surface);
   box-shadow: 0 -8px 28px rgb(23 62 47 / 0.05);
 }
 
@@ -407,7 +407,7 @@
   gap: 0.6rem;
   border-color: var(--color-border);
   border-radius: 0.85rem;
-  background: var(--white);
+  background: var(--color-surface);
   color: var(--brand-forest);
 }
 
@@ -538,7 +538,7 @@
   margin-inline-end: 0.5rem;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-full);
-  background: var(--white);
+  background: var(--color-surface);
 }
 
 .welcome-steps [aria-current="step"] {
@@ -562,7 +562,7 @@
   padding: clamp(1.5rem, 3vw, 2.5rem);
   border: 1px solid var(--color-border);
   border-radius: 1.75rem;
-  background: var(--white);
+  background: var(--color-surface);
   box-shadow:
     0 18px 48px -24px rgb(23 62 47 / 0.18),
     0 2px 6px rgb(23 62 47 / 0.025);
@@ -768,7 +768,7 @@
 .copilot-form textarea {
   border-color: var(--color-border-strong);
   border-radius: 1rem;
-  background: var(--white);
+  background: var(--color-surface);
   color: var(--color-text-primary);
 }
 

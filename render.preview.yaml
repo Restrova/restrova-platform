@@ -4,7 +4,7 @@ services:
     name: restrova-visual-preview
     runtime: static
     repo: https://github.com/Restrova/restrova-platform
-    branch: feat/restrova-static-preview
+    branch: main
     buildCommand: node scripts/build-visual-preview.mjs
     staticPublishPath: ./dist/visual-preview
     autoDeployTrigger: checksPass

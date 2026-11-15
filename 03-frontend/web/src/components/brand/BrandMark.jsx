@@ -1,11 +1,9 @@
 export function BrandMark({ size = 48, className = "", title, monochrome = false }) {
-  const ink = monochrome ? "currentColor" : "#173e2f";
-
   return (
     <svg
       className={`restrova-brand-mark ${className}`.trim()}
       xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 64 64"
+      viewBox="0 0 80 80"
       width={size}
       height={size}
       role={title ? "img" : undefined}
@@ -13,25 +11,17 @@ export function BrandMark({ size = 48, className = "", title, monochrome = false
       aria-hidden={title ? undefined : true}
       focusable="false"
     >
-      <rect x="3" y="3" width="58" height="58" rx="18" fill={monochrome ? "none" : ink} />
-      <circle
-        cx="32"
-        cy="32"
-        r="22"
-        fill={monochrome ? "none" : "#8edb70"}
-        stroke={monochrome ? ink : "#c7e7b6"}
-        strokeWidth="2"
-      />
       <path
-        d="M20 17h13.5C41.5 17 46 21.1 46 28c0 4.7-2.3 8.1-6.3 9.8L48 48H37.5L30 38h-1v10h-9V17Zm9 8v5h4c2.6 0 4-.7 4-2.5S35.6 25 33 25h-4Z"
-        fill={monochrome ? ink : "#173e2f"}
-        fillRule="evenodd"
+        d="M21 9h29c17 0 26 8 26 22 0 10-5 17-15 20l17 20H57L40 50H28V35h22c6 0 9-2 9-6s-3-6-9-6H21Z"
+        fill={monochrome ? "currentColor" : "#ff6a00"}
       />
-      <rect x="48" y="6" width="9" height="9" rx="1" fill={monochrome ? ink : "#e49b7c"} />
+      <path d="M7 64c7-13 24-21 48-22-20-3-37 0-48 8Z" fill={monochrome ? "currentColor" : "#ff4d00"} />
+      <path d="M13 37h37c-2-10-8-16-18-16s-16 6-19 16Z" fill={monochrome ? "currentColor" : "#ff6a00"} />
+      <path d="M10 40h44" stroke={monochrome ? "currentColor" : "#ff6a00"} strokeWidth="4" strokeLinecap="round" />
+      <circle cx="32" cy="18" r="3" fill={monochrome ? "currentColor" : "#ff6a00"} />
     </svg>
   );
 }
-
 export function BrandPixels({ className = "" }) {
   return (
     <span className={`brand-pixels ${className}`.trim()} aria-hidden="true">

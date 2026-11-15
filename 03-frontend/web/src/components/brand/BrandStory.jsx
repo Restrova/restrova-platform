@@ -20,12 +20,13 @@ const copy = {
   },
   en: {
     label: "The Restrova world",
-    eyebrow: "THE RESTROVA WAY",
-    first: "GOOD FOOD.",
-    second: "GREAT DECISIONS.",
-    description: "A little more clarity for your everyday. A lot more possibility for your restaurant.",
+    eyebrow: "RESTAURANT INTELLIGENCE",
+    first: "Your restaurant.",
+    second: "Real growth.",
+    description:
+      "Turn your restaurant data into clarity. Manage operations, understand profitability, and make smarter decisions.",
     note: "YOUR NEXT CHAPTER STARTS HERE.",
-    assistant: "HEY, I'M RIVO!",
+    assistant: "RESTAURANT INTELLIGENCE",
     available: "Available now",
     soon: "Coming soon",
     business: "Know your restaurant",
@@ -72,7 +73,7 @@ export function BrandStory() {
           <span aria-hidden="true" /> {c.assistant}
         </span>
         <img
-          src="/images/restrova/brand-hero.webp"
+          src="/images/restrova/restaurant-hero.png"
           alt=""
           width="1536"
           height="1024"

@@ -1,9 +1,10 @@
 # Free Restrova visual preview
 
-This is a separate static website showing the green artwork and verified
-English, Arabic, mobile and Business workspace screenshots. It has no login,
-database, API, analytics or saved data. The workspace screenshot uses a synthetic
-review tenant. Market and Discover remain marked as coming soon.
+This separate static website presents the current obsidian-and-orange identity,
+restaurant photography, and responsive HTML design previews for the dashboard,
+English sign-in, Arabic sign-in, and mobile. Figures are illustrative, and the
+sign-in views are design studies. It has no login, database, API, analytics,
+or saved data. The previous green screenshot-based preview is superseded.
 
 ## Deploy on Render
 
@@ -13,7 +14,7 @@ In the Render dashboard, select **New → Static Site**, connect
 | Setting           | Value                                   |
 | ----------------- | --------------------------------------- |
 | Name              | `restrova-visual-preview`               |
-| Branch            | `feat/restrova-static-preview`          |
+| Branch            | `main`                                  |
 | Root directory    | Leave empty                             |
 | Build command     | `node scripts/build-visual-preview.mjs` |
 | Publish directory | `dist/visual-preview`                   |
@@ -32,9 +33,11 @@ For a manually created Static Site, copy the headers from `render.preview.yaml`
 into the site's Headers settings.
 
 After deployment, open the public URL shown by Render and check all four
-screenshot buttons, image downloads, mobile layout and reduced-motion behavior.
-The screenshots are static: buttons shown inside an image are not interactive.
-A successful Git push or local build does not establish a successful deployment.
+preview buttons, mobile layout, Arabic direction, and keyboard navigation.
+The screen selector is interactive; account forms within each design study
+are illustrative. A successful Git push or local build does not establish a
+successful deployment. Merge the reviewed identity change into the service's
+configured branch (currently main for the existing preview).
 
 ## Build locally
 
